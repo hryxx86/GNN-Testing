@@ -32,7 +32,7 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 - [x] Encode text with SentenceTransformer (all-MiniLM-L6-v2, 384-dim embeddings)
 - [x] Construct HeteroData graph (480 news nodes + 9 stock nodes, time-series 80/10/10 split)
 - [x] Baseline: Logistic Regression (Val AUC 0.52, Test AUC 0.62)
-- [x] Train GraphSAGE (2-layer, hidden=32, early stopping) -> Val AUC 0.64, Test AUC 0.69
+- [x] Train GraphSAGE (2-layer, hidden=32, early stopping) -> Val AUC 0.61, Test AUC 0.64
 
 ### Infrastructure & Fixes
 - [x] Fix Google Drive path (`GNN测试` not `GNN-Testing`)
@@ -40,12 +40,14 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 - [x] Add reproducibility seed setting (Cell 0 + GraphSAGE cell)
 - [x] Create detailed `REPORT.md` covering all phases
 - [x] Move Google Drive mount to Cell 0 so all cells can find cached files (prevents re-downloading)
+- [x] Fix `torch.use_deterministic_algorithms` crash on Colab CUDA (set to False)
+- [x] Review and correct REPORT.md (sector names, AUC values, hardware disclaimer)
 
 ---
 
 ## Current Status
 
-**All Phase 1 & Phase 2 steps are complete.** The notebook runs end-to-end with reproducible results (seed=42). GraphSAGE outperforms the text-only baseline by +6.9% Test AUC.
+**All Phase 1 & Phase 2 steps are complete.** The notebook runs end-to-end with seed=42. GraphSAGE outperforms the text-only baseline by +3.4% Test AUC (0.64 vs 0.62). Results may vary slightly across hardware.
 
 ---
 
@@ -58,4 +60,4 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 
 ---
 
-*Last updated: 2026-02-09*
+*Last updated: 2026-02-10*
