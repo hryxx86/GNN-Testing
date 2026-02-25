@@ -78,16 +78,28 @@ GNN-Testing/
 
 ## Current Status
 
-**All Phase 1 & Phase 2 steps are complete.** The notebook runs end-to-end with seed=42. GraphSAGE outperforms the text-only baseline by +3.4% Test AUC (0.64 vs 0.62). Results may vary slightly across hardware.
+**Phase 1 & Phase 2 (original) complete. Phase B (Task 1 dynamic graphs) complete. Phase A (data prep) notebook created, pending EODHD API token.**
 
 ---
 
-## Next Steps
+## In Progress: Phase A Data Preparation
 
-- [ ] Explore model improvements (more news data, additional features, hyperparameter tuning)
-- [ ] Consider adding stock-stock edges to the heterogeneous graph
-- [ ] Experiment with different embedding models or fine-tuning
-- [ ] Extend to more tickers beyond the 9 hub stocks
+**Notebook:** `phase_a_data_prep.ipynb`
+
+- [ ] Purchase EODHD Calendar & News API ($19.99/mo, student 50% off → ~$10/mo)
+- [ ] Download S&P 500 news (500 tickers, 5 years) → `data/sp500_news_eodhd.parquet`
+- [ ] Validate & clean news data → `data/sp500_news_clean.parquet`
+- [ ] Build event-level dataset (explode by ticker, align next-day return) → `data/sp500_news_events.parquet`
+- [ ] FinBERT 768-dim embeddings + 3-dim sentiment → `data/sp500_news_emb_finbert.npy`
+- [ ] t-SNE validation of embeddings
+
+## Next Steps (Phase C)
+
+- [ ] Construct heterogeneous graph (3 edge types: news→stock, stock↔stock corr, stock↔stock sector)
+- [ ] Implement baselines (LR + FinBERT, FinBERT-LSTM)
+- [ ] Implement HeteroGNN model
+- [ ] Run ablation experiments
+- [ ] Results analysis + visualization
 
 ---
 
