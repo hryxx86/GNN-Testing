@@ -9,6 +9,36 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 
 **Main notebook:** `GNN测试1 colab.ipynb` (Google Colab / local)
 
+## Directory Structure
+
+```
+GNN-Testing/
+├── GNN测试1 colab.ipynb          # Main notebook
+├── progress.md                    # This file
+├── data/                          # All data files
+│   ├── raw/                       # Raw source data
+│   │   └── Newstitle_.../         # Factiva RTF exports
+│   ├── sp500_5y_prices.csv        # 5-year daily prices (502 stocks)
+│   ├── sp500_market_caps.csv      # Market cap data
+│   ├── sp500_sectors.csv          # GICS sector mapping
+│   ├── news_clean.csv             # Cleaned Factiva articles
+│   ├── news_events.csv/parquet    # Event-level dataset (480 rows)
+│   ├── news_events_emb.npy        # SentenceTransformer embeddings (480x384)
+│   ├── news_events_emb_meta.parquet
+│   ├── sensitivity_analysis.csv   # Dynamic graph statistics
+│   └── graph_data.pt              # HeteroData graph object
+├── scripts/                       # Python scripts
+│   ├── process_news.py            # RTF -> CSV conversion
+│   ├── prepare_events.py          # Event-level dataset builder
+│   └── build_dynamic_graphs.py    # Rolling window graph builder
+├── plots/                         # All visualization outputs
+│   └── *.png (13 files)
+└── docs/                          # Documentation
+    ├── REPORT.md                  # Detailed progress report
+    ├── 代码讲解.md                 # Code walkthrough (Chinese)
+    └── gnn-llm-prediction-plan.md # Phase 3 design document
+```
+
 ---
 
 ## Completed Steps
@@ -17,8 +47,8 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 - [x] Download S&P 500 5-year daily closing prices via yfinance (502 stocks x 1255 days)
 - [x] Compute Pearson correlation matrix and build graph (threshold |corr| > 0.6, 3198 edges)
 - [x] Define and run 2-layer GCN (1 -> 16 -> 1, single forward pass, no training)
-- [x] Fetch and cache market cap data from yfinance (`sp500_market_caps.csv`)
-- [x] Fetch and cache GICS sector data from Wikipedia (`sp500_sectors.csv`)
+- [x] Fetch and cache market cap data from yfinance (`data/sp500_market_caps.csv`)
+- [x] Fetch and cache GICS sector data from Wikipedia (`data/sp500_sectors.csv`)
 - [x] Plot: Top 100 market cap correlation network
 - [x] Plot: Top 100 sector-colored correlation network
 - [x] Plot: Full 502-stock correlation network
@@ -27,8 +57,8 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 
 ### Phase 2: News-Driven Prediction
 - [x] Acquire 1,900 Factiva articles for 9 hub companies (2021-01-29 to 2026-01-28)
-- [x] Process RTF -> CSV with `process_news.py` (textutil + deduplication)
-- [x] Build event-level dataset with `prepare_events.py` (ticker matching, next-day return labels) -> 480 rows
+- [x] Process RTF -> CSV with `scripts/process_news.py` (textutil + deduplication)
+- [x] Build event-level dataset with `scripts/prepare_events.py` (ticker matching, next-day return labels) -> 480 rows
 - [x] Encode text with SentenceTransformer (all-MiniLM-L6-v2, 384-dim embeddings)
 - [x] Construct HeteroData graph (480 news nodes + 9 stock nodes, time-series 80/10/10 split)
 - [x] Baseline: Logistic Regression (Val AUC 0.52, Test AUC 0.62)
@@ -38,10 +68,11 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 - [x] Fix Google Drive path (`GNN测试` not `GNN-Testing`)
 - [x] Fix SentenceTransformer cell (removed unnecessary cache deletion)
 - [x] Add reproducibility seed setting (Cell 0 + GraphSAGE cell)
-- [x] Create detailed `REPORT.md` covering all phases
+- [x] Create detailed `docs/REPORT.md` covering all phases
 - [x] Move Google Drive mount to Cell 0 so all cells can find cached files (prevents re-downloading)
 - [x] Fix `torch.use_deterministic_algorithms` crash on Colab CUDA (set to False)
 - [x] Review and correct REPORT.md (sector names, AUC values, hardware disclaimer)
+- [x] Reorganize project directory structure (data/, scripts/, docs/, plots/)
 
 ---
 
@@ -60,4 +91,4 @@ GNN-based stock correlation network analysis and news-driven stock movement pred
 
 ---
 
-*Last updated: 2026-02-10*
+*Last updated: 2026-02-25*

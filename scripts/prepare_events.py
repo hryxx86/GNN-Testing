@@ -18,10 +18,10 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Optional
 
-NEWS_PATH = Path("news_clean.csv")
-PRICE_PATH = Path("sp500_5y_prices.csv")
-OUT_PARQUET = Path("news_events.parquet")
-OUT_CSV = Path("news_events.csv")
+NEWS_PATH = Path("data/news_clean.csv")
+PRICE_PATH = Path("data/sp500_5y_prices.csv")
+OUT_PARQUET = Path("data/news_events.parquet")
+OUT_CSV = Path("data/news_events.csv")
 
 # Strict whitelist to reduce false positives
 WHITELIST = {

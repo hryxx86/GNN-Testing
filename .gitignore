@@ -5,12 +5,8 @@
 __pycache__/
 *.pyc
 
-# Data files
-*.csv
-*.parquet
-*.npy
-*.pt
-Newstitle_20210129_20260128_1491/
+# Data files (all in data/)
+data/
 
 # Output
 plots/

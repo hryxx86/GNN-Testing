@@ -9,8 +9,8 @@ import re
 import subprocess
 from typing import List, Tuple
 
-ROOT = pathlib.Path("Newstitle_20210129_20260128_1491")
-OUT_PATH = pathlib.Path("news_clean.csv")
+ROOT = pathlib.Path("data/raw/Newstitle_20210129_20260128_1491")
+OUT_PATH = pathlib.Path("data/news_clean.csv")
 
 DATE_LINE_RE = re.compile(
     r"(January|February|March|April|May|June|July|August|September|October|November|December)"
