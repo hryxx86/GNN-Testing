@@ -112,14 +112,16 @@ Superseded documents are moved to `archived/`. These are kept for reference only
 
 - Google Drive folder: `GNN测试` (NOT `GNN-Testing`)
 - Local project: `/Users/heruixi/Desktop/GNN-Testing`
-- Conda Python: `/Users/heruixi/anaconda3/bin/python`
+- Conda env: `gnn` (activate via `conda activate gnn`)
+- Conda Python: `/opt/homebrew/Caskroom/miniforge/base/envs/gnn/bin/python`
+- GitHub repo: `https://github.com/hryxx86/GNN-Testing`
 
 ---
 
 ## Rule 8: Technical Conventions
 
 - **NotebookEdit gotcha**: `insert` mode places new cell AFTER the specified `cell_id`. To put a cell at the beginning, merge into Cell 0.
-- **Notebooks**: Run on Google Colab (A100 80GB for GNN training).
+- **Notebooks**: Can run locally on Mac Mini M4 16GB (CPU/MPS) or on Google Colab (A100 for large sweeps).
 - **Data leakage**: All market context features use strictly T-1 close values. No exceptions.
 - **Return definition**: Next-day close-to-close, locked and cannot be changed.
 
