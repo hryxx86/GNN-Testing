@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files (all in data/)
+data/
+
+# Output
+plots/
+
+# Claude Code local settings
+.claude/
+
+# Colab run results
+colab result/
