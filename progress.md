@@ -4657,3 +4657,98 @@ Trigger Codex Touchpoint 2 Round B to independently verify all 5 fixes hold; if 
 Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criterion.
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
+
+## 2026-05-27-a: E1 Colab launch + 4 downstream scripts + Codex Touchpoint 2 ×4
+
+### Session arc (continuation of 2026-05-26-k smoke pass)
+
+1. **§1.10 smoke benchmark PASS (M4)**: 4 cells × seed 86 × fold 0 × all 4 models on Universe B.
+   Wall: GAT 242s, SAGE-Mean 147s, MLP 75s, LightGBM 0.5s; **total 7.7 min < 25 min** PASS gate.
+   Per-cell single-seed IC: GAT -0.031, SAGE-Mean -0.030, MLP +0.011, LightGBM +0.020.
+   Decision: proceed to full E1 on Colab A100.
+
+2. **Commit + push E1 pipeline to GitHub (a8773be)**: 18 files, +11541 / -99 lines including
+   `.gitignore` whitelist hardening (experiments/** + artifacts/** ignored, whitelist small
+   text/config files), `scripts/colab_launch.sh` cwd sentinel + Drive-path docstring fix,
+   `run_storya_e1_anchor.py` + meta/prereg/schema files + Codex Touchpoint 1+2 review trail.
+
+3. **Colab Cell 1 setup** (new flow per H博士):
+   - Discovered Drive folder is NOT a git working tree (no `.git/`) — `git pull` from Drive fails.
+   - Root cause of subsequent `torch_geometric` import error: `OSError: [Errno 107]` from Drive FUSE
+     when sys.path includes Drive cwd (triton import scan touched Drive → transient disconnect).
+   - **Solution (LOCKED)**: clone code to `/content/GNN-Testing` (local SSD, fast git, no FUSE in
+     critical path); symlink data/, experiments/, artifacts/ from `/content/drive/MyDrive/GNN测试/`.
+   - Cell 1 sanity verified on A100: torch 2.11+cu128, lightgbm 4.6, torch_geometric OK, arch 8.0.
+
+4. **E1 launch on A100** (cloudflared SSH from local Mac was dead — `colab_ssh` package's
+   cloudflared binary lost the websocket handshake; sshd up but cloudflared client process gone).
+   Fallback: `!bash scripts/colab_launch.sh run_storya_e1_anchor.py` from Colab cell directly.
+   tmux session `train` launched; log writes to `artifacts/colab_runs/20260527_063625_*.log`.
+   Universe B built (1255×501×10), Universe C built (1255×501×51 after alpha158 npy uploaded
+   to Drive — was missing, H博士 manually uploaded 379 MB via web), 400-cell run in progress.
+   First cell ran: GAT seed=86 fold=0; manifest empty at last check.
+
+5. **Parallel downstream script writing** (E1 estimated 5-10h on A100):
+   - `scripts/build_news_edge_source.py` — PIT-safe derived artifact (~285 lines). Smoke
+     1.7M source rows → 1.05M unique articles in 40s on M4. 293K articles with ≥2 SP500
+     tickers (usable for co-occurrence edges). Output 19.3 MB vs 2.7 GB source.
+   - `compute_e6_dm_spa.py` — Story A statistical post-process (~711 lines): Hansen SPA +
+     DM/HLN pairwise + BH-FDR + stationary-block-bootstrap CI + cost-ladder Net Sharpe +
+     multi-testing ledger JSON + summary.md. Smoke on 4-cell M4 data produced all 5 outputs.
+   - `run_storya_e3_news_edge.py` — 50-cell SAGE × (corr ∪ news_cooccurrence) runner (~727 lines).
+     Uses NYSE session_close(t-1) UTC PIT cutoff per news_edge_source_schema.md v2 (Codex D-03 fix).
+     1254 per-day news snapshots built in 7.3s, cached `.npz` (avg 1823 news edges/test_day,
+     807 articles/test_day for Q2-2024 fold 0). Smoke cell: IC=+0.0017, Sharpe_gross=0.355, 208s.
+   - `run_storya_e4_alpha.py` — 100-cell α2 (corr+sector) + α4 (corr+sector+news) runner (~506 lines).
+     GICS 11 sectors yield 13,535 undirected same-sector pairs; union with 1,513 corr edges →
+     13,695 dedup-unique. Smoke α2 cell: IC=-0.013, Sharpe_gross=0.905, 202s.
+
+6. **Codex Touchpoint 2 reviews — all 4 scripts** (parallel, ~3-5 min each):
+
+| Script | Verdict | Findings | All fixed? |
+|--------|---------|----------|------------|
+| build_news_edge_source.py | PROCEED-WITH-FIXES | 0 C + 0 M + 2 Cn | ✅ |
+| compute_e6_dm_spa.py | PROCEED-WITH-FIXES | 0 C + 1 M + 1 Cn | ✅ |
+| run_storya_e3_news_edge.py | PROCEED-WITH-FIXES | 0 C + 2 M + 1 Cn | ✅ |
+| run_storya_e4_alpha.py | **PASS** | 0 (clean) | n/a |
+
+Key fixes applied (all re-smoke verified):
+- **NW-HAC variance divisor** (E6 MAJOR): `.mean()` divides by (T-l); fixed to `.sum()/T`
+  per Newey-West 1987. DM/HLN p-values shifted <5%, BH-FDR pattern unchanged at q=0.05.
+- **n_news_articles_avg populated** (E3 MAJOR): was hardcoded 0; now tracks per-day eligible
+  article count, cached in `.npz` as `__article_counts__` sidecar.
+- **(fold, seed) resume identity** (E3 MAJOR): was cell_id integer (formula-dependent → stale
+  manifest could skip wrong cell); now uses canonical (fold, seed) tuple. Propagated to E4
+  as (edge_config, fold, seed).
+- **Pre-validation of per-day edges** (E3 CONCERN): catches missing edge_tensor at fold-setup
+  time, not silently at training time (was: silent zero predictions on missing day).
+- **groupby first determinism** (E3 build CONCERN): added explicit sort_values before groupby.
+- **Readback dtype check** (E3 build CONCERN): asserts uint64 + uint16 + list<string> via pyarrow.
+- **Joint SPA empty-cand guard** (E6 CONCERN): skip joint SPA if any (universe, candidate) empty.
+- **Sharpe N=1 NaN** (E6 CONCERN): explicit NaN return when only 1 cell.
+
+7. **Commit + push (039eb36)**: 8 files, +2470 lines: 4 new scripts + 4 review files.
+
+### Single-seed smoke comparison (Universe B, SAGE-Mean, seed=86, fold=0)
+
+| edge config | IC | Sharpe_gross | wall | source |
+|-------------|-----|--------------|------|--------|
+| corr only | -0.030 | -0.087 | 147s | E1-B SAGE-Mean smoke |
+| corr + news | +0.002 | +0.355 | 208s | E3 smoke |
+| corr + sector | -0.013 | +0.905 | 202s | E4 α2 smoke |
+
+Single-seed not robust (N=1); but directionally consistent with "any edge addition >
+corr-only" — a multi-seed test should detect this conditional signal at q=0.05 BH-FDR.
+
+### Pending
+
+- **E1 progress on Colab** — awaiting H博士 Cell 4 output. Last check: 0/400 cells in manifest,
+  GAT seed=86 fold=0 starting. ETA per smoke extrapolation: 5-10h total wall.
+- **Cloudflared SSH** — remains broken (colab_ssh cloudflared client dead). Not blocking
+  (training in tmux survives; Cell 4 polling sufficient).
+- **E3/E4 Colab launches** — queued after E1 completes (~5-10h from now); both scripts
+  pushed to GitHub, will pull via Colab `git pull` when E1 done.
+- **progress.md/plan.md/analysis.md ongoing sync** — analysis.md update deferred until
+  first E1 results arrive (per Rule 9 Touchpoint 3 protocol).
+
+→ progress: 2026-05-27-a | plan: 2026-05-26-a (v3, fully unblocked) | analysis: N/A
