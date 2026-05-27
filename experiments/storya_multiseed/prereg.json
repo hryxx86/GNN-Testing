@@ -1,0 +1,350 @@
+{
+  "schema_version": "3.0",
+  "experiment_id": "storya_e1_anchor_v3",
+  "experiment_name": "Story A E1 anchor — fixed canonical 10 seeds × 4 models × Universe B/C paired",
+  "version": "v3",
+  "supersedes": [
+    "v1 (adaptive 30→100 extension rule; superseded per Codex CODEX-A-02 winner's-curse inflation on 2026-05-26)",
+    "v2 (fixed tiered 100/100/30/30/30 sample sizes + DSR/PBO F2 framework + LSTM in model list; superseded per H博士 2026-05-26 evening simplification: drop adaptive complexity, drop DSR/PBO, drop LSTM, switch to fixed canonical 10 + Hansen SPA + DM/HLN + cost ladder + Universe B/C paired)"
+  ],
+  "created_at": "2026-05-26 (evening, v3 simplification)",
+  "v1_created_at": "2026-05-26 (morning)",
+  "v2_created_at": "2026-05-26 (afternoon)",
+  "created_by": "Claude (Story A pivot session; v3 incorporates H博士 simplification directive after Codex Round A dispositions + LSTM drop)",
+  "approved_by": "H博士 (per session 2026-05-26 evening: lock canonical 10 + Universe B/C + SPA + DM/HLN + cost ladder + drop LSTM)",
+  "plan_file": "/Users/heruixi/.claude/plans/handoff-session-ranking-swirling-lemur.md",
+  "plan_version": "v3",
+  "plan_section": "§1.1 (this file pre-registers what plan §1.1 commits to)",
+  "codex_round_a_review": "artifacts/reviews/2026-05-26_codex_plan_A.md",
+  "codex_round_a_dispositions": {
+    "A-02_adaptive_extension": "RESOLVED-BY-V3 (fixed seeds eliminate winner's-curse inflation)",
+    "A-03_PBO_seeds_vs_time": "RESOLVED-BY-V3 (PBO dropped; Hansen SPA replaces)",
+    "A-04_DSR_underspecified": "RESOLVED-BY-V3 (DSR dropped; Hansen SPA is academic-standard equivalent)",
+    "A-09_cross_pick_nulls": "RESOLVED-BY-V3 (DM+HLN paired tests + SPA over candidate family are standard)",
+    "A-11_compute_optimistic": "RESOLVED-BY-V3 (cells reduced 1450 → 400; smoke benchmark gating)",
+    "A-01_news_edge_PIT": "STILL-OPEN (addressed in plan §1.2 PIT spec; E3 script must enforce)",
+    "A-05_purge_embargo": "STILL-OPEN (plan §1.8 v3 contract added explicit 21d embargo; E1 script must enforce)",
+    "A-06_literature_matrix": "STILL-OPEN (plan §1.9 v3 expanded to 16 papers; further verification before submission)",
+    "A-07_hparam_pre_reg": "PARTIALLY-RESOLVED (plan §1.7 v3 LightGBM row added, LSTM row removed; LightGBM uses Qlib defaults)",
+    "A-08_Mamba_narrative": "ACCEPTED-AS-CONCERN (Mamba in E5 OPTIONAL; ablation matrix preserved if E5 runs)",
+    "A-10_Mamba_underpowered": "ACCEPTED-AS-CONCERN (same as A-08)"
+  },
+  "codex_round_b_status": "skipped (v2 superseded by v3 before Round B trigger)",
+  "codex_round_c_status": "COMPLETE 2026-05-26 — verdict BLOCK-EXECUTION; full review at artifacts/reviews/2026-05-26_codex_plan_C.md; 1 CRITICAL + 5 MAJOR + 2 CONCERN; 5 Round A findings FIXED, 4 STILL-OPEN (A-01/A-05/A-06/A-09 per Round C reassessment), 2 ACCEPTED-AS-CONCERN",
+  "codex_round_c_dispositions": {
+    "C-01_plan_v2_stale_text": "FIXED — plan lines 230-235/394-407/417-428/498-503/539-543/689-697 cleaned to v3 ground truth (4 models / 400 cells / M=40/80 SPA / no LSTM / no compute_dsr.py / 4-model smoke)",
+    "C-02_sanity_check_backwards": "FIXED — plan §1.8 rewritten to correct within-fold purge assertion using trading-day indices; between-fold check removed (was conceptually wrong; expanding-window is by design)",
+    "C-03_news_PIT_artifact": "FIXED 2026-05-26 evening (H博士 directed immediate fix instead of deferring). Schema spec written at experiments/storya_e3_news_edge/news_edge_source_schema.md with: (a) source artifact audit confirming `date` IS UTC second-precision (Codex assumption corrected); (b) derived PIT-safe artifact schema with article_id (xxHash64) + publication_timestamp + tickers_mentioned list + n_tickers; (c) forbidden columns enforced (return_next/label/polarity/neg/neu/pos/tags); (d) build procedure pseudocode; (e) E3 runtime PIT assertion code; (f) build-time verification script. Actual `data/fullscale/sp500_news_edge_source.parquet` parquet generation deferred to E3 launch step (~30 min M4 wall time); E3 runner script still needs writing + Codex T2 review.",
+    "C-04_DM_seed_aggregation": "FIXED — prereg seed_aggregation block LOCKS averaging across seeds per (model, date, fold) BEFORE DM; T=313 not 3130",
+    "C-05_cost_ladder_inconsistent": "FIXED — equal-weight position construction LOCKED; one-way bps semantics LOCKED; Net Sharpe annualization sqrt(252/21) LOCKED; uncertainty reporting required for N=15 periods",
+    "C-06_literature_matrix_errors": "DEFERRED-TO-PAPER-WRITING-PHASE per H博士 Option B — must re-verify FinGAT/HIGSTM/HTAN entries and add GRU-PFG/DishFT-GNN/DGT before paper submission; not E1 blocker",
+    "C-07_MDE_pre_commit": "FIXED — prereg DM_HLN.minimum_detectable_effect_note_per_C-07 added: non-significant DM result requires |CI upper_bound| < 0.005 to claim 'no effect'; otherwise frame as 'inconclusive'",
+    "C-08_BC_HP_transfer": "ACCEPTED-AS-PAPER-LIMITATION — paper §Discussion will note B/C results use fixed default hparams without capacity-tuning, framing comparison as 'feature richness under fixed model class' not 'optimal-per-universe'"
+  },
+  "codex_round_d_status": "COMPLETE 2026-05-26 evening — verdict BLOCK-EXECUTION; full review at artifacts/reviews/2026-05-26_codex_plan_D.md; 1 CRITICAL + 4 MAJOR; independent verification of 8 Round C dispositions revealed only 3/8 actually FIXED (C-06/C-07/C-08), 2 STILL-OPEN (C-02/C-05), 3 NEW-CONCERN (C-01/C-03/C-04). Round D adds 5 new findings (D-01 CRITICAL cell_id math error + D-02 MAJOR vacuous sanity assertion + D-03 MAJOR UTC-midnight timezone bug + D-04 MAJOR SPA M=40/80 contradicts seed-aggregation + D-05 MAJOR turnover constant + N_periods wrong). Lesson: every FIXED disposition must include independent verification (math check / grep residual / cross-data validation) BEFORE marking FIXED. Round E queued after the 10 Round D fixes (5 D-series + 5 C-series residuals) commit.",
+  "codex_round_d_dispositions": {
+    "D-01_cell_id_math_error": "FIXED — plan §1.1 formula corrected to universe_idx*200 + model_idx*50 + fold_idx*10 + seed_idx (range 0..399, injective); this prereg cell_id_formula field already had correct formula (line 167)",
+    "D-02_vacuous_sanity_assertion": "FIXED — plan §1.8 rewritten with explicit label_end vs feature_start comparison on trading-day arrays; this prereg purge_embargo block rewritten below",
+    "D-03_timezone_cutoff": "FIXED — experiments/storya_e3_news_edge/news_edge_source_schema.md updated to use NYSE session_close (via pandas_market_calendars) instead of UTC midnight; plan §1.2 references updated schema",
+    "D-04_SPA_M_contradicts_seed_aggregation": "FIXED — SPA M=3 per universe (was 40), M=6 joint (was 80); applies seed aggregation consistently with §1.4(b) DM/HLN; reduces internal contradiction",
+    "D-05_turnover_and_N_periods_wrong": "FIXED — turnover_L1 = 4 at full rotation (not 2); N_periods = 17 verified against horizon_ablation_results.csv n_periods column (fold sums 3+4+4+3+3); cost formula clarified for L1-norm vs one-side conventions"
+  },
+  "codex_round_c_re_verification_after_D": {
+    "C-01_FIXED_via_D-01": "Plan §1.1 cell_id math + 8-test→5-test family text + stale 500/compute_dsr residuals cleaned",
+    "C-02_FIXED_via_D-02": "Plan §1.8 + this prereg purge_embargo block rewritten with meaningful assertion",
+    "C-03_FIXED_via_D-03": "Schema doc timezone bug closed",
+    "C-04_FIXED_via_D-04": "SPA seed aggregation applied consistently with DM/HLN",
+    "C-05_FIXED_via_D-05": "Turnover formula + N_periods constant + cost convention all corrected",
+    "C-06_DEFERRED": "Literature matrix re-verify remains paper-writing-phase task; not E1 blocker",
+    "C-07_FIXED_PRE-D": "MDE pre-commit already in DM_HLN block; Round D confirmed FIXED",
+    "C-08_ACCEPTED_PRE-D": "B/C HP transfer accepted as paper §Limitations; no change needed"
+  },
+
+  "purpose": "Pre-register the v3 E1 anchor design: fixed canonical 10 seeds × 4 models × 5 walk-forward folds × 2 paired universes (B 10-dim hc, C 51-dim Plan AAA top-15 members) at 21d horizon, with Hansen SPA + DM/HLN + transaction cost ladder + block bootstrap for multi-comparison and cherry-pick defense.",
+
+  "design": {
+    "seeds": {
+      "list": [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026],
+      "n_seeds": 10,
+      "source": ".claude/rules/experiments.md canonical seed list",
+      "rationale": "Same 10 seeds for ALL 4 models (paired comparison for DM/HLN tests; no per-model extension); canonical list per project rules; eliminates cherry-pick concern by reporting full distribution",
+      "applies_to_all_models": true
+    },
+    "models": {
+      "list": ["GAT_price", "SAGE-Mean_price", "MLP_price", "LightGBM_price"],
+      "n_models": 4,
+      "dropped_from_v2": ["LSTM_price"],
+      "drop_rationale_LSTM": "LSTM sequence input cannot align cleanly with Universe B/C rolling-stats features. Feeding 21 days of pre-aggregated stats to LSTM produces highly autocorrelated time steps (only 1 day shift between consecutive steps), leaving LSTM almost no incremental temporal signal beyond MLP. Documented as paper §Limitations per plan §1.1 'LSTM limitation note'.",
+      "mamba_sage_status": "OPTIONAL E5 only (plan §1.5); not part of E1 anchor; separate prereg if E5 runs"
+    },
+    "universes": {
+      "B": {
+        "name": "Universe B (10-dim hc)",
+        "n_features": 10,
+        "feature_list": [
+          "ret_mean_5d", "ret_mean_10d", "ret_mean_21d",
+          "ret_std_5d", "ret_std_10d", "ret_std_21d",
+          "mom12m", "maxret", "dolvol", "CORR5"
+        ],
+        "source": "run_step3_plan_z_part_a.py:101-117 (Plan Z++ universe; literature alphas + Phase 5 baselines, semantically de-duplicated 13→10)",
+        "data_path": "loaded via load_data_and_features() in run_step3_plan_z_part_a.py"
+      },
+      "C": {
+        "name": "Universe C (51-dim Plan AAA top-15 members)",
+        "n_features": 51,
+        "feature_list_source": "artifacts/plan_aaa/ranking.csv top 15 rows; union of all members across these 15 groups",
+        "feature_groups_by_plan_aaa_rank": {
+          "rank_1": ["hc_mom12m"],
+          "rank_2": ["ROC30", "MA60", "MAX60", "MIN60", "QTLU60", "QTLD60"],
+          "rank_3": ["CNTP60", "CNTD60"],
+          "rank_4": ["KMID", "KMID2", "KSFT", "KSFT2", "OPEN0", "HIGH0", "VWAP0"],
+          "rank_5": ["RESI60"],
+          "rank_6": ["BETA20", "RANK20", "RSV20", "IMAX20", "IMXD20", "SUMP20", "SUMD20", "RANK30", "RSV30"],
+          "rank_7": ["CNTP5", "CNTN5", "CNTD5", "CNTP10", "CNTN10", "CNTD10"],
+          "rank_8": ["ROC60", "IMIN60", "CNTN60", "SUMN60"],
+          "rank_9": ["WVMA20", "WVMA30"],
+          "rank_10": ["KUP", "KUP2"],
+          "rank_11": ["RANK60", "RSV60", "IMAX60"],
+          "rank_12": ["CNTP20", "CNTD20", "CNTP30", "CNTD30"],
+          "rank_13": ["hc_ret_std_5d", "hc_ret_std_10d"],
+          "rank_14": ["RSQR20"],
+          "rank_15": ["CORR60"]
+        },
+        "feature_count_check": 51,
+        "data_sources": {
+          "alpha158": "data/reference/sp500_5y_alpha158_features_raw.npy (md5: 0a2cd862eb1e94a8b132c12d858591ab; shape (1255, 501, 158))",
+          "hc_features": "loaded via run_step3_plan_z_part_a.load_data_and_features() (hc_mom12m, hc_ret_std_5d, hc_ret_std_10d)"
+        },
+        "slicing_method": "by feature_name; column indices resolved at run-time from data/reference/sp500_5y_alpha158_features_meta.json feature_order"
+      },
+      "paired_design_rationale": "Test decisions.md:19/20 'feature richness threshold' hypothesis: at low-dim (B), MLP ≈ SAGE (decisions.md:19 p=0.679); at high-dim (D=168, decisions.md:20 p=0.005 SAGE > MLP). Universe C (51-dim) is intermediate and tests where the threshold lies on US S&P 500 at 21d horizon."
+    },
+    "folds": {
+      "n_folds": 5,
+      "scheme": "Walk-forward, expanding training window",
+      "fold_dates": [
+        {"id": 0, "train_end": "2023-12-31", "val_end": "2024-03-31", "test_end": "2024-06-30", "desc": "Q2-2024"},
+        {"id": 1, "train_end": "2024-03-31", "val_end": "2024-06-30", "test_end": "2024-09-30", "desc": "Q3-2024"},
+        {"id": 2, "train_end": "2024-06-30", "val_end": "2024-09-30", "test_end": "2024-12-31", "desc": "Q4-2024"},
+        {"id": 3, "train_end": "2024-09-30", "val_end": "2024-12-31", "test_end": "2025-03-31", "desc": "Q1-2025"},
+        {"id": 4, "train_end": "2024-12-31", "val_end": "2025-03-31", "test_end": "2025-06-30", "desc": "Q2-2025 (known regime outlier — LOFO sensitivity required)"}
+      ],
+      "source": "archived/scripts/run_horizon_ablation.py:72-83 WALK_FORWARD_FOLDS (reused unchanged)"
+    },
+    "horizon_days": 21,
+    "horizon_lock": "locked per CLAUDE.md Rule 8 invariants; next-day close-to-close 21d forward return",
+    "label_construction": "z_score = cross-sectional z(excess_return_21d), market-demeaned, day-wise std normalized; reused from run_step3_plan_z_part_a.py:122-128 / run_horizon_ablation.py:181-194",
+
+    "purge_embargo": {
+      "within_fold_purge_days": 21,
+      "between_fold_embargo_clarification": "EXPANDING-WINDOW DESIGN — no between-fold gap required. Fold N+1's training set intentionally INCLUDES fold N's test period; this is by design, not a leak. The v2-era between-fold check `(fold_{N+1}.train_end - 42d) > fold_N.test_end` was conceptually backwards (always false because train_end shifts forward by quarters but test_end of prior fold is later) per Codex C-02; removed per Codex Round D D-02.",
+      "explicit_contract_per_D-02": "Within-fold purge is the PRIMARY leak prevention. For each fold N, drop the last 21 trading days from train AND val splits before extracting features. This guarantees: (a) max(train_label_end_date) < min(val_feature_date); (b) max(val_label_end_date) < min(test_feature_date). Assertion code documented in plan §1.8 — uses trading_dates array, computes last_train_label_end_date = trading_dates[last_train_feat_idx + HORIZON], compares to first_val_feat_date with strict `<`.",
+      "sanity_check_must_be_executable": "run_storya_e1_anchor.py start-of-run block runs the §1.8 plan assertion on actual trading_dates array; with the purge in place the assertion passes with a 1-trading-day gap; verification: removing the purge MUST cause the assertion to FIRE.",
+      "code_assertion_required_in": "run_storya_e1_anchor.py start-of-run sanity block"
+    },
+
+    "winsorization": {
+      "method": "Per-fold p1/p99 train-only winsor on features (NOT labels)",
+      "source": "run_plan_aaa_168_ranking.py per_fold_winsor pattern",
+      "applied_to": "features only, both Universe B and C"
+    },
+
+    "scaling": {
+      "method": "Per-fold StandardScaler fit on train, applied to val + test",
+      "no_cross_fold_contamination": true
+    },
+
+    "model_hparams": {
+      "source_file": "experiments/storya_e1_anchor/hp_grid.json (must be written alongside this prereg)",
+      "GAT_price": {"hidden": 64, "layers": 2, "heads": 4, "dropout": 0.3, "lr": 1e-3, "wd": 1e-4, "epochs": 100, "patience": 15, "optimizer": "Adam"},
+      "SAGE-Mean_price": {"hidden": 64, "layers": 2, "aggr": "mean", "dropout": 0.3, "lr": 1e-3, "wd": 1e-4, "epochs": 100, "patience": 15, "optimizer": "Adam"},
+      "MLP_price": {"hidden": 64, "layers": 2, "dropout": 0.3, "lr": 1e-3, "wd": 1e-4, "epochs": 100, "patience": 15, "optimizer": "Adam"},
+      "LightGBM_price": {"num_leaves": 31, "n_estimators": 100, "learning_rate": 0.05, "min_data_in_leaf": 20, "early_stop_patience": 10, "early_stop_metric": "val_IC"},
+      "source_of_NN_defaults": "archived/scripts/run_horizon_ablation.py PARAMS dict lines 54-64 (production defaults; no novel HP search)",
+      "source_of_LightGBM_defaults": "Microsoft Qlib LGBModel defaults (preserves comparability with experiments/wf5_results.csv baseline)",
+      "no_HP_search": true,
+      "rationale": "Per Codex A-07: any HP variation inflates multi-testing ledger; locking to production defaults eliminates this risk"
+    },
+
+    "cell_allocation": {
+      "universe_B": {
+        "models": 4,
+        "seeds": 10,
+        "folds": 5,
+        "cells": 200
+      },
+      "universe_C": {
+        "models": 4,
+        "seeds": 10,
+        "folds": 5,
+        "cells": 200
+      },
+      "total_cells": 400
+    },
+
+    "cell_id_formula": "cell_id = universe_idx*200 + model_idx*50 + fold_idx*10 + seed_idx (range 0..399, globally unique)",
+
+    "graph": {
+      "type": "single-relation correlation graph (E1 anchor; sector/news edges in E3 and E4-α)",
+      "construction": "rolling 126d window of stock close-to-close returns, Spearman |ρ| > 0.6, monthly snapshot step=21d",
+      "source": "archived/scripts/run_horizon_ablation.py correlation_graph_builder pattern",
+      "last_snapshot_constraint": "≤ end_of_day(t-1) for prediction at day t (PIT compliance)"
+    }
+  },
+
+  "post_processing": {
+    "framework": "Hansen SPA + DM/HLN + block bootstrap + transaction cost ladder (plan §1.4 v3)",
+    "primary_tests": {
+      "hansen_spa": {
+        "library": "arch.bootstrap.SPA",
+        "loss": "-IC per candidate per day t, where candidates are seed-averaged per (model, universe)",
+        "benchmark": "LightGBM_price seed-averaged loss per day per universe",
+        "M_candidates_per_universe": 3,
+        "M_candidates_joint": 6,
+        "M_count_semantics_per_D-04": "M counts NON-baseline candidates only. Per universe: {GAT, SAGE-Mean, MLP} = 3 candidates vs LightGBM benchmark. Joint: 3 candidates × 2 universes = 6 candidates vs pooled LightGBM benchmark. Seeds are AVERAGED per (model, universe, date, fold) BEFORE entering the SPA loss matrix — consistent with DM_HLN seed_aggregation block. Prior v3 draft used M=40/80 (treating each (model, seed) as a candidate) which contradicted seed aggregation; corrected per Codex Round D D-04.",
+        "bootstrap_reps": 10000,
+        "block_size": 21,
+        "headline_pvalue": "p_consistent",
+        "pass_criterion": "p_consistent < 0.05"
+      },
+      "DM_HLN": {
+        "test_family_vs_LGB": ["GAT_price", "SAGE-Mean_price", "MLP_price"],
+        "test_family_vs_MLP": ["GAT_price", "SAGE-Mean_price"],
+        "seed_aggregation": {
+          "LOCKED_per_Codex_C-04": "Average IC across 10 seeds per (model, date, fold) BEFORE forming DM series. Seeds are NOT pooled as independent observations.",
+          "construction": [
+            "Step 1: per (model, seed, fold, date), compute IC_m_s_f_t",
+            "Step 2: per (model, fold, date), seed-average: IC_seed_avg_m_f_t = mean_s(IC_m_s_f_t)",
+            "Step 3: per (model, date), concatenate folds: IC_pooled_m_t = concat_f(IC_seed_avg_m_f_t)",
+            "Step 4: loss for DM: L_m(t) = -IC_pooled_m_t",
+            "Step 5: paired difference: d(t) = L_A(t) - L_B(t)"
+          ],
+          "T_effective": 313,
+          "T_pooled_warning": "If seeds were treated as independent observations (T=3130), HLN small-sample correction would silently assume a longer effective test series. This pathology is eliminated by seed-aggregation BEFORE DM."
+        },
+        "DM_formula": "mean(d_t) / sqrt(NW_HAC_variance(d_t) / T) where T = 313 seed-aggregated days",
+        "NW_lag": "floor(4 × (T/100)^(2/9)) per Newey-West 1994 auto rule = 5",
+        "HLN_correction": "DM × sqrt((T + 1 - 2h + h(h-1)/T) / T) with h=21, T=313, factor≈0.935",
+        "HLN_distribution": "t_{T-1} (NOT N(0,1))",
+        "multiple_testing": "BH-FDR at q=0.05 over combined 5-test family (3 vs LGB + 2 vs MLP); 7 if E5 OPTIONAL Mamba runs",
+        "minimum_detectable_effect_note_per_C-07": "Pre-committed interpretation rule: a non-significant DM result (HLN p > 0.05) is reported as 'inconclusive' unless the bootstrap 95% CI on ΔIC has |upper_bound| < 0.005 (practically negligible threshold). Otherwise paper §Discussion frames as 'unable to detect difference at our sample size' NOT 'no difference exists'."
+      },
+      "block_bootstrap_CI": {
+        "library": "reuse run_plan_aaa_168_ranking.py stationary_bootstrap_ci function (Künsch 1989 fixed-length)",
+        "block_len": 21,
+        "n_boot": 5000,
+        "confidence": 0.95
+      },
+      "transaction_cost_ladder": {
+        "cost_levels_bps": [0, 5, 10, 15, 20, 30],
+        "cost_semantics_LOCKED_per_Codex_C-05": "ONE-WAY per dollar traded (industry standard); round-trip cost is 2× listed value",
+        "metric": "Net Sharpe per cost level",
+        "position_construction_LOCKED_per_C-05": {
+          "weights": "EQUAL-WEIGHT (not score-weighted): position_i = +1/K if rank in top K, -1/K if bottom K, 0 otherwise",
+          "K": "floor(0.10 × n_valid_stocks_at_t)",
+          "dollar_neutral": "sum_i(position_i) = 0",
+          "gross_exposure": "sum_i(|position_i|) = 2 (200%)",
+          "rebalance_period_days": 21,
+          "overlap": "non-overlapping (each fold yields 3-4 rebalance periods per horizon_ablation_results.csv n_periods column)"
+        },
+        "turnover_definition_LOCKED_per_D-05": {
+          "primary": "L1-norm: turnover_L1(t) = sum_i(|position_i(t) - position_i(t-1)|); counts BOTH entries and exits; at full rotation = 4 (long side 2 + short side 2)",
+          "historical_alternative_in_existing_code": "archived/scripts/run_horizon_ablation.py uses one-side definition: turnover_oneside(t) = (1 - |top_idx ∩ prev_long|/K) + (1 - |bot_idx ∩ prev_short|/K); counts ENTRIES only; at full rotation = 2; empirical mean from horizon_ablation_results.csv (horizon=21) is 1.77 → 88% of names rotate per period",
+          "equivalence": "turnover_L1 = 2 × turnover_oneside",
+          "cost_formula_LOCKED": "cost_per_period(t, c_bps) = turnover_L1(t) × c_bps × 1e-4 (no extra ×2 since L1 already counts both legs)",
+          "implementation_warning": "If reusing existing horizon_ablation Sharpe_net, either (a) recompute with turnover_L1 = 2 × existing_turnover, or (b) keep existing turnover_oneside but use cost = turnover_oneside × (2×c_bps) × 1e-4 to match the locked spec arithmetically. Prior v3 draft said 'turnover ≈ 2 at full rotation' which understated cost by ½; corrected per Codex Round D D-05."
+        },
+        "net_period_return_formula": "gross_period_return(t) - turnover_L1(t) × c_bps × 1e-4",
+        "Net_Sharpe_formula": "mean(net_period_return) / std(net_period_return) × sqrt(252/21)  -- annualization for 21d non-overlapping periods, NOT sqrt(252)",
+        "effective_sample_size_LOCKED_per_D-05": {
+          "value": 17,
+          "derivation": "Sum of per-fold n_periods at horizon=21 from experiments/horizon_ablation_results.csv: fold 0 = 3, fold 1 = 4, fold 2 = 4, fold 3 = 3, fold 4 = 3 → total 17 periods per (model, universe, cost) configuration",
+          "prior_draft_error": "v3 pre-D-05 said '5 folds × ~3 periods = 15'; underestimated; corrected per Codex Round D D-05 with empirical verification against CSV"
+        },
+        "uncertainty_reporting": "Report Net Sharpe as MEAN ± block-bootstrap CI (block_size=1 since 21d periods are non-overlapping, n_boot=5000); mark as SECONDARY metric due to small N=17; primary ranking comparison remains pooled per-day IC (T=313)",
+        "extension_of": "existing Sharpe_net column in archived/scripts/run_horizon_ablation.py — VERIFY equal-weight + L1-norm-turnover OR matched-arithmetic alternative before reuse (v3 spec is equal-weight + L1-norm; v2 plan formula was score-weighted, mismatch corrected per C-05; existing code uses one-side turnover, conversion documented per D-05)"
+      }
+    },
+    "dropped_post_processing_from_v2": [
+      "DSR (Deflated Sharpe Ratio): dropped per H博士; industry-not-academic; Hansen SPA is academic-standard equivalent",
+      "PBO (Probability of Backtest Overfitting): dropped per H博士; v2 design split seeds not time (Codex A-03)",
+      "Romano-Wolf StepM: dropped per H博士; overkill given SPA + BH-FDR coverage",
+      "ONC clustering of N_eff: dropped (was input to DSR)",
+      "PIMP B=100+: dropped (excessive compute, qualitative result unchanged)"
+    ]
+  },
+
+  "outputs": {
+    "results_csv": "experiments/storya_e1_anchor/results.csv",
+    "results_schema": ["universe", "model", "seed", "fold", "IC", "IC_std", "n_days", "Sharpe_gross", "Sharpe_net_5bps", "Sharpe_net_10bps", "Sharpe_net_15bps", "Sharpe_net_20bps", "Sharpe_net_30bps", "MaxDD", "mean_turnover", "n_periods", "wall_time_sec", "converged_flag", "best_val_IC", "epochs_run", "git_commit"],
+    "manifest_csv": "experiments/storya_e1_anchor/manifest.csv",
+    "manifest_schema": ["cell_id", "universe", "model", "seed", "fold", "status", "start_ts", "end_ts", "git_commit", "results_row_idx"],
+    "per_day_ic_dir": "experiments/storya_e1_anchor/per_day_ic/",
+    "per_day_ic_filename": "{universe}_{model}_s{seed}_f{fold}.npy",
+    "smoke_benchmark_csv": "experiments/storya_e1_anchor/smoke_benchmark.csv",
+    "hp_grid_json": "experiments/storya_e1_anchor/hp_grid.json (must mirror model_hparams in this prereg)"
+  },
+
+  "checkpoint_resume": {
+    "mandatory": true,
+    "rationale": "Colab SSH unstable per H博士; disconnects every ~2h; manifest-based atomic resume saves ≤1 cell of work on disconnect",
+    "implementation": "Atomic append after each cell completion; --resume flag default ON; SIGTERM handler graceful flush"
+  },
+
+  "what_is_FORBIDDEN_under_this_v3_prereg": [
+    "Any adaptive / observation-based seed extension (v1 forbidden; v3 reaffirms)",
+    "Changing n_seeds from 10 after pilot results seen",
+    "Adding LSTM back to E1 model list without filing v4 prereg + H博士 approval + Codex Round D review",
+    "Cherry-picking seeds by test IC values (data snooping)",
+    "Reporting top-K-by-test-IC as headline (cherry-pick red line per plan Decision Log)",
+    "Switching to different fold split or different feature universes after runs begin",
+    "Hyperparameter search beyond the locked grid in hp_grid.json",
+    "Adding extra models mid-run (e.g. inserting Transformer between models)",
+    "Skipping smoke benchmark (plan §1.10 gating milestone)",
+    "Running E1 cells without explicit purge/embargo per §1.8 v3 contract",
+    "Computing post-hoc statistics outside the locked SPA + DM/HLN + block bootstrap + cost ladder framework (e.g. resurrecting DSR or PBO)"
+  ],
+
+  "allowed_under_this_v3_prereg": [
+    "Reporting full distribution mean ± std + 95% block-bootstrap CI as headline (plan §1.1 reporting commitments)",
+    "Reporting top-10 by VAL IC ensemble test predictions as Supplementary 'Operational Deployment' table (defensible per ML standard, NOT cherry-pick)",
+    "Excluding seeds that failed to converge (best val IC < -0.05) as 'failed cells'; count and report all exclusions per-model per-universe",
+    "Hansen SPA + DM/HLN + block bootstrap + transaction cost ladder analysis post-processing per plan §1.4",
+    "E3 news-edge runs (plan §1.2) using same canonical 10 seeds + same hparams + same folds; α3 of E4-α references E3 outputs",
+    "E4-α clean edge ablation (plan §1.3) using same canonical 10 seeds + same hparams + same folds; α1/α3 reuse from E1-B and E3 respectively",
+    "Optional E5 Mamba ablation (plan §1.5) GO/SKIP gated by remaining budget after E1+E3+E4-α (decision based on time, NOT performance)"
+  ],
+
+  "failure_exclusion_rule": {
+    "criterion": "best validation IC < -0.05 over patience window",
+    "rationale": "Same threshold as Plan AAA cell_id=28 handling; excludes obvious training failures, not low-IC results",
+    "must_be_reported": "Per-model per-universe count of excluded cells disclosed in paper Table 1; if exclusion rate > 20% for any (model, universe) cell, paper §Discussion must address"
+  },
+
+  "amendment_rule": "Any change to this v3 prereg requires (a) explicit H博士 approval BEFORE the change, (b) prereg_v4.json filed with explicit diff from v3, (c) Codex Round D review on the amended plan, (d) the change reason logged in progress.md naming the prereg version that produced any subsequent results.",
+
+  "v3_simplification_summary": {
+    "design_changes_from_v2": {
+      "models": "5 (including LSTM, Mamba-SAGE as core) → 4 (drop LSTM; Mamba-SAGE moved to OPTIONAL E5 separate prereg)",
+      "seeds_per_model": "Tiered 100/100/30/30/30 → uniform 10 canonical (no extension)",
+      "universes": "Universe B only → Universe B + C paired anchor",
+      "total_cells": "1450 → 400",
+      "post_processing_primary": "DSR + PBO + BH-FDR → Hansen SPA + DM/HLN + BH-FDR",
+      "cost_analysis": "single Sharpe_net → 6-level transaction cost ladder",
+      "output_dir": "storya_multiseed → storya_e1_anchor (clearer naming)"
+    },
+    "what_v3_preserves_from_v2": [
+      "Pre-committed fixed sample sizes (no observation-based extension)",
+      "Cherry-pick red line: no test-IC cherry-pick anywhere; full distribution reporting",
+      "Failure exclusion rule (val IC < -0.05)",
+      "Block bootstrap CI as supporting evidence",
+      "BH-FDR multiple-testing correction over pairwise family",
+      "Codex Round A finding dispositions (5 FIXED + 4 STILL-OPEN + 2 ACCEPTED-AS-CONCERN)",
+      "Checkpoint/resume requirement for SSH instability",
+      "Per-day IC array saving for downstream block bootstrap + DM/HLN"
+    ],
+    "why_v3_simpler_is_better": "v2 was complex due to Codex Round A pressure (adaptive design + DSR + PBO + multi-testing ledger). H博士 evening review noted: (a) cherry-pick risk already eliminated by reporting full distribution + SPA, no need for DSR (industry-only) or PBO (wrong axis per A-03); (b) tiered 100/100/30/30/30 was overkill (10 seeds gives SE ≈ 0.0033 which is sufficient for headline IC reporting); (c) LSTM cannot align cleanly with rolling-stats Universe B/C; (d) compute reduction (1450 → 400 cells) frees budget for E3 news-edge + E4-α clean ablation + E6 SPA/DM/cost post-processing. v3 is methodologically more defensible AND faster AND simpler to implement."
+  },
+
+  "git_commit_at_creation": "TODO_fill_with_HEAD_sha_after_commit"
+}

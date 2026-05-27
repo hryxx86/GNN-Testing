@@ -8,14 +8,48 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data files (all in data/)
+# Data files (all in data/ — lives in Google Drive, never in GitHub)
 data/
 
 # Output
 plots/
 
-# Claude Code local settings
-.claude/
+# Experiment outputs live in Google Drive, NOT GitHub.
+# Whitelist only small text/config artifacts that aid reproducibility.
+experiments/**
+!experiments/**/
+!experiments/**/README.md
+!experiments/**/prereg.json
+!experiments/**/hp_grid.json
+!experiments/**/news_edge_source_schema.md
+!experiments/README.md
+
+# Artifacts: logs + large run outputs live in Google Drive.
+# Whitelist Codex / reviewer text reports — they document the review trail.
+artifacts/**
+!artifacts/**/
+!artifacts/README.md
+!artifacts/reviews/
+!artifacts/reviews/**
+
+# Claude Code — whitelist shareable team infrastructure, ignore everything else by default.
+# Previously (pre-2026-04-23) blanket-ignored `.claude/`, which broke Rule 9 infra shipping.
+# Intermediate fix (2026-04-23 earlier) only blocked settings files, which silently tracked
+# any future Claude-Code-generated cache / log / session state.
+# Final fix: deny-all-then-allow pattern — safe against future Claude Code files.
+.claude/*
+!.claude/rules/
+!.claude/rules/**
+!.claude/commands/
+!.claude/commands/**
+!.claude/agents/
+!.claude/agents/**
 
 # Colab run results
 colab result/
+
+# API keys (NEVER commit)
+openrouter_key.txt
+api_key*.txt
+.env
+*.key

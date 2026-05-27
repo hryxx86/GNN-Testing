@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 # One-line launcher for Colab GPU training jobs via SSH.
 #
+# IMPORTANT (2026-05-26 update): Code lives on GitHub; DATA lives in Google Drive.
+# The project root on Colab is the Drive mount, NOT a fresh GitHub clone:
+#
+#   /content/drive/MyDrive/GNN测试   ← project root (Drive mount, also a git working tree)
+#
 # Usage (run from project root on Colab side):
 #   bash scripts/colab_launch.sh <run_script.py> [run_args...]
 #
 # Examples:
+#   bash scripts/colab_launch.sh run_storya_e1_anchor.py
 #   bash scripts/colab_launch.sh run_tier1_phase_a_wandb.py --mode smoke
-#   bash scripts/colab_launch.sh run_tier1_phase_a_wandb.py --mode tier1b
 #
-# Or remote-trigger from local Mac:
+# Or remote-trigger from local Mac (cloudflared SSH):
 #   sshpass -p "GNNTEST" ssh <host>.trycloudflare.com \
-#     "cd ~/GNN-Testing && git pull && bash scripts/colab_launch.sh run_tier1_phase_a_wandb.py --mode tier1b"
+#     "cd '/content/drive/MyDrive/GNN测试' && git pull && \
+#      bash scripts/colab_launch.sh run_storya_e1_anchor.py"
 #
 # What it does:
+#   0. Sanity-checks cwd is the project root (must contain data/reference/sp500_5y_prices.csv)
 #   1. Verifies tmux + python + wandb are available (installs if missing)
 #   2. Optionally logs into wandb if WANDB_API_KEY is set in environment
 #   3. Creates artifacts/colab_runs/ log directory
@@ -25,13 +32,27 @@
 
 set -e
 
+# ─── Step 0: cwd sanity check ───
+# Fail fast if invoked from the wrong directory (e.g. a bare GitHub clone in ~ that has no data/).
+SENTINEL="data/reference/sp500_5y_prices.csv"
+if [[ ! -f "$SENTINEL" ]]; then
+    echo "ERROR: cwd=$PWD does not look like the GNN-Testing project root."
+    echo "       Missing sentinel: $SENTINEL"
+    echo ""
+    echo "       The project root (with data/) lives in Google Drive on Colab:"
+    echo "           cd '/content/drive/MyDrive/GNN测试'"
+    echo ""
+    echo "       Then re-run: bash scripts/colab_launch.sh <run_script.py> [args...]"
+    exit 2
+fi
+
 RUN_SCRIPT="${1:-}"
 shift || true
 RUN_ARGS="$@"
 
 if [[ -z "$RUN_SCRIPT" ]]; then
     echo "Usage: bash $0 <run_script.py> [run_args...]"
-    echo "Example: bash $0 run_tier1_phase_a_wandb.py --mode smoke"
+    echo "Example: bash $0 run_storya_e1_anchor.py"
     exit 1
 fi
 
