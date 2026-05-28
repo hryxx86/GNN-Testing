@@ -4658,6 +4658,54 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
+## 2026-05-27-d: Honesty pass — numerical corrections to analysis.md 2026-05-27-a + plan.md Decision Log 2026-05-27 rows + record completeness audit
+
+> **Trigger**: H博士 new-conversation challenge "你有记录吗，我开新对话记忆还停留在E1没跑完。多次检查是否如实记录实验结果" — initiated a full audit of recorded-vs-actual experimental outputs per Rule 9 诚信要求 #1 / #5 ("不准捏造" / "不准偷懒验证").
+
+### Audit method
+
+Cross-checked every numeric claim in `docs/analysis.md` 2026-05-27-a Q1/Q3 (E1+E6+LOFO) and 2026-05-27-c Q2 (edge ablation) against the source CSVs in `artifacts/storya_e6_dm_spa/` and `artifacts/storya_e6_edge_ablation/`. Also checked file-path citations against `ls artifacts/reviews/`.
+
+### Findings
+
+| Item | Severity | Status |
+|------|----------|--------|
+| `2026-05-27_codex_code_e1anchor_A.md` cited in analysis.md but file does NOT exist (real file: `2026-05-26_codex_code_A.md` + `_B.md`) | Rule 9 #1 violation | FIXED |
+| SPA p_consistent C / JOINT reported as 0.589 / 0.281 in analysis.md Q1 + Q3 item 1; actual `spa_results.csv` values are 0.384 / 0.136 (substantive conclusion — neither rejects at 5% — UNCHANGED) | Rule 9 #5 violation | FIXED |
+| 5 of 8 bootstrap_ci rows in analysis.md Q1 IC table off by ±0.001-±0.003 from `bootstrap_ci.csv` (does NOT change "CI excludes 0" judgment for any row) | minor mis-rounding | FIXED |
+| plan.md Decision Log had NO 2026-05-27 entries (missing: Plan AAA T-1 verdict A, HATS GO, paper-writing strategy, ledger expansion, E3/E4 edge ablation completion) | Rule 5 / docs.md §7 Sync Matrix violation | FIXED |
+
+### Verified accurate (no corrections needed)
+
+- LOFO IC table (8 rows, drop-f4 + full): all values match `lofo_diagnostic.csv` precisely
+- LOFO Sharpe @10bps table (8 rows × 2 columns): all values match `lofo_diagnostic.csv` precisely
+- Edge ablation DM/HLN/BH-FDR table (5 pairs × 3 regimes = 15 rows): all values match `edge_pairs_dm.csv` precisely
+- Edge ablation bootstrap CI table (15 rows): all values match `edge_bootstrap_ci.csv` precisely
+- Per-cell outlier flagging (Univ C GAT cid=240 Sharpe=75.0): matches `per_cell_distribution.csv` precisely
+- All E6 derived artifacts (SPA, DM/HLN, LOFO, edge ablation, cost ladder, multi-testing ledger): internally consistent with cell_id range 0-399 + 50 cells per (univ, model) — confirms full E1 400-cell run DID happen on Colab/Drive
+
+### Record-completeness status (post fix)
+
+| File class | Status |
+|------------|--------|
+| `progress.md` 2026-05-26-a..k + 2026-05-27-a/b/c/d | 12 entries complete |
+| `docs/analysis.md` 2026-05-27-a + 2026-05-27-c | 2 entries complete (per Rule 5 Quad-Doc: analysis updates only when experiments produce results, no -b needed) |
+| `plan.md` Decision Log 2026-05-27 rows | 5 new rows added (Plan AAA T-1 / HATS / paper strategy / ledger / E3-E4 closure) |
+| `artifacts/reviews/` | 8 files for 2026-05-26..27: 5 plan rounds (A/B/C/D/E + finance-gnn fallback Round B) + 6 code rounds (e1_anchor A/B + e3build/e3run/e4alpha/e6/e6edge) + 2 results rounds (e1e6_A-bis + e3e4edge_A) |
+| `artifacts/storya_e6_dm_spa/` | 11 files: spa_results / dm_hln / bootstrap_ci / cost_ladder / multi_testing_ledger / lofo_diagnostic / per_fold_table / per_cell_distribution / e1_three_column_summary / summary.md / lofo_summary.md |
+| `artifacts/storya_e6_edge_ablation/` | 4 files: edge_pairs_dm / edge_bootstrap_ci / edge_cost_ladder / edge_summary.md |
+| `artifacts/plan_aaa_t1_diagnostic/` | 3 files: group_ranking_comparison.csv / proxy_ic_per_feature.csv / summary.md |
+
+### Important reality-check note
+
+Local `experiments/storya_e1_anchor/results.csv` contains only **4 smoke cells** (cell_id 0/50/100/150 all fold=0 seed=86) — this is by `.gitignore` design (`experiments/**` ignored, only README/prereg/hp_grid/schema whitelisted; large `results.csv` + `per_day_ic/*.npy` live on Google Drive `/content/drive/MyDrive/GNN测试/`). The full 400-cell results.csv physically exists on Drive and was the basis for all E6 derived artifacts — proven by `per_cell_distribution.csv` referencing cell_id up to 399 and `lofo_diagnostic.csv` reporting n_cells=50 per (univ, model). H博士's "E1 not finished" memory in the new conversation reflects pre-completion state, not current reality.
+
+### Tri-doc cross-reference
+
+→ progress: 2026-05-27-d | plan: 2026-05-27 (5 Decision Log rows added) | analysis: 2026-05-27-a (corrected in-place + correction notes added)
+
+---
+
 ## 2026-05-27-c: E3/E4 edge ablation E6 post-process + 2 Codex Touchpoints + 3-column E1 paper Table
 
 ### E1 paper Table 2 extension — 3-column bootstrap CIs (full / LOFO-4 / Fold-4-only)
