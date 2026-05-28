@@ -224,18 +224,25 @@ next_actions:
 - **Tables**: ST7 (limitations row 5+7)
 - **Narrative**: N3 (Plan AAA T-1 leak provenance)
 
-### §4.6 Horizon ablation — 360 cells, 2026-04-XX
+### §4.6 Horizon ablation — 360 data rows, 2026-04-XX  (VERIFIED 2026-05-27)
 
-- **Scope**: {SAGE-Mean, MLP, GAT, LSTM} × {`_price` 9-dim, `_all` 768+9-dim} × {1, 5, 10, 21, 42, 63}d horizon × 3 seeds × 5 folds ≈ **360 rows** (note: some cells skipped due to MPS constraints; check actual count from CSV `wc -l`)
-- **Status**: COMPLETE; results in `experiments/horizon_ablation_results.csv`
+- **Scope**: 4 models {SAGE-Mean_price, SAGE-Mean_all, MLP_price, MLP_all} × 6 horizons {1, 5, 10, 21, 42, 63}d × 3 seeds {42, 123, 456} × 5 folds = **360 data rows + 1 header**. Note: NO GAT, NO LSTM (despite original plan); actual experiment is 4-model 6-horizon. Plan/memory had drifted; correcting here.
+- **Status**: COMPLETE; results in `experiments/horizon_ablation_results.csv` (361 lines)
 - **Source files**:
-  - `experiments/horizon_ablation_results.csv` (~360 rows)
-  - `experiments/horizon_preds/*.npy` (per-cell prediction tensors)
+  - `experiments/horizon_ablation_results.csv` (360 data rows; columns: model, seed, fold, horizon, test_period, IC, IC_std, n_days, Sharpe_gross, Sharpe_net, n_periods, mean_turnover)
+  - `experiments/horizon_preds/*.npy` (per-cell prediction tensors, 60 files)
   - `archived/scripts/run_horizon_ablation.py` (original runner)
-- **Headline result** (provenance: per `docs/analysis.md` 2026-04-27-b prior entries and plan §Story A context): MLP_price 21d IC=+0.037, MLP_all 21d IC=-0.008 → news-feature dilution ΔIC=-0.045 at 21d (the primary motivation for news-as-edge in §4.2); SAGE-Mean_price 21d IC=+0.027 ≤ MLP_price 21d. **VERIFY**: re-extract these values from the actual CSV at script-writing time (above are quoted from plan/memory, not freshly read).
-- **Figures**: F7 (horizon × architecture heatmap), F8 (news dilution illustration), S7-S8 (cross-reference)
-- **Tables**: ST3 (full 24-row table)
-- **Narrative**: N2 (horizon conditional), N3 (news dilution)
+- **Headline result** (VERIFIED 2026-05-27 via pandas group-by on actual CSV):
+  - **21d horizon IC by model** (n=15 per cell = 5 folds × 3 seeds):
+    - **MLP_price: +0.0374 ± 0.0646** (15 cells)
+    - **MLP_all: −0.0078 ± 0.0298** (15 cells)
+    - **SAGE-Mean_price: +0.0269 ± 0.0417** (15 cells)
+    - **SAGE-Mean_all: +0.0111 ± 0.0296** (15 cells)
+  - **News-feature dilution at 21d for MLP: ΔIC = +0.0374 − (−0.0078) = −0.0452** (matches plan §1.2 motivation exactly)
+  - News-feature dilution at 21d for SAGE-Mean: ΔIC = +0.0269 − 0.0111 = −0.0158 (less catastrophic than MLP, but same sign)
+- **Figures**: F7 (horizon × architecture heatmap, 6×4 cells), F8 (news dilution forest plot — MLP_all vs MLP_price and SAGE-Mean_all vs SAGE-Mean_price across all horizons), S7-S8 (cross-reference)
+- **Tables**: ST3 (full 24-row {model × horizon} aggregated)
+- **Narrative**: N2 (horizon conditional — peak IC at H=1 for SAGE, H=21 for MLP_price; opposite directions by architecture), N3 (news dilution catastrophic for MLP at H≥21)
 
 ### §4.7 Architecture comparison (Week 1-2) — ~150 cells, 2026-03-XX
 
@@ -247,14 +254,14 @@ next_actions:
 - **Tables**: optional; mostly subsumed by E1
 - **Narrative**: N1 (architectural robustness of "GNN-all-features doesn't help"), N3
 
-### §4.8 Graph ablation — 28+ cells, 2026-03-XX
+### §4.8 Graph ablation — 27 data rows, 2026-03-XX  (VERIFIED 2026-05-27)
 
-- **Scope**: {correlation-0.6, correlation-0.7, +sector, +sector+industry, no-graph, +news, all-edges} × seeds = ~28 rows
-- **Status**: COMPLETE; results in `experiments/graph_ablation_results.csv`
-- **Source files**: `experiments/graph_ablation_results.csv` (28 rows; verify)
-- **Headline result** (TBD — re-read CSV): "current" config (corr 0.6 + dense sector) ≈ "no graph" baseline IC ~0.039 ± 0.004; multi-edge slight underperformance (foreshadows E4-α negative bundle finding)
-- **Figures**: S9 (cross-reference to E4-α)
-- **Tables**: optional supplementary
+- **Scope**: 8 configs (verified: `0_true_mlp` true-MLP baseline, `current` corr-0.6+dense-sector, +sector, +industry, no-graph, +news variants, all-edges) × 3 seeds {42,123,456} = **27 data rows + 1 header**
+- **Status**: COMPLETE; results in `experiments/graph_ablation_results.csv` (28 lines incl. header)
+- **Source files**: `experiments/graph_ablation_results.csv` (columns: `config, desc, seed, edges, IC, IC_std, Sharpe_NO, n_periods`)
+- **Headline result** (VERIFIED): config=`0_true_mlp` (nn.Linear true MLP baseline) IC mean across 3 seeds = +0.0413, std = 0.0098 (source: read at 2026-05-27); multi-edge configs trend ≈ baseline or below (foreshadows E4-α negative bundle finding). **IMPORTANT**: this experiment includes the `0_true_mlp` row which is THE clearest "no graph" baseline — should be highlighted in F9/S9.
+- **Figures**: S9 (cross-reference to E4-α with `0_true_mlp` baseline overlay)
+- **Tables**: optional supplementary; could feed ST8 (new — graph_ablation full)
 - **Narrative**: N2 (edge-type conditional, pre-Story-A evidence), N3 (multi-edge collapse)
 
 ### §4.9 Week 1 5-fold walk-forward baseline (wf5) — 90 cells, 2026-03-XX
@@ -397,6 +404,80 @@ next_actions:
   - S+3 (optional): edge-relation attention weights heatmap if HATS attention layer instrumented
 - **Tables (confirmed)**: T1 extension row "HATS-3R-adapt (10s × 5f, Univ B)" + ST6 extension paired DM/HLN row "HATS-3R-adapt vs SAGE-Mean_corr-only"
 - **Narrative**: N1 (4th narrative element — strengthens "honest baseline under strict eval" by adapting a published-GNN family for S&P 500 cross-sectional ranking; narrowed claim_scope avoids overreach into Template 1 false-equivalence territory)
+
+### §4.19 Step 3 Feature Expansion (Phase 5) — 135 rows, 2026-04-XX  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: Feature-expansion sub-experiment (separate from §4.10 Plan Z subset analysis); 135 data rows
+- **Status**: COMPLETE; results in `experiments/step3_feature_expansion_results.csv` (136 lines incl. header)
+- **Source files**: `experiments/step3_feature_expansion_results.csv`
+- **Headline result** (TBD — script-time verification needed)
+- **Figures**: ancillary; cross-reference only in S6 (Plan Z subset SPA tree)
+- **Tables**: optional supplementary; could feed an extended ST5 row
+- **Narrative**: N2 (additional feature-universe conditional data point)
+
+### §4.20 Step 0 Permutation v2 (Phase 5 baseline-null) — 16K shuffles, 2026-04-XX  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: Per Rule 10 "Step 0 Reruns DONE: ... permutation v2 (16K shuffles)"; established IC null distribution for SAGE-Mean × {_price, _all} × 3 seeds {42, 123, 456}
+- **Status**: COMPLETE
+- **Source files**:
+  - `experiments/permutation_v2_results.csv` (16 rows summary)
+  - `experiments/perm_v2_ics_*.npy` (12 distribution files: 4 model×feature combos × 3 seeds = 12 files of ~16000 shuffles each, total 16K × 12 ≈ 192K samples)
+  - `experiments/permutation_test_results.csv` + `permutation_test_ics.npy` (v1 baseline, predecessor)
+- **Headline result** (TBD — read CSV at script time); per Rule 10 spirit, this established that "GNN-on-all-features IC is statistically indistinguishable from random permutation"
+- **Figures**: methodology box; could feed S10 (cross-reference) or new figure S_perm
+- **Tables**: ST_perm (optional new)
+- **Narrative**: N1 (baseline-null calibration) + N4 (permutation methodology precedent)
+
+### §4.21 Step 0 SEC Gate 1 (Lazy Prices) — 22 rows, 2026-04-XX  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: Per Rule 10 "SEC Gate 1 STOP: Layer 1 Lazy Prices 对 NN 有害; Layer 2/3 CANCELLED"; tested SEC Lazy Prices layer-1 features on NN
+- **Status**: COMPLETE; Layer 2/3 CANCELLED per gate decision
+- **Source files**: `experiments/gate1_results.csv` (23 lines incl. header)
+- **Headline result** (TBD — read CSV at script time): negative for NN; led to gate STOP decision
+- **Figures**: optional supplementary S_gate1 (Lazy Prices SEC failure illustration)
+- **Tables**: optional supplementary
+- **Narrative**: N3 (additional failure mode: SEC text feature fails for NN — pre-Story-A evidence aligning with "GNN doesn't help" theme broadened beyond graph alone)
+
+### §4.22 Option B LightGBM Feature Importance (hand-curated rank) — top-30 features, 2026-05-XX  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: LightGBM permutation feature importance with manual curation to top-30 list; basis for Universe C composition selection
+- **Status**: COMPLETE
+- **Source files**: `artifacts/option_b_lgbm_importance/{hand_curated_ranks.csv, importance_full.csv, summary.md, top_30.csv}`
+- **Headline result** (TBD — read summary.md at script time); cross-referenced with Plan AAA top-15 in Universe C composition (§4.1 E1 anchor Universe C list)
+- **Figures**: optional supplementary S_lgb_imp (top-30 LGB importance ranked bar)
+- **Tables**: optional supplementary
+- **Narrative**: N2 (feature-universe conditional provenance — explains how Universe C top-15 groups were chosen; provides external LGB-importance corroboration of Plan AAA's permutation-Δ-IC-based group selection)
+
+### §4.23 Phase 5 Audits (feature audit + sentinel leakage test) — 2026-04-XX  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: (1) Phase 5 features audit — every Alpha158 column inspected for T-1 contract compliance; (2) sentinel leakage test — synthetic "future" sentinel feature injected to detect leakage in pipeline
+- **Status**: COMPLETE; methodology validation step that pre-dates the Plan AAA T-1 diagnostic (§4.5)
+- **Source files**: `artifacts/audits/{phase5_features_audit.md, sentinel_leakage_test.md}`
+- **Headline result** (TBD — read summary docs at script time)
+- **Figures**: methodology box; no new figure unless sentinel test result needs visualization
+- **Tables**: optional supplementary
+- **Narrative**: N4 (methodology pre-validation — supports Story A's claim "we have a leakage-aware pipeline" by citing audit + sentinel test). **Important for §Limitations** — explains the chain of evidence around the Plan AAA T-1 leak: this audit DID NOT catch it because audit was on Phase 5 features (different from Alpha158); the leak was discovered LATER via Plan AAA T-1 diagnostic (§4.5).
+
+### §4.24 Loss Horserace methodology sub-analyses — multiple bootstrap / mixed-effects / LOFO artifacts, 2026-04-XX  (DISCOVERED 2026-05-27 self-audit; partially covered in §4.12)
+
+- **Scope**: Statistical methodology applied to loss horserace data, demonstrating the cluster-bootstrap + mixed-effects + LOFO + block-bootstrap framework that Story A v3 E6 inherits
+- **Status**: COMPLETE; outputs in `experiments/loss_horserace/` sub-CSVs
+- **Source files**:
+  - `experiments/loss_horserace/block_bootstrap_sharpe.csv` — block bootstrap on Sharpe
+  - `experiments/loss_horserace/cluster_bootstrap_ic.csv` + `cluster_bootstrap_pred_cs_std.csv` — cluster bootstrap (cluster = fold) on IC and pred CS std
+  - `experiments/loss_horserace/mixed_effects_ic.csv` + `mixed_effects_pred_cs_std.csv` — mixed-effects regression (random intercepts per fold)
+  - `experiments/loss_horserace/fold4_lofo_stats.csv` — Fold 4 LOFO statistics
+  - `experiments/loss_horserace/per_cell_stats.csv` + `analysis_summary.csv` — per-cell + summary
+- **Headline result** (per Decision Log 2026-05-20 + Rule 10): 0/36 BH-FDR rejected; ListMLE Fold-4 collapse; mixed-effects validates the Fold-4 random-intercept dominance
+- **Figures**: S_loss_methodology (optional: visualization of mixed-effects vs naive aggregation showing how methodology choice changes conclusion)
+- **Tables**: optional supplementary (mostly subsumed by §4.12's main tables)
+- **Narrative**: N4 (methodology lineage — Story A v3 E6's LOFO + bootstrap + mixed-effects-equivalent (NW-HAC paired tests) pattern comes from this pre-work). Should be CITED in paper §3 Methodology as "the framework was first applied to Loss Horserace (Decision Log 2026-05-20) and refined for Story A v3 E1/E3/E4/E6 (this work)."
+
+### §4.25 (Deprecated artifact note) storya_multiseed/ — SUPERSEDED, do not include in paper  (DISCOVERED 2026-05-27 self-audit)
+
+- **Scope**: `experiments/storya_multiseed/prereg.json` ONLY — superseded design v2 pre-registration; replaced by v3 storya_e1_anchor pre-reg (§4.1) per Codex Round D D-01 fix series
+- **Status**: DEPRECATED; do NOT include in paper
+- **Action**: leave on disk for audit trail; in §Limitations or §Methodology, do NOT cite; if paper reviewer asks "did you change pre-registration", paper response: "yes — pre-reg v3 supersedes earlier drafts per Codex Touchpoint 1 Round A-D iterations recorded in artifacts/reviews/ commits 5bef3b9..8149fab"
 
 ---
 
@@ -591,3 +672,130 @@ Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
 - Rule 9 Touchpoint 1 (Plan Review) for this paper-figure-plan: OPTIONAL (this is a derivative work plan; Codex review of `run_storya_e1_anchor.py` + the v3 plan already passed Round E)
 - Rule 9 Touchpoint 2 (Code Review): WILL FIRE for `analyze_storya_results.py` or per-module `paper_figs/fig_*.py` once written (per H博士 directive)
 - Rule 9 Touchpoint 3 (Results Review): already DONE for E1+E6 + E3/E4 — review files at `artifacts/reviews/2026-05-27_codex_results_*.md`
+
+---
+
+## §10. Skill Chain Workflow — paper production pipeline
+
+> **Goal** (per H博士 2026-05-27 directive "建立skill的联动"): orchestrate the 13 installed Claude Code skills into a single coherent paper-production pipeline. Each stage produces outputs consumed by the next stage; each transition has an explicit hand-off + verification checkpoint.
+
+### §10.1 7-stage pipeline
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 1 — LITERATURE & SETUP                                               │
+│ literature-review → citation-management → venue-templates                  │
+│ Output: refs.bib + venue-template.cls + 16-paper related-work matrix.md   │
+│ Verification: scripts/verify_docs_provenance.py on related-work matrix    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 2 — FIGURE / SCHEMATIC PRODUCTION                                    │
+│ matplotlib (data viz) + scientific-schematics (F1 arch diagram, S15 Gantt) │
+│ Style override: mpl_sizes 'ICML' preset + 5-line rcparams_storya.py       │
+│ Output: figures/*.pdf + figures/*.png (28 figs upper bound)                │
+│ Verification: each fig script's header comment block cross-checks source  │
+│              CSV value to ≥3 decimals (per §7.4)                          │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 3 — DRAFT WRITING (IMRAD)                                            │
+│ scientific-writing (primary) + nature-writing (secondary cross-check)     │
+│ Two-stage: outline (using research-lookup) → flowing prose                │
+│ Output: docs/storya_paper_draft_v1.md (full 7-section IMRAD)              │
+│ Verification: scripts/verify_docs_provenance.py on every numeric claim    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 4 — POLISH                                                           │
+│ nature-polishing (prose) + peer-review (self-review simulation)            │
+│ Output: docs/storya_paper_draft_v2.md (polished)                          │
+│ Verification: peer-review skill produces structured findings (CRITICAL/   │
+│              MAJOR/CONCERN per .claude/rules/docs.md §6 schema)           │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 5 — EXTERNAL REVIEW (Rule 9 Touchpoint 3)                            │
+│ /codex-results-review on full draft + figures + tables                     │
+│ Output: artifacts/reviews/2026-XX-XX_codex_results_paper_draft_A.md       │
+│ Verification: every CRITICAL in Codex review must be FIXED before stage 6  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 6 — SUBMISSION PREP                                                  │
+│ venue-templates (ACM SIG check) + citation-management (BibTeX validate)   │
+│ + nature-data (reproducibility statement / data availability)             │
+│ Output: docs/storya_paper_submission.tex + refs.bib + figures.zip         │
+│ Verification: ACM TAPS validator local pass; venue template compliance    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ STAGE 7 — POST-SUBMISSION (if reviewer feedback received)                  │
+│ nature-response (reviewer-response letter draft)                           │
+│ Output: docs/storya_paper_response_v1.md                                   │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### §10.2 Per-skill invocation pattern (concrete)
+
+| Stage | Skill | Invocation pattern | Inputs | Outputs |
+|-------|-------|--------------------|--------|---------|
+| 1 | `literature-review` | "Verify plan §1.9 16-paper matrix: confirm FinGAT/HIGSTM/HTAN entries against arXiv abstracts; add 3 missing papers (GRU-PFG, DishFT-GNN, DGT)" | plan §1.9 table | `docs/storya_related_work.md` |
+| 1 | `citation-management` | "Generate BibTeX for the 19 papers in storya_related_work.md; cross-check DOI" | related work matrix | `refs.bib` |
+| 1 | `venue-templates` | "Fetch ICAIF 2026 ACM SIG template" | venue=ICAIF 2026 | `template/sample-sigconf.cls` |
+| 2 | `matplotlib` | "Generate F2 cumulative L/S PnL curves, 2×4 panel (univ × model), input source `experiments/storya_e1_anchor/results.csv` cols={IC_mean, Sharpe_*, n_periods}" + rcparams_storya | E6 result CSVs | `figures/F2_pnl_2x4.pdf` |
+| 2 | `scientific-schematics` | "Produce Story A pipeline F1: data → features (Universe B/C) → model (GAT/SAGE/MLP/LGB) → walk-forward fold → eval (IC + Sharpe + SPA + DM + BH-FDR)" | written spec | `figures/F1_pipeline.svg` |
+| 3 | `scientific-writing` | "Draft §5 Results subsection N1 using TBD figure refs F2/F3/F4 + table T1/T2; cite all numeric values per source CSV path" | figures + tables + analysis.md | `docs/storya_paper_draft_v1.md §5.N1` |
+| 4 | `nature-polishing` | "Polish IMRAD §5 Results paragraph X for clarity + concision; preserve all numeric claims and citation anchors" | §5.X draft | §5.X polished |
+| 4 | `peer-review` | "Simulate peer review of full §5 Results: assess methodology rigor (Hansen SPA, DM/HLN, BH-FDR), figure integrity, reporting standards" | full draft v2 | structured YAML review |
+| 5 | `codex-results-review` (slash) | "Touchpoint 3 final on docs/storya_paper_draft_v2.md + figures/" | draft + figs | review .md in artifacts/reviews/ |
+| 6 | `venue-templates` | "Confirm ACM SIG sample-sigconf submission compliance: 2-column, 7-page count, refs format" | tex source | pass/fail report |
+| 6 | `nature-data` | "Generate Data Availability + Code Availability statements" | git rev + Drive paths | section.md |
+| 7 | `nature-response` | "Draft reviewer-response letter addressing 3 reviewer comments preserving original claim_scope" | reviewer comments | response.md |
+
+### §10.3 Hand-off contracts (machine-checkable)
+
+Each pipeline transition has a **contract file** in `paper_workflow/contracts/` that lists:
+- Required input artifacts (paths + MD5)
+- Required output schemas (column names, frontmatter keys, etc.)
+- Verification command (must exit 0 before next stage starts)
+
+Example for Stage 2 → Stage 3 transition:
+
+```yaml
+# paper_workflow/contracts/stage2_to_stage3.yaml
+stage_2_outputs_required:
+  - path: figures/F1_pipeline.svg
+    min_size_kb: 5
+  - path: figures/F2_pnl_2x4.pdf
+    min_size_kb: 20
+  - path: figures/F3_lofo_heatmap.pdf
+  # ... (all 10 main figures)
+  - path: tables/T1_headline.tex
+  - path: tables/T2_3col_robustness.tex
+stage_2_verification_command: |
+  python scripts/verify_figures_complete.py --required-list paper_workflow/required_figs.yaml
+  python scripts/verify_docs_provenance.py docs/storya_paper_draft_v1.md
+```
+
+### §10.4 Implementation NOT in this handoff
+
+This §10 only documents the chain; CONCRETE implementation:
+- `paper_workflow/contracts/` directory with 6 stage-to-stage contract YAMLs — TO BE WRITTEN during script work
+- `scripts/verify_figures_complete.py` — TO BE WRITTEN (1 day effort) to mechanically check Stage 2 → 3 transition
+- Slash command `/paper-stage-advance` that runs the next stage's verification before triggering the next skill — OPTIONAL stretch goal
+
+For now, H博士 + Claude invoke skills manually per §10.2 invocation patterns; the chain documentation prevents skill-overlap or sequence-mistakes.
+
+### §10.5 Verification hooks for Rule 9 integration
+
+- **Stage 2 (figures)** → Rule 9 Touchpoint 2 (Code Review) fires on each `paper_figs/fig_*.py`
+- **Stage 5 (external review)** = Rule 9 Touchpoint 3 (Results Review) on full draft
+- **Stage 6 (submission)** → final `verify_docs_provenance.py` pass before send-to-H博士
+- All 3 Rule 9 touchpoints + the skill-chain transitions log to `progress.md` with the standard entry format
