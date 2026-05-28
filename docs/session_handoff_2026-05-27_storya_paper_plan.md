@@ -16,10 +16,12 @@ in_flight:
     status: "scheduled per plan §1.6 GO 2026-05-27"
     blockers: ["~1-1.5 weeks effort budget"]
 open_questions:
-  - "Q1 (figure-count budget): aim for exhaustive ~25 figures + ~12 tables (current plan) vs. lean ~10 figures + ~6 tables (page-limit conscious)?"
-  - "Q2 (single vs. multi-script): one mega `analyze_storya_results.py` (~2000 LOC) vs. modular `analyze_storya_<experiment>_figs.py` (~7 files)?"
-  - "Q3 (venue): ICAIF 2026 ACM SIG (8 pages + refs) vs. Quantitative Finance journal (no page limit, more detail)?"
-  - "Q4 (HATS-3R-adapt scope — RESOLVED in §4.18 post Codex T1; this question is now legacy): full KOSPI200 replication ruled out per Codex A-05/06/07; locked to S&P 500 HATS-3R-adapt with narrowed claim_scope"
+  - "ALL 4 ORIGINAL OPEN QUESTIONS RESOLVED 2026-05-27 — locked in plan.md Decision Log + this frontmatter for audit:"
+  - "Q1 RESOLVED → 图表全出 = exhaustive 25 figures + 13 tables (upper bound; trim at writing time per venue page budget)"
+  - "Q2 RESOLVED → 13 modular paper_figs/fig_*.py scripts (Option Y precedent; shared rcparams_storya.py import)"
+  - "Q3 RESOLVED → ICAIF 2026 ACM SIG primary (highest-prestige feasible for AI+finance 8-week timeline); QF journal backup if rejected"
+  - "Q4 RESOLVED → HATS-3R-adapt (Codex T1 PROCEED-WITH-FIXES; narrowed claim_scope per A-05/A-06/A-07)"
+  - "NEW open question 2026-05-27-h: Drive-sync strategy for Story A 400 .npy per-day_ic files — pull from Drive (~50MB) to local for offline fig scripts, OR run scripts on Colab + push small PDFs back? (Phase 6.1 decision)"
 file_state:
   modified_since_last_commit: []
   new_files: [docs/session_handoff_2026-05-27_storya_paper_plan.md]
