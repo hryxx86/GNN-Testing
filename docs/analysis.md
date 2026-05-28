@@ -117,7 +117,7 @@ E3/E4 edge ablation analysis COMPLETE. All Story A v3 confirmatory experiments D
 
 ### Question 1: What do the headline E1 + E6 numbers say?
 
-**E1 run**: 4 models × 10 canonical seeds × 5 walk-forward folds × 2 universes = 400 cells; 5.58h A100 wall (source: `experiments/storya_e1_anchor/_meta.json`). Per Codex Plan Round E PASS-WITH-FIXES + Codex Code Touchpoint 2 verdicts on `run_storya_e1_anchor.py` (`artifacts/reviews/2026-05-26_codex_plan_E.md`, `artifacts/reviews/2026-05-26_codex_code_A.md`, `artifacts/reviews/2026-05-26_codex_code_B.md`). Source: `experiments/storya_e1_anchor/results.csv` (n=400 rows). [Correction 2026-05-27-d: prior draft cited a non-existent `2026-05-27_codex_code_e1anchor_A.md`; actual e1_anchor code review files dated 2026-05-26 night.]
+**E1 run**: 4 models × 10 canonical seeds × 5 walk-forward folds × 2 universes = 400 cells; 5.58h A100 wall (source: `experiments/storya_e1_anchor/_meta.json`). Per Codex Plan Round E PASS-WITH-FIXES + Codex Code Touchpoint 2 verdicts on `run_storya_e1_anchor.py` (`artifacts/reviews/2026-05-26_codex_plan_E.md`, `artifacts/reviews/2026-05-26_codex_code_A.md`, `artifacts/reviews/2026-05-26_codex_code_B.md`). Source: `experiments/storya_e1_anchor/results.csv` (n=400 rows). [Correction 2026-05-27-e: prior draft cited a non-existent `2026-05-27_codex_code_e1anchor_A.md`; actual e1_anchor code review files dated 2026-05-26 night.]
 
 **E6 post-process** (`compute_e6_dm_spa.py`, ~5 min CPU; outputs at `artifacts/storya_e6_dm_spa/`):
 
@@ -185,7 +185,7 @@ Real Codex retry verdict at `artifacts/reviews/2026-05-27_codex_results_e1e6_A-b
 
 Paper §Results LOCKED language (per Codex recommendations + LOFO evidence above):
 
-1. **Bootstrap vs SPA framing separated** (CODEX-RR-E1E6-A-bis-01): "Bootstrap CIs reject IC = 0 for all four Universe C models and three of four Universe B models. Hansen SPA does NOT reject H₀ of no candidate dominance over the LightGBM benchmark (p_consistent = 0.147 / 0.384 / 0.136 for B / C / joint — source: `spa_results.csv` rows univ=B/C/joint p_consistent column). The two tests address different nulls: absolute IC > 0 vs paired benchmark dominance. Both findings can hold; we do not claim GNN benchmark dominance." [Correction 2026-05-27-d: prior draft wrote 0.589/0.281 for C/joint; substantive conclusion (none reject at 5%) unchanged.]
+1. **Bootstrap vs SPA framing separated** (CODEX-RR-E1E6-A-bis-01): "Bootstrap CIs reject IC = 0 for all four Universe C models and three of four Universe B models. Hansen SPA does NOT reject H₀ of no candidate dominance over the LightGBM benchmark (p_consistent = 0.147 / 0.384 / 0.136 for B / C / joint — source: `spa_results.csv` rows univ=B/C/joint p_consistent column). The two tests address different nulls: absolute IC > 0 vs paired benchmark dominance. Both findings can hold; we do not claim GNN benchmark dominance." [Correction 2026-05-27-e: prior draft wrote 0.589/0.281 for C/joint; substantive conclusion (none reject at 5%) unchanged.]
 
 2. **Fold 4 robustness column mandatory in Table 2** (CODEX-RR-E1E6-A-bis-02): Each headline IC / Sharpe row gets a paired "LOFO-4" column; bolded if drop > 40%. Footnote: "Fold 4 (test period Q2-2025) is a known regime outlier (see §Limitations). LOFO-4 isolates results not driven by this single fold."
 

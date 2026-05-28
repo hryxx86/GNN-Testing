@@ -1,0 +1,593 @@
+---
+handoff_date: 2026-05-27
+handoff_type: paper-figure-and-experiment-mapping-plan
+last_completed: "2026-05-27-d: Codex Touchpoint 1 PROCEED-WITH-FIXES on HATS-3R-adapt baseline plan (parallel session); 2026-05-27-e: Honesty pass — analysis.md SPA/CI corrections + plan.md Decision Log rows; 2026-05-27-f: this handoff"
+in_flight:
+  - id: figure-and-table-plan
+    file: docs/session_handoff_2026-05-27_storya_paper_plan.md
+    status: "draft handoff complete; awaiting H博士 review before script implementation"
+    blockers: []
+  - id: storya-paper-figure-scaffolding
+    file: analyze_storya_results.py (to be written)
+    status: "queued; depends on plan approval + restart-for-nature-skill-loading"
+    blockers: ["plan approval", "nature-* skills load on next session"]
+  - id: hats-baseline-reproduction
+    file: run_hats_baseline.py (to be written)
+    status: "scheduled per plan §1.6 GO 2026-05-27"
+    blockers: ["~1-1.5 weeks effort budget"]
+open_questions:
+  - "Q1 (figure-count budget): aim for exhaustive ~25 figures + ~12 tables (current plan) vs. lean ~10 figures + ~6 tables (page-limit conscious)?"
+  - "Q2 (single vs. multi-script): one mega `analyze_storya_results.py` (~2000 LOC) vs. modular `analyze_storya_<experiment>_figs.py` (~7 files)?"
+  - "Q3 (venue): ICAIF 2026 ACM SIG (8 pages + refs) vs. Quantitative Finance journal (no page limit, more detail)?"
+  - "Q4 (HATS reproduction scope): full KOSPI200 replication vs. SP500 transfer only?"
+file_state:
+  modified_since_last_commit: []
+  new_files: [docs/session_handoff_2026-05-27_storya_paper_plan.md]
+rule9_status:
+  touchpoint_1_plan: NOT_YET_TRIGGERED  # this handoff itself is informational, not a "new experiment plan" — touchpoint optional
+  touchpoint_2_code: PENDING  # for analyze_storya_results.py when written
+  touchpoint_3_results: PENDING  # for figures + tables when produced
+next_actions:
+  - "Review this handoff with H博士 — confirm Q1-Q4 above"
+  - "Restart Claude Code session so nature-figure / nature-writing / nature-polishing skills load"
+  - "Write `analyze_storya_results.py` per §6 plan (estimated 2-3 days)"
+  - "Write `run_hats_baseline.py` per plan §1.6 (estimated 1-1.5 weeks)"
+  - "Verify-docs-provenance pass on docs/storya_paper_draft.md when draft exists"
+---
+
+# Story A Paper — Comprehensive Figure / Table / Experiment Handoff Plan
+
+> **Audience**: future Claude session(s) + H博士. This document maps EVERY completed experiment in this repo onto figures and tables for the Story A ICAIF 2026 paper. Both **last-2-days work** (Story A v3 confirmatory: E1/E3/E4 + E6 + Plan AAA T-1 diagnostic) AND **prior work** (horizon ablation, arch comparison, graph ablation, wf5, Phase 5, Plan AAA 168-group ranking, loss horserace, Tier 1 Phase A/B, SelectiveNet, etc.) are explicitly inventoried and slot into the paper's 4-narrative-pillar structure.
+>
+> **Source of authority**: Story A v3 plan at `/Users/heruixi/.claude/plans/handoff-session-ranking-swirling-lemur.md`; `plan.md` Decision Log 2026-05-26 / 2026-05-27 rows; `progress.md` 2026-05-26-a..k + 2026-05-27-a/b/c/d; `docs/analysis.md` 2026-05-27-a/c; existing experiment artifacts (paths cited inline).
+>
+> **Key honesty caveat**: figure counts in this handoff are **upper bounds** ("能出多少出多少图" per H博士 directive 2026-05-27); actual paper Figure/Table count will trim per venue page budget at writing time. Numbers cited below are taken from source CSVs unless noted "TBD" or "approximate".
+
+---
+
+## §1. Paper-level Structure
+
+### §1.1 Paper title (working)
+
+**"When Do Graph Neural Networks Help in Cross-Sectional Stock Ranking? A Multi-Seed, Multi-Universe, Cost-Aware Study of US S&P 500"**
+
+### §1.2 Target venue + format
+
+- **Primary**: ICAIF 2026 (full paper, ACM SIG format, ~8-10 pages + refs)
+- **Backup**: Quantitative Finance journal (no page limit)
+- **Use venue-templates skill** for: ACM SIG `.cls`, bibstyle, page-limit-aware figure sizing
+
+### §1.3 7-section structure
+
+| § | Title | Pages (ACM SIG est.) | Figures | Tables |
+|---|-------|---------------------|---------|--------|
+| 1 | Introduction | ~1.0 | 1 (Architecture/setup overview) | 0 |
+| 2 | Related Work | ~1.0 | 0 | 1 (16-paper matrix) |
+| 3 | Methodology | ~1.5 | 0–1 (pipeline diagram) | 1 (statistical-test framework summary) |
+| 4 | Data + Experimental Setup | ~0.5 | 0 | 1 (data + cell budget table) |
+| 5 | Results | ~3.5 | 7–10 (main result figs) | 4–6 (headline + ablations) |
+| 6 | Discussion | ~1.0 | 0 | 0 |
+| 7 | Limitations + Future Work | ~0.5 | 0 | 1 (limitation matrix) |
+| — | **Supplementary** | unbounded | +5–10 (overflow figs) | +3–5 (overflow tables) |
+
+### §1.4 4 narrative pillars (locked per plan §LOCKED DECISIONS 2026-05-26 evening)
+
+**N1 — Honest baseline IC under strict multi-seed eval.** Establishes IC numbers reviewers can trust because they survive 10-seed × 5-fold × bootstrap CI eval.
+
+**N2 — Conditional findings (horizon × feature universe × news encoding × edge type).** When does GNN beat MLP / LightGBM, and when does it not?
+
+**N3 — Failure-mode catalog (lucky-seed inflation / news-feature dilution / Fold-4 regime collapse / multi-edge bundle harm / Plan AAA T-1 leak provenance).** What goes wrong, why, and how to detect.
+
+**N4 — Methodology framework (walk-forward + multi-seed + Hansen SPA + DM/HLN + BH-FDR + block bootstrap + LOFO + cost ladder + multi-testing ledger).** Reusable scaffold for future GNN-finance work.
+
+---
+
+## §2. Master Figure List (~25 figures, upper bound)
+
+### Main paper figures (target: 10 — trim from this list)
+
+| F# | Title | Type | Narrative | Source experiment |
+|----|-------|------|-----------|-------------------|
+| F1 | Story A architecture + experimental design overview | Schematic | All | scientific-schematics skill |
+| F2 | Cumulative L/S PnL curves, 2×4 panel (universe × model) | Line plot | N1 | storya_e1_anchor |
+| F3 | E1 LOFO sensitivity heatmap (model × universe, color=ΔIC%) | Heatmap | N1 + N3 | storya_e6_dm_spa lofo_diagnostic.csv |
+| F4 | E1 per-fold IC bar plot with seed-spread error bars | Grouped bar | N3 | storya_e6_dm_spa per_fold_table.csv |
+| F5 | Cost-ladder Net Sharpe vs bps cost, 8 lines (univ × model) | Line plot | N1 + N4 | storya_e6_dm_spa cost_ladder.csv |
+| F6 | Edge ablation forest plot (5 pairs × 3 regimes, ΔIC + CI) | Forest plot | N2 + N3 | storya_e6_edge_ablation edge_bootstrap_ci.csv |
+| F7 | Horizon × architecture conditional matrix (4 models × 6 horizons) | Heatmap | N2 | horizon_ablation_results.csv |
+| F8 | News-feature dilution at 21d: ΔIC = -0.045 illustration | Forest / bar | N3 | horizon_ablation MLP_all vs MLP_price |
+| F9 | Hansen SPA p-value timeline + DM/HLN paired Δ-IC distribution | Density / step | N4 | storya_e6_dm_spa spa_results + dm_hln_results |
+| F10 | Plan AAA T-1 stability scatter (proxy ranking raw vs T-1) | Scatter | N3 | plan_aaa_t1_diagnostic |
+
+### Supplementary figures (S1-S15+, page-budget-flexible)
+
+| F# | Title | Type | Narrative | Source experiment |
+|----|-------|------|-----------|-------------------|
+| S1 | Per-cell IC vs Sharpe scatter (400-cell distribution) | Scatter | N1 | per_cell_distribution.csv |
+| S2 | Per-cell outlier flagging top-3/bot-3 by Sharpe | Scatter + annotations | N3 (Univ C GAT cid=240 Sharpe=75) | per_cell_distribution.csv |
+| S3 | E1 per-day IC time series, 8 lines + Fold-4 shaded | Time series | N3 | storya_e1_anchor per_day_ic/*.npy |
+| S4 | Plan AAA 168-group ranking dot plot (top-30, NW-t + BH-FDR) | Dot plot | N3 + N4 | artifacts/plan_aaa/ranking.csv |
+| S5 | Plan AAA permutation Δ-IC distribution (per group) | Violin | N4 | plan_aaa per-group perm distributions |
+| S6 | Phase 5 Step 3 Plan Z subset SPA + DM tree (S1-S8) | Tree / forest | N2 + N4 | step3_plan_z |
+| S7 | Loss horserace ΔIC per (model, loss) heatmap | Heatmap | N2 | loss_horserace paired_delta_ic.csv |
+| S8 | Loss horserace Fold 4 ListMLE collapse per architecture | Faceted line | N3 | loss_horserace per-fold IC |
+| S9 | Graph ablation: corr vs +sector vs multi-edge IC bar | Grouped bar | N2 + N3 | graph_ablation_results.csv |
+| S10 | Phase 5 feature importance per fold (LGB perm rank) | Stacked bar | N1 + N2 | diag_phase5_permutation_importance_lgb.csv |
+| S11 | Sector attribution daily forensics (long vs short sector mix) | Stacked area | N3 | diag_sector_attribution_*.csv |
+| S12 | SelectiveNet coverage vs IC tradeoff curve | Line | N3 | selectivenet_results.csv |
+| S13 | Tier 1 Phase B hyperparameter sweep convergence (per-tier IC distribution) | Box / violin | N4 | tier1{a,b_h2,c}_phase_b |
+| S14 | Diagnostic_price 200-cell distribution vs Part B v4 claim | Histogram + arrow | N3 (Part B replication failure) | loss_horserace results_diagnostic_price.csv |
+| S15 | Walk-forward calendar visualization (5 folds + 21d purge) | Gantt | N4 | run_storya_e1_anchor.py WALK_FORWARD_FOLDS |
+| S16 | Multi-testing ledger pyramid (exploratory + confirmatory family sizes) | Pyramid | N4 | multiple_testing_ledger.json |
+| S17 | Bootstrap CI overlay: full vs LOFO-4 vs Fold-4-only | Forest | N1 + N3 | e1_three_column_summary.csv |
+| S18 | News-edge density temporal profile (eligible articles per trading day) | Time series | N4 | storya_e3_news_edge news_snapshots_cache.npz |
+
+---
+
+## §3. Master Table List (~12 tables, upper bound)
+
+### Main paper tables (target: 5-6)
+
+| T# | Title | Source | Narrative | Cells |
+|----|-------|--------|-----------|-------|
+| T1 | E1 Headline IC + Sharpe + Bootstrap CI (8 rows = 2 univ × 4 models) | bootstrap_ci.csv | N1 | 8 |
+| T2 | E1 3-column robustness: full / LOFO-4 / Fold-4-only IC + Sharpe (8 rows) | e1_three_column_summary.csv | N1 + N3 | 8 |
+| T3 | Statistical tests: SPA + DM/HLN family-of-5 + BH-FDR (per universe) | spa_results.csv + dm_hln_results.csv | N4 | 8 + 10 |
+| T4 | Cost ladder Net Sharpe @ {0,5,10,15,20,30} bps × 8 (univ × model) | cost_ladder.csv | N1 + N4 | 48 |
+| T5 | Edge ablation: 5 pairs × 3 regime conditions + BH-FDR | edge_pairs_dm.csv + edge_bootstrap_ci.csv | N2 + N3 | 15 |
+| T6 | 16-paper related-work matrix (axes: horizon / feature / graph / regime / seed / PIT / cherry-pick / cost) | plan §1.9 | All | 17 rows |
+
+### Supplementary tables (~6, page-budget-flexible)
+
+| T# | Title | Source | Narrative | Cells |
+|----|-------|--------|-----------|-------|
+| ST1 | Data + experimental setup summary (universe + fold dates + hyperparameters) | run_storya_e1_anchor.py constants | N4 | 1 page |
+| ST2 | Multi-testing ledger (exploratory family enumeration) | multiple_testing_ledger.json | N4 | 1 page |
+| ST3 | Horizon × architecture full IC + Sharpe table (24 rows) | horizon_ablation_results.csv | N2 | 24 |
+| ST4 | Plan AAA ranking top-20 + BH-FDR | plan_aaa/ranking.csv | N3 + N4 | 20 |
+| ST5 | Phase 5 Step 3 Plan Z subset-by-subset breakdown | step3_plan_z | N2 | ~30 rows |
+| ST6 | Loss horserace ΔIC + DM/HLN per pair | loss_horserace paired_delta_ic.csv | N2 | ~20 rows |
+| ST7 | Limitations + decisions table (LSTM dropped / sector edge null / Plan AAA T-1 caveat / single-market) | plan §1.9 honest caveats | All §Limitations | 7 rows |
+
+---
+
+## §4. Per-Experiment Figure & Table Map
+
+> **Reading guide**: each subsection below is one experiment family. For each, this lists:
+> - Experiment ID + scope + date + status
+> - Source files (absolute paths)
+> - Headline result (verified, with citation)
+> - Figures derivable (F# refs main + S# refs supplementary)
+> - Tables derivable (T# refs main + ST# refs supplementary)
+> - Narrative pillar contribution
+
+### §4.1 Story A E1 anchor — 400 cells, 2026-05-26..27
+
+- **Scope**: 4 models {GAT, SAGE-Mean, MLP, LightGBM} × 10 canonical seeds × 5 walk-forward folds × 2 universes {B: 10-dim hc, C: 51-dim Plan AAA top-15} = **400 cells**; 21d horizon; correlation-only edges
+- **Status**: COMPLETE on Colab A100 (5.58h wall, source: `experiments/storya_e1_anchor/_meta.json`); local results.csv has only smoke 4 cells (Drive sync gap, by `.gitignore` design)
+- **Source files**:
+  - `experiments/storya_e1_anchor/results.csv` (400 rows on Drive; 4-row smoke locally)
+  - `experiments/storya_e1_anchor/per_day_ic/*.npy` (400 .npy files on Drive; ≤4 locally)
+  - `experiments/storya_e1_anchor/manifest.csv` (atomic checkpoint log)
+  - `experiments/storya_e1_anchor/_meta.json`, `hp_grid.json`, `smoke_benchmark.csv`
+  - **Derived E6**: `artifacts/storya_e6_dm_spa/{bootstrap_ci, spa_results, dm_hln_results, cost_ladder, lofo_diagnostic, per_fold_table, per_cell_distribution, e1_three_column_summary, multiple_testing_ledger, summary.md, lofo_summary.md}.csv|json|md`
+- **Headline result**: 7/8 (univ, model) cells have IC > 0 with bootstrap CI excluding 0 (only B LightGBM excludes; source `bootstrap_ci.csv`); SPA p_consistent = 0.147 / 0.384 / 0.136 for B / C / joint — none reject at 5% (source `spa_results.csv`); LOFO-4 drops most IC by 38-72% (source `lofo_diagnostic.csv`)
+- **Figures**: F2 (PnL curves), F3 (LOFO heatmap), F4 (per-fold IC bars), F5 (cost ladder), S1 (cell-level IC vs Sharpe), S2 (outlier flagging), S3 (per-day IC time series), S15 (walk-forward calendar), S17 (3-column CI forest)
+- **Tables**: T1 (headline), T2 (3-column robustness), T3 (SPA + DM/HLN), T4 (cost ladder), ST1 (data setup)
+- **Narrative**: N1 (primary), N3 (LOFO failure), N4 (methodology demo)
+
+### §4.2 Story A E3 news-as-edge — 50 NEW cells, 2026-05-27
+
+- **Scope**: SAGE-Mean × Universe B × 10 canonical seeds × 5 walk-forward folds × {corr+news_cooccur} = **50 cells**; PIT news edge (NYSE-session-close UTC cutoff per Codex Round D D-03)
+- **Status**: COMPLETE on Colab A100
+- **Source files**:
+  - `experiments/storya_e3_news_edge/results.csv` (50 rows on Drive)
+  - `experiments/storya_e3_news_edge/per_day_ic/*.npy`
+  - `experiments/storya_e3_news_edge/news_edge_source_schema.md` (PIT spec)
+  - `experiments/storya_e3_news_edge/news_snapshots_cache.npz` (12MB derived PIT-safe edges, 313 daily snapshots, avg ~1823 edges + ~807 articles per day per `_meta.json`)
+- **Headline result**: news-edge ΔIC vs α1 baseline = +0.010 [-0.007, +0.024], HLN p=0.039 (smallest in family but below rank-1 BH threshold 0.010 — NOT rejected); LOFO-4 collapses to +0.005 with p=0.34 (source `edge_pairs_dm.csv` row α3vα1)
+- **Figures**: F6 (forest plot, α3 row), S18 (news-edge density temporal profile)
+- **Tables**: T5 (edge ablation main table row α3)
+- **Narrative**: N2 (news encoding conditional finding), N3 (LOFO collapse), N4 (PIT methodology)
+
+### §4.3 Story A E4-α edge ablation — 100 NEW cells, 2026-05-27
+
+- **Scope**: SAGE-Mean × Universe B × 10 seeds × 5 folds × 2 NEW configs {corr+sector (α2), corr+sector+news (α4)} = **100 NEW cells** (α1 reuses E1-B SAGE 50 cells; α3 reuses E3 50 cells; total ablation analysis = 200 cells)
+- **Status**: COMPLETE on Colab A100
+- **Source files**:
+  - `experiments/storya_e4_alpha/results.csv` (100 rows on Drive)
+  - `experiments/storya_e4_alpha/per_day_ic/*.npy`
+  - `experiments/storya_e4_alpha/_meta.json` (records edge counts: ~1513 corr + ~13535 sector + ~1823 news per day)
+  - **Derived E6 v2**: `artifacts/storya_e6_edge_ablation/{edge_pairs_dm, edge_bootstrap_ci, edge_cost_ladder, edge_summary.md}` (15 + 15 + 72 rows)
+- **Headline result**: 0/5 pairs survive BH-FDR q=0.05 in full condition; LOFO-4 collapses all ΔIC magnitudes; Fold-4-only ΔIC CIs exclude 0 for all 3 augmented-vs-α1 pairs but N=10 cells per arm caps to diagnostic-only (per `edge_pairs_dm.csv`, `edge_bootstrap_ci.csv`)
+- **Figures**: F6 (full forest plot, all 5 rows × 3 regimes), S9 (graph_ablation cross-reference comparison)
+- **Tables**: T5 (full)
+- **Narrative**: N2 (edge-type conditional), N3 (full bundle harm), N4 (BH-FDR + bootstrap methodology)
+
+### §4.4 Story A E6 statistical post-process — 2026-05-27
+
+- **Scope**: SPA + DM/HLN + BH-FDR + block bootstrap + LOFO + per-fold + per-cell + cost ladder + multi-testing ledger
+- **Status**: COMPLETE; outputs at `artifacts/storya_e6_dm_spa/` + `artifacts/storya_e6_edge_ablation/`
+- **Source files**: `compute_e6_dm_spa.py` (E1) + `compute_e6_edge_ablation.py` (E3/E4, Option Y imports helpers)
+- **Headline result**: see §4.1 (SPA + DM/HLN) and §4.3 (edge BH-FDR)
+- **Figures**: F9 (SPA + DM/HLN visualization)
+- **Tables**: T3, ST2 (ledger)
+- **Narrative**: N4 (entire framework)
+
+### §4.5 Plan AAA T-1 stability diagnostic — 15 groups, 2026-05-27
+
+- **Scope**: 158 Alpha158 features × 313 test days × {raw / T-1-shifted} → proxy single-feature mean per-day IC → group-level proxy importance for top-15 Plan AAA groups
+- **Status**: COMPLETE on M4 CPU (0.3 min vectorized)
+- **Source files**: `analyze_plan_aaa_t1_diagnostic.py`, `artifacts/plan_aaa_t1_diagnostic/{group_ranking_comparison, proxy_ic_per_feature, summary.md}`
+- **Headline result**: proxy-raw ∩ proxy-T1 = 15/15 (HIGH proxy stability under T-1 shift; IC magnitudes change ≤0.007 absolute); BUT proxy-raw ∩ orig-Plan-AAA = 5/15 (proxy ≠ permutation Δ-IC by construction — cannot rule out leak affected group ordering via permutation framework). Verdict A per H博士 2026-05-27: accept inconclusive + §Limitations qualifier; full re-run (~12-24h M4) deferred to §Future Work
+- **Figures**: F10 (proxy stability scatter), S4 (Plan AAA ranking dot plot)
+- **Tables**: ST7 (limitations row 5+7)
+- **Narrative**: N3 (Plan AAA T-1 leak provenance)
+
+### §4.6 Horizon ablation — 360 cells, 2026-04-XX
+
+- **Scope**: {SAGE-Mean, MLP, GAT, LSTM} × {`_price` 9-dim, `_all` 768+9-dim} × {1, 5, 10, 21, 42, 63}d horizon × 3 seeds × 5 folds ≈ **360 rows** (note: some cells skipped due to MPS constraints; check actual count from CSV `wc -l`)
+- **Status**: COMPLETE; results in `experiments/horizon_ablation_results.csv`
+- **Source files**:
+  - `experiments/horizon_ablation_results.csv` (~360 rows)
+  - `experiments/horizon_preds/*.npy` (per-cell prediction tensors)
+  - `archived/scripts/run_horizon_ablation.py` (original runner)
+- **Headline result** (provenance: per `docs/analysis.md` 2026-04-27-b prior entries and plan §Story A context): MLP_price 21d IC=+0.037, MLP_all 21d IC=-0.008 → news-feature dilution ΔIC=-0.045 at 21d (the primary motivation for news-as-edge in §4.2); SAGE-Mean_price 21d IC=+0.027 ≤ MLP_price 21d. **VERIFY**: re-extract these values from the actual CSV at script-writing time (above are quoted from plan/memory, not freshly read).
+- **Figures**: F7 (horizon × architecture heatmap), F8 (news dilution illustration), S7-S8 (cross-reference)
+- **Tables**: ST3 (full 24-row table)
+- **Narrative**: N2 (horizon conditional), N3 (news dilution)
+
+### §4.7 Architecture comparison (Week 1-2) — ~150 cells, 2026-03-XX
+
+- **Scope**: {SAGE-Mean, GAT, Transformer, MLP, +variants} × seeds × folds = ~150 rows
+- **Status**: COMPLETE; results in `experiments/arch_comparison_results.csv`
+- **Source files**: `experiments/arch_comparison_results.csv` (~150 rows; verify via `wc -l`)
+- **Headline result** (TBD — re-read CSV at script time): per project Rule 10 + prior memory, GNN-on-all-features negative across architectures; price-only positive uniformly
+- **Figures**: optional inclusion in S9 or as supplementary cross-reference
+- **Tables**: optional; mostly subsumed by E1
+- **Narrative**: N1 (architectural robustness of "GNN-all-features doesn't help"), N3
+
+### §4.8 Graph ablation — 28+ cells, 2026-03-XX
+
+- **Scope**: {correlation-0.6, correlation-0.7, +sector, +sector+industry, no-graph, +news, all-edges} × seeds = ~28 rows
+- **Status**: COMPLETE; results in `experiments/graph_ablation_results.csv`
+- **Source files**: `experiments/graph_ablation_results.csv` (28 rows; verify)
+- **Headline result** (TBD — re-read CSV): "current" config (corr 0.6 + dense sector) ≈ "no graph" baseline IC ~0.039 ± 0.004; multi-edge slight underperformance (foreshadows E4-α negative bundle finding)
+- **Figures**: S9 (cross-reference to E4-α)
+- **Tables**: optional supplementary
+- **Narrative**: N2 (edge-type conditional, pre-Story-A evidence), N3 (multi-edge collapse)
+
+### §4.9 Week 1 5-fold walk-forward baseline (wf5) — 90 cells, 2026-03-XX
+
+- **Scope**: 6 models × 3 seeds × 5 folds = **90 cells** per project Rule 10
+- **Status**: COMPLETE; results in `experiments/wf5_results.csv`
+- **Source files**: `experiments/wf5_results.csv`
+- **Headline result** (TBD): provides original 9-dim S_price + 768-d + 9-dim feature universes' walk-forward IC baseline; **used as comparator for Diagnostic_price 200-cell replication study** (see §4.13)
+- **Figures**: optional inclusion in S9 (cross-reference)
+- **Tables**: optional supplementary
+- **Narrative**: N1 (baseline-credibility predecessor of E1), N4 (walk-forward methodology origin)
+
+### §4.10 Phase 5 Step 3 Plan Z — subset × Hansen SPA analysis, 2026-04-18..20
+
+- **Scope**: 8 feature subsets {S1-S8} × {MLP, SAGE-Mean} × 5 folds × multiple seeds (verify exact count); Hansen SPA + DM/BH-FDR applied to ΔIC family
+- **Status**: COMPLETE; results in `experiments/step3_plan_z/`
+- **Source files**:
+  - `experiments/step3_plan_z/part_a_permuted_ic.csv` (13K rows, per-day per-group IC)
+  - `experiments/step3_plan_z/part_a_daily_ic.csv` (1.9K rows, aggregated)
+  - `experiments/step3_plan_z/part_c_s8_perfold_daily_ic.csv` (S8 universe per-fold)
+  - `experiments/step3_plan_z/fold4_tail_concentration.csv` (Fold 4 regime tail risk)
+  - `artifacts/step3_plan_z/{subsets_frozen, fold_manifest, per_fold_scaler}.json` (frozen configs)
+- **Headline result** (per `docs/methodology_qa_2026-05-22.md` cited earlier): T_SPA = 1.231 for SAGE-Mean (NOT 0.23 — that was the 2026-04-21-c provenance bug); S6 MLP ΔIC = +0.046, p = 0.009. Provides Story A's first Hansen SPA precedent in this repo.
+- **Figures**: S6 (subset SPA forest tree)
+- **Tables**: ST5 (subset breakdown)
+- **Narrative**: N2 (feature-universe conditional), N4 (SPA methodology precedent)
+
+### §4.11 Plan AAA 168-group ranking — 168 groups, 2026-05-XX
+
+- **Scope**: 168 feature groups × 313 test days × 3 seeds × permutation Δ-IC + Newey-West t-stat + BH-FDR + bootstrap CI
+- **Status**: COMPLETE; results in `artifacts/plan_aaa/`
+- **Source files**:
+  - `artifacts/plan_aaa/ranking.csv` (62 rows of ranked groups; check if 168 vs 62 — possibly 62 = unique non-trivial groups after dedup)
+  - `run_plan_aaa_168_ranking.py` (original runner)
+  - **Diagnostic addendum**: `artifacts/plan_aaa_t1_diagnostic/` (see §4.5)
+- **Headline result**: 0 of 61 (or 62) groups pass BH-FDR q=0.05 (per project memory + plan §1.9 honest caveats); top group hc_mom12m Δ-IC = +0.0079, NW-t = 1.01, p = 0.31 (per agent inventory above; **VERIFY at script time**). 1 group (CORD20+1) passed FDR in NEGATIVE direction. **Caveat**: Plan AAA used same-day Alpha158 (T-1 leak in ranking step), see §4.5 diagnostic.
+- **Figures**: S4 (top-30 dot plot), S5 (perm Δ-IC violins)
+- **Tables**: ST4 (top-20 ranking)
+- **Narrative**: N3 (group-test null result + leak provenance), N4 (permutation + FDR framework)
+
+### §4.12 Loss horserace (Stage 0 + Stage 1) — 600 cells, 2026-04-22..27
+
+- **Scope**: Stage 0 pilot (162 cells) + Stage 1 (5 losses × 6 archs × 5 folds × ~3-10 seeds ≈ 438 cells, total ~600) on MLP / SAGE-Mean × {MSE, Huber, Tukey, ListNet τ=0.2, ListMLE}
+- **Status**: COMPLETE; results in `experiments/loss_horserace/` + `artifacts/loss_horserace/`
+- **Source files**:
+  - `experiments/loss_horserace/results.csv` (~37K daily-IC rows; ~600 cells aggregated)
+  - `experiments/loss_horserace/results_diagnostic_price.csv` (12.5K daily-IC rows, ~200 cells diagnostic price)
+  - `experiments/loss_horserace/paired_delta_ic.csv` (24.7K rows, pairwise loss comparison)
+  - `experiments/loss_horserace/sharpe_per_run.csv` (601 rows, Sharpe summary)
+- **Headline result** (per Decision Log 2026-05-20 + analysis.md 2026-04-27-b): 0/36 BH-FDR rejected across loss × arch × subset families; ListMLE shows architecture-independent + feature-independent Fold-4 catastrophic collapse (mean IC ∈ [-0.36, -0.28] across 6/6 arch × feat combos). Robust losses (Tukey/Huber) don't help. Loss family is NOT a key conditional → Story A drops loss-function as a narrative axis.
+- **Figures**: S7 (ΔIC heatmap), S8 (ListMLE Fold-4 collapse faceted)
+- **Tables**: ST6 (loss horserace pairwise DM/HLN)
+- **Narrative**: N2 (loss conditional null), N3 (ListMLE collapse failure mode), N4 (BH-FDR over 36-test family)
+
+### §4.13 Diagnostic_price (Part B v4 replication) — 200 cells, 2026-04-27
+
+- **Scope**: (MSE, ListMLE) × (MLP, SAGE-Mean) × 9-dim S_price × 5 folds × 10 seeds = **200 cells** in Stage 1 framework
+- **Status**: COMPLETE; results in `experiments/loss_horserace/results_diagnostic_price.csv`
+- **Source files**: `experiments/loss_horserace/results_diagnostic_price.csv` (200 cells × ~62.6 days = 12.5K daily rows); `experiments/loss_horserace/local_diag_price.log`
+- **Headline result** (per analysis.md 2026-04-27-b): MLP×S_price IC = -0.004, SAGE×S_price IC = -0.057 — **Part B v4 wf5's headline 21d MLP_price IC=+0.037 / SAGE_price IC=+0.027 DOES NOT replicate** in Stage 1 framework with identical feature set. Part B's apparent advantage was setup-specific artifact (code path / fold timing / model spec).
+- **Figures**: S14 (Part B replication failure histogram)
+- **Tables**: optional supplementary
+- **Narrative**: N3 (replication-failure failure mode — supports Template 1 narrative element if HATS reproduction joins)
+
+### §4.14 Tier 1 Phase A/B (Plan AAA precursor sweeps) — ~1400 cells, 2026-05-XX
+
+- **Scope**: Tier1a Phase B (200) + Tier1b h2 Phase B (800) + Tier1c Phase B (400) = ~1400 cells across hyperparameter / loss / feature variations
+- **Status**: COMPLETE; results in `artifacts/tier1{_phase_a, a_phase_b, b_h2_phase_b, c_phase_b}/`
+- **Source files**:
+  - `artifacts/tier1_phase_a/results.csv` (~1200 rows)
+  - `artifacts/tier1a_phase_b/results.csv` (~200 rows)
+  - `artifacts/tier1b_h2_phase_b/results.csv` (~800 rows)
+  - `artifacts/tier1c_phase_b/results.csv` (~400 rows)
+  - `artifacts/phase_b_finalize/{stat_tier1a, stat_tier1b_h2, stat_tier1c, tier1e_regime_forensic, ic_sector_resid_per_cell}.csv` (aggregated stats)
+- **Headline result**: Tier1 best mean IC ~0.04 across folds 0-3, Fold 4 consistently -0.05 to -0.10 (regime forensic confirmed). 10-seed expansion exposed 5-seed selection artifact (Decision Log 2026-05-20: Tier 1.D verdict revoked from "marginal positive" to "FULL NULL").
+- **Figures**: S13 (Tier 1 hyperparameter convergence)
+- **Tables**: optional; mostly subsumed by E1 + Plan AAA
+- **Narrative**: N3 (Fold 4 universally negative across Tier 1 hyperparameter sweeps — the strongest pre-Story-A evidence for Fold 4 = regime failure)
+
+### §4.15 SelectiveNet — 70 cells, 2026-04-XX
+
+- **Scope**: 7 SelectiveNet target coverages × 10 thresholds = 70 rows
+- **Status**: COMPLETE; results in `experiments/selectivenet_results.csv`
+- **Source files**: `experiments/selectivenet_results.csv` (70 rows)
+- **Headline result**: Peak IC ~0.08 at 10% coverage (threshold strategy works); E2E target-0.2 drops to 0.02 IC; selective rejection suppresses signal not noise
+- **Figures**: S12 (coverage vs IC tradeoff)
+- **Tables**: optional supplementary
+- **Narrative**: N3 (selective-rejection failure mode)
+
+### §4.16 Sector attribution diagnostics — 2026-04-XX
+
+- **Scope**: SAGE-Mean × {sum, mean} aggregation × 11 sectors × 313 days = ~1409 rows × 2 aggregations
+- **Status**: COMPLETE; results in `experiments/diag_sector_attribution_sage_*.csv`
+- **Source files**: `experiments/diag_sector_attribution_sage_mean.csv`, `_sum.csv`, `diag_sector_composition.csv`, `diag_sector_ic.csv`
+- **Headline result**: Sector contributions ±0.01/day; Tech dominates long-side (10+ stocks/day) with high short overlap (8-15 stocks); sector crowding masks signal
+- **Figures**: S11 (sector attribution stacked area)
+- **Tables**: optional supplementary
+- **Narrative**: N3 (sector-crowding failure mode)
+
+### §4.17 Phase 5 diagnostics suite — 2026-04-XX
+
+- **Scope**: 10+ diagnostic CSVs covering collinearity, feature importance, label distribution, train/test regime shift, permutation importance LGB, fold-regime composition, pairwise correlations
+- **Status**: COMPLETE; results in `experiments/diag_phase5_*.csv`
+- **Source files**:
+  - `experiments/diag_phase5_collinearity.csv`
+  - `experiments/diag_phase5_feature_importance.csv` (5.7K rows)
+  - `experiments/diag_phase5_ic_by_fold.csv`
+  - `experiments/diag_phase5_train_test_shift.csv`
+  - `experiments/diag_phase5_permutation_importance_lgb.csv`
+  - `experiments/diag_phase5_fold_regime.csv`
+  - `experiments/diag_phase5_pairwise_corr_v2.csv`
+  - `experiments/diag_phase5_effective_rank.csv`
+  - `experiments/diag_phase5_label_dist.csv`
+  - `experiments/diag_phase5_single_feature_lgb.csv`
+  - `experiments/diag_phase5_feature_dist.csv`
+- **Headline result**: Per-feature IC range 0-0.03; Fold 4 shows 0.05-0.10 regime shift via collinearity diagnostic
+- **Figures**: S10 (LGB perm rank stacked bar per fold)
+- **Tables**: optional supplementary (mostly methodology validation)
+- **Narrative**: N1 (baseline credibility), N3 (Fold 4 regime confirmation via independent diagnostic), N4 (multi-modal feature diagnostics)
+
+### §4.18 HATS-3R-adapt baseline — plan locked + Codex Round A PROCEED-WITH-FIXES, 2026-05-27 (parallel session)
+
+- **IMPORTANT name change (per Codex T1 Round A dispositions A-05/A-06/A-07)**: NOT pure "HATS reproduction" — renamed to **"HATS-3R-adapt"** (HATS-style 3-Relation Adaptation) because the implementation differs from Kim et al. 2019 along 4 dimensions: (1) no Wikidata KG ingestion → use sector/correlation/news edges; (2) no GRU sequence encoder → use SAGE-Mean to align with E1; (3) S&P 500 not KOSPI 200; (4) 10-seed × 5-fold + walk-forward purge per Story A methodology. **prereg.json `claim_scope` narrowed** — paper does NOT make a "Template 1 replication-failure" claim against Kim 2019 GRU+Wikidata original; instead positions as "Template 1 adapted-architecture comparator" inside Story A narrative N1
+- **Plan file**: `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md`
+- **Codex Touchpoint 1 review**: `artifacts/reviews/2026-05-27_codex_plan_A.md` — Round A verdict: **1 CRITICAL + 8 MAJOR + 2 CONCERN** initial BLOCK-EXECUTION → post-disposition **PROCEED-WITH-FIXES** (8 FIXED + 3 ACCEPTED-AS-CONCERN + 0 REJECTED). Disposition log in progress.md 2026-05-27-d
+- **Scope (post-Codex amendments)**: 50 cells = SAGE-Mean + HATS-3R adapter × 10 seeds × 5 folds × Universe B (single-universe, NOT both); horizon 21d; 3 edge relations {correlation, sector, news_cooccur} fused
+- **Status**: PLAN APPROVED; awaiting implementation. **A100 1-cell smoke benchmark mandatory before 50-cell launch** per A-10 disposition (wall-time was provisional 13min/cell)
+- **Cell IDs**: `cell_id_hats = 400 + fold_idx*10 + seed_idx`, range [400, 449] (avoids E1 [0, 399] collision per A-04 fix)
+- **Source files (future after launch)**: `run_hats_3r_adapt.py`, `experiments/storya_hats_3r_adapt/results.csv` + `per_day_ic/*.npy` + `manifest.csv`; `analyze_hats_lofo.py` (mirrors `analyze_e1_lofo.py:167-169` 3-column pattern per A-09 fix); E6 integration via the locked decision rule + SPA family expansion (HATS EXCLUDED from joint SPA per A-02; per-universe B M=3→4 only)
+- **Locked decision rule (per A-08 Codex 3-gate)**:
+  - POSITIVE: ΔIC > +0.005 AND BH-HLN p < 0.05 AND LOFO-4 sign-preserve
+  - NEGATIVE: ΔIC < −0.005 OR (p > 0.20 AND LOFO-4 ≤ 0)
+  - TIE: else
+- **Locked extensions pre-committed (per A-11)**: +50 cell uniform-α run gates any "attention-specific" claim
+- **§Limitations item (per A-01 ACCEPTED-AS-CONCERN)**: sector PIT — `data/reference/sp500_sectors.csv` was fetched 2026-02-09 (one snapshot), no PIT history; Plan §Limitations row added
+- **Headline result**: TBD post-run; expected per Codex 3-gate framework + Story A N1 narrative
+- **Figures (now confirmed integrated into S+1/S+2 + T1 extension after launch)**:
+  - S+1: HATS-3R-adapt IC distribution overlaid on Story A E1 (per-seed dot plot, 50 HATS dots + 200 E1 SAGE-Mean dots for Univ B)
+  - S+2: HATS-3R-adapt 3-column robustness (full / LOFO-4 / Fold-4-only) — same 3-column format as E1 Table 2
+  - S+3 (optional): edge-relation attention weights heatmap if HATS attention layer instrumented
+- **Tables (confirmed)**: T1 extension row "HATS-3R-adapt (10s × 5f, Univ B)" + ST6 extension paired DM/HLN row "HATS-3R-adapt vs SAGE-Mean_corr-only"
+- **Narrative**: N1 (4th narrative element — strengthens "honest baseline under strict eval" by adapting a published-GNN family for S&P 500 cross-sectional ranking; narrowed claim_scope avoids overreach into Template 1 false-equivalence territory)
+
+---
+
+## §5. Narrative-Pillar → Figure/Table Cross-Index
+
+> **Use case**: when writing each §5 results subsection of the paper, look up the pillar to find every figure/table that supports it.
+
+### N1: Honest baseline IC under strict multi-seed eval
+
+- **Primary evidence**: E1 anchor (§4.1), HATS reproduction (§4.18 future)
+- **Supporting**: Arch comparison (§4.7), wf5 baseline (§4.9), Phase 5 diagnostics (§4.17)
+- **Figures**: F2, F3, S1, S3, S15, S17 (+ S+1, S+2 once HATS done)
+- **Tables**: T1, T2 (+ T1 extension with HATS row)
+
+### N2: Conditional findings
+
+- **Primary evidence**: Horizon ablation (§4.6), E3 news-as-edge (§4.2), E4-α edge ablation (§4.3), Phase 5 Step 3 Plan Z (§4.10)
+- **Supporting**: Graph ablation (§4.8), Loss horserace (§4.12)
+- **Figures**: F6, F7, S6, S7, S9
+- **Tables**: T5, ST3, ST5, ST6
+
+### N3: Failure-mode catalog
+
+- **Lucky-seed inflation**: E1 LOFO (§4.1), Tier 1 10-seed revocation (§4.14)
+- **News-feature dilution**: Horizon ablation MLP_all vs MLP_price (§4.6)
+- **Fold-4 regime collapse**: E1 (§4.1), Tier 1 Phase B (§4.14), Phase 5 Step 3 Plan Z (§4.10), Loss horserace ListMLE (§4.12)
+- **Multi-edge bundle harm**: E4-α (§4.3), Graph ablation (§4.8)
+- **Plan AAA T-1 leak**: Diagnostic (§4.5), Plan AAA 168 (§4.11)
+- **Selective-rejection failure**: SelectiveNet (§4.15)
+- **Sector-crowding**: Sector attribution (§4.16)
+- **Replication failure**: Diagnostic_price (§4.13)
+- **Figures**: F3, F4, F8, F10, S2, S8, S11, S12, S14
+- **Tables**: T2 (LOFO), T5 (edge), ST7 (limitations matrix)
+
+### N4: Methodology framework
+
+- **Walk-forward purge + embargo**: §4.1 + §4.9
+- **Multi-seed canonical 10**: §4.1
+- **Hansen SPA**: §4.4 + §4.10 (precedent)
+- **DM/HLN paired**: §4.4
+- **BH-FDR**: §4.4 + §4.3 + §4.11 + §4.12
+- **Block bootstrap CI**: §4.4 + §4.11
+- **LOFO sensitivity**: §4.1
+- **Cost ladder**: §4.4
+- **Multi-testing ledger**: §4.4 (`multiple_testing_ledger.json` with historical exploratory enumeration)
+- **Permutation Δ-IC**: §4.11
+- **T-1 stability diagnostic**: §4.5
+- **Figures**: F9, S5, S15, S16, S18
+- **Tables**: T3, T6, ST1, ST2
+
+---
+
+## §6. Implementation plan — sequenced script work
+
+> **Estimated total**: 5-8 days local work + ~1-1.5 weeks HATS (~3-4 days could be parallelized to Colab compute) = ~2.5 weeks before draft writing starts (week 5 per plan §8 timeline).
+
+### Phase 6.1: rcparams preset + skill verification (1 day, BLOCKING)
+
+- **Restart Claude Code session** so nature-* skills auto-load
+- Write `paper_figs/rcparams_storya.py` defining ACM-SIG / ICAIF-compatible rcparams (combining `matplotlib` skill defaults + `mpl_sizes.get_format('ICML')` + Times serif + 8pt caption + ≥300 DPI)
+- Smoke test: render 1 dummy bar chart, verify `figures/test.pdf` produced with correct dimensions
+- Verify all 7 currently-loaded skills + 6 nature-* skills usable via `Skill` tool
+
+### Phase 6.2: Prior-experiment figure ports (3-4 days)
+
+Scope: figures S4-S14 derived from prior experiments with existing result CSVs (no new compute needed).
+
+**Module split (per Q2 above, propose modular)**:
+
+1. `paper_figs/fig_horizon_ablation.py` → F7, F8, ST3 (from §4.6 + §4.13 cross-reference)
+2. `paper_figs/fig_plan_aaa.py` → F10, S4, S5, ST4 (from §4.5 + §4.11)
+3. `paper_figs/fig_phase5_step3.py` → S6, ST5 (from §4.10)
+4. `paper_figs/fig_loss_horserace.py` → S7, S8, S14, ST6 (from §4.12 + §4.13)
+5. `paper_figs/fig_graph_ablation.py` → S9 (from §4.8)
+6. `paper_figs/fig_phase5_diagnostics.py` → S10, S11 (from §4.16 + §4.17)
+7. `paper_figs/fig_selectivenet.py` → S12 (from §4.15)
+8. `paper_figs/fig_tier1_phaseb.py` → S13 (from §4.14)
+
+Each module: ~150-300 LOC, imports rcparams_storya, reads CSV, produces PDF + PNG to `figures/`.
+
+### Phase 6.3: Story A v3 figures (2 days)
+
+Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
+
+9. `paper_figs/fig_e1_anchor.py` → F2, F3, F4, S1, S2, S3, S17, T1, T2 (from §4.1)
+10. `paper_figs/fig_e6_statistical.py` → F9, S16, T3, ST2 (from §4.4)
+11. `paper_figs/fig_e6_cost_ladder.py` → F5, T4 (from §4.4)
+12. `paper_figs/fig_edge_ablation.py` → F6, S18, T5 (from §4.2 + §4.3)
+13. `paper_figs/fig_walkforward_calendar.py` → S15 (Gantt of folds + 21d purge)
+
+### Phase 6.4: Architecture + setup schematic (1 day)
+
+14. Use `scientific-schematics` skill to produce F1 (Story A architecture overview: data flow + model + edge config + walk-forward schematic in a single SVG)
+
+### Phase 6.5: Composite + summary figures (0.5 day)
+
+15. Multi-panel "Story A at a glance" composite combining F2 + F3 + F4 into single PDF page for §5 lead figure
+
+### Phase 6.6: HATS-3R-adapt baseline (~1-1.5 weeks parallel work — plan PROCEED-WITH-FIXES per parallel-session Codex T1)
+
+16. `run_hats_3r_adapt.py` per `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md` (post-Codex-T1-amendments) + `analyze_hats_lofo.py` (mirrors `analyze_e1_lofo.py:167-169`) — run on Colab A100 (mandatory 1-cell smoke benchmark before 50-cell launch per A-10), integrate into T1 row extension + S+1/S+2 supplementary figures; cell_id range [400, 449] (A-04 fix); HATS EXCLUDED from joint SPA M=6 (A-02 fix); locked Codex 3-gate decision rule (A-08); uniform-α extension pre-committed (A-11)
+
+### Phase 6.7: Verification + provenance check (0.5 day)
+
+17. Every figure has source citation in its caption (per `.claude/rules/docs.md` §4)
+18. `python scripts/verify_docs_provenance.py docs/storya_paper_draft.md` passes before send to H博士
+
+---
+
+## §7. Constraints + risks
+
+### §7.1 Drive sync constraint
+
+- **Local** has only smoke 4 cells of E1 (per `.gitignore` design); per-day_ic .npy files for full 400 cells live on Drive at `/content/drive/MyDrive/GNN测试/experiments/storya_e1_anchor/per_day_ic/`
+- For figures requiring per-day IC time series (F4, S3): either pull from Drive OR run figure scripts on Colab + push small PDFs back
+- **Decision needed at script-writing time**: sync 400 .npy files from Drive (~50MB total) to local for offline figure work, OR script-on-Colab approach
+
+### §7.2 Figure-count vs page-limit
+
+- Upper bound here: ~25 figures + ~12 tables. ICAIF ACM SIG page limit is typically 8 pages + refs (extends to ~10 with supplementary). Realistic main-paper budget: **F1-F10 + T1-T6** (10 figures + 6 tables). Rest go to supplementary / online appendix.
+- **H博士 to decide** at writing-time per Q1 in frontmatter
+
+### §7.3 Reproducibility
+
+- All figure scripts use canonical 10 seeds (`.claude/rules/experiments.md`)
+- All scripts must include `git rev-parse HEAD` hash in figure metadata
+- rcparams preset must be version-locked (matplotlib + mpl_sizes versions pinned via `pip freeze | grep -E "matplotlib|mpl_sizes"`)
+- Output paths: ALL figures → `figures/`; ALL tables → `tables/`; PDF + PNG dual export per matplotlib-skill default
+
+### §7.4 Honest-numbers integrity (Rule 9 #5)
+
+- Several headline numbers in §4 above are quoted from project memory / plan citations rather than freshly read from CSVs (flagged "VERIFY" where applicable)
+- **MANDATORY**: every figure script begins with a header comment block listing the source CSV columns + verification that the script's headline plot value matches the source value to ≥3 decimal places
+- Codex Touchpoint 3 (results review) MUST run before docs/storya_paper_draft.md ships
+
+---
+
+## §8. Skills inventory for paper workflow
+
+### §8.1 Currently auto-loaded (per system list 2026-05-27)
+
+| Skill | Usage in paper workflow |
+|-------|------------------------|
+| `matplotlib` | Most figure scripts (PnL curves, heatmaps, bar plots, line plots, cost ladder) |
+| `scientific-schematics` | F1 architecture diagram, walk-forward Gantt S15 |
+| `scientific-writing` | §1-§7 prose drafting |
+| `literature-review` | Plan §1.9 16-paper matrix verification (Codex C-06 deferred task) |
+| `peer-review` | Self-review pass before submission |
+| `citation-management` | BibTeX generation for 16+ refs |
+| `venue-templates` | ACM SIG `.cls` + bibstyle |
+
+### §8.2 Awaiting restart-to-load
+
+| Skill | Status | Usage |
+|-------|--------|-------|
+| `nature-figure` | symlinked at `~/.claude/skills/nature-figure`, awaiting session reload | Alternative figure style for journal backup (Quant Finance has different conventions than ACM) |
+| `nature-writing` | symlinked, awaiting reload | Optional secondary writing aid |
+| `nature-polishing` | symlinked, awaiting reload | Final prose polish pass |
+| `nature-response` | symlinked, awaiting reload | Reviewer-response letter draft (post-submission) |
+| `nature-citation` | symlinked, awaiting reload | Cross-check with citation-management |
+| `nature-data` | symlinked, awaiting reload | Reproducibility statement / data availability section |
+
+### §8.3 Python packages
+
+- `matplotlib`, `seaborn`, `numpy`, `pandas`, `scipy.stats` (already in gnn conda env)
+- `mpl_sizes` 0.0.2 (just installed)
+- `arch` (for SPA), `statsmodels` (NW-HAC) — already used in E6 scripts
+
+---
+
+## §9. Decision log + cross-references
+
+### §9.1 Decisions encoded in this plan (need H博士 confirmation)
+
+1. **Figure budget**: upper-bound 25 figures + 12 tables; H博士 to pick subset at writing
+2. **Module split**: 13 individual `paper_figs/fig_*.py` scripts (modular) — H博士 confirmed Option Y pattern for compute_e6_edge_ablation.py, same pattern applied here
+3. **HATS scope**: full reproduction with 10 canonical seeds × 5 walk-forward × S&P 500 (parallel to E1 design)
+4. **rcparams source**: matplotlib-skill defaults + ICML preset from mpl_sizes + manual 5-line ACM-SIG override (Times serif, double-column 3.33" half-width / 7.0" full-width)
+5. **PDF + PNG dual export**: keep matplotlib-skill default; PDF for inclusion in paper, PNG for slide / quick share
+
+### §9.2 Tri-doc cross-reference
+
+→ progress: 2026-05-27-d (handoff is informational, no new experiment, but adds §6 work plan) | plan: 2026-05-27 (5 Decision Log rows landed) | analysis: 2026-05-27-c (last analysis entry — handoff references but does not modify)
+
+### §9.3 References
+
+- Plan: `/Users/heruixi/.claude/plans/handoff-session-ranking-swirling-lemur.md` (Story A v3, LOCKED 2026-05-26 evening, Codex Round E PASS-WITH-FIXES)
+- Plan §1.9 honest caveats: source for §Limitations + ST7
+- Plan §1.6 HATS GO: confirmed 2026-05-27 (§4.18 plan + §6.6 scheduling)
+- Plan §1.4 statistical framework: source for §4.4 + N4 narrative
+- Recent commits: `5bef3b9` (E1/E6/LOFO/Plan AAA T-1 diagnostic), `706be0d` (E3/E4 edge ablation), `8149fab` (honesty-pass corrections) — all pushed
+- Rule 9 Touchpoint 1 (Plan Review) for this paper-figure-plan: OPTIONAL (this is a derivative work plan; Codex review of `run_storya_e1_anchor.py` + the v3 plan already passed Round E)
+- Rule 9 Touchpoint 2 (Code Review): WILL FIRE for `analyze_storya_results.py` or per-module `paper_figs/fig_*.py` once written (per H博士 directive)
+- Rule 9 Touchpoint 3 (Results Review): already DONE for E1+E6 + E3/E4 — review files at `artifacts/reviews/2026-05-27_codex_results_*.md`

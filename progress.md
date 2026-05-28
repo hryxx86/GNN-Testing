@@ -4,6 +4,64 @@
 
 ---
 
+## 2026-05-27-d: Codex Review — Plan (Touchpoint 1, Round A) — HATS-3R-adapt baseline (Story A §1.6)
+
+- Target: `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md`
+- Reviewer: codex-cli (no fallback needed; responded inside 15-min window)
+- Full review: `artifacts/reviews/2026-05-27_codex_plan_A.md`
+- Summary: **1 CRITICAL + 8 MAJOR + 2 CONCERN**
+- Initial verdict: **BLOCK-EXECUTION** → Post-disposition verdict: **PROCEED-WITH-FIXES** (8 FIXED + 3 ACCEPTED-AS-CONCERN + 0 REJECTED)
+
+### Evidence verified by Claude before disposition (Rule 9 诚信要求 #5)
+
+- `data/reference/sp500_sectors.csv:1` — only `Symbol,GICS Sector` columns; file mtime 2026-02-09. CRITICAL A-01 confirmed.
+- `compute_e6_dm_spa.py:582-584` — `spa_application_joint_M: 6` hardcoded. MAJOR A-02 confirmed.
+- `compute_e6_dm_spa.py:367-372` (SPA) + `:454-457` (DM) — silent min-length truncate. `compute_e6_edge_ablation.py:156-164` already hard-errors. MAJOR A-03 confirmed.
+- `run_storya_e1_anchor.py:197-215` cell_id formula → range [0, 399]; HATS plan range [0, 49] overlaps. MAJOR A-04 confirmed.
+- `analyze_e1_lofo.py:167-169` + `compute_e6_edge_ablation.py:7-18` — full/LOFO-4/Fold-4-only triple-column pattern. MAJOR A-09 reporting gap confirmed.
+
+### Disposition summary
+
+| Finding | Severity | Disposition | H博士 decision |
+|---|---|---|---|
+| A-01 sector PIT | CRITICAL | ACCEPTED-AS-CONCERN | Project-level §Limitations (option A); sp500_sectors.csv fetch=2026-02-09 documented |
+| A-02 joint SPA M=6 vs 7 | MAJOR | FIXED | HATS EXCLUDED from joint SPA; per-universe B M=3→4 only; joint stays 6 |
+| A-03 silent truncate | MAJOR | FIXED | Port compute_e6_edge_ablation.py:156-164 RuntimeError pattern into compute_e6_dm_spa.py |
+| A-04 cell_id collision | MAJOR | FIXED | cell_id_hats = 400 + f*10 + s_idx, range [400, 449]; injectivity assert |
+| A-05/06/07 not Kim HATS / GRU / Wikidata | MAJOR (×3) | FIXED | Renamed to "HATS-3R-adapt"; prereg `claim_scope` narrows Template-1 claim |
+| A-08 decision rule thresholds | MAJOR | FIXED | Codex 3-gate: ΔIC > +0.005 + BH-HLN < 0.05 + LOFO-4 sign-preserve (POS); ΔIC < −0.005 OR (p > 0.20 AND LOFO-4 ≤ 0) (NEG); else TIE |
+| A-09 LOFO-4 reporting | MAJOR | FIXED | analyze_hats_lofo.py (mirror analyze_e1_lofo.py:167-169); LOFO-4 sign-preservation in decision rule |
+| A-10 wall-time provisional | CONCERN | ACCEPTED-AS-CONCERN | 13min/cell labeled PROVISIONAL; mandatory 1-cell A100 smoke benchmark gates 50-cell launch |
+| A-11 uniform-α control | CONCERN | ACCEPTED-AS-CONCERN | prereg `uniform_alpha_extension_rule`; no attention-specific claims without +50 cell uniform-α run |
+
+### Plan amendments made (all in `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md`)
+
+1. Title + opening renamed: "HATS-style 3-Relation Adaptation"
+2. New §"Prior-art scope clarification" table — 4 dimensions where this differs from Kim 2019
+3. cell_id range updated to [400, 449] + injectivity assertion in Verification §4
+4. Wall-time labeled PROVISIONAL; A100 smoke benchmark added as gate
+5. prereg.json schema rewritten: model="HATS-3R-adapt", claim_scope narrowed, spa_family_expansion HATS excluded from joint, decision_rules_locked_2026_05_27 with 3 gates, uniform_alpha_extension_rule pre-committed, sector_pit_limitation documented
+6. E6 integration table: hard-error port (A-03), cell_id injectivity (A-04), joint SPA unchanged (A-02), DM family 5→8 per universe B
+7. Risks expanded R6 (sector PIT) + R7 (provisional wall-time)
+8. Verification gates: 10 steps (added cell_id check, hard-align check, A100 smoke benchmark, LOFO-4 column)
+9. Out-of-scope updated: no joint SPA participation, no attention-specific claims, no E4-α sector re-run
+
+### Implementation gate status
+
+- Touchpoint 1 (plan): **PROCEED-WITH-FIXES applied to plan; no remaining OPEN findings**
+- Touchpoint 2 (code): PENDING — triggers when `run_storya_e1_6_hats.py` is written
+- Touchpoint 3 (results): PENDING — triggers when 50-cell results land
+
+### Next actions
+
+- Per H博士 instruction "只写 plan 文件，不动手", no implementation yet
+- Awaits H博士 GO signal to start writing `run_storya_e1_6_hats.py`
+- When GO: write skeleton → local M4 shape smoke → Touchpoint 2 Codex code review → fix → A100 1-cell smoke benchmark → re-lock wall budget → 50-cell launch
+
+→ progress: 2026-05-27-d | plan: 2026-05-27-d (plan file under .claude/plans/; main plan.md §1.6 status still ⏳ STRETCH) | analysis: N/A (no experimental findings yet)
+
+---
+
 ## 2026-05-26-c: Fallback Reviewer — Codex unavailable, finance-gnn-reviewer took Touchpoint 1 Round B
 
 - **Trigger condition met**: Codex companion returned `{"available": false, "sessionId": "9cff3cd9...", "candidate": null}` when invoked for plan Round B review. Per CLAUDE.md Rule 9 §Fallback ("Codex CLI 在 Rule 9 任一触发点响应超过 15 分钟（含：完全不响应 / 错误中断 / 输出空内容）"), the "完全不响应" case fired.
@@ -4658,7 +4716,52 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
-## 2026-05-27-d: Honesty pass — numerical corrections to analysis.md 2026-05-27-a + plan.md Decision Log 2026-05-27 rows + record completeness audit
+## 2026-05-27-f: Comprehensive paper figure/table/experiment handoff plan + 3 plotting skills installed
+
+> **Trigger**: H博士 directive 2026-05-27 — "写一个详细handoff，我们的图不只是这两天跑的，这两天是补充，而之前的跑过的实验也都出图。围绕paperA的idea，能出多少出多少图，按照不同的实验进行归类。先写一个plan梳理整个paper和实验的流程，你可以参考所有已有的工作。再安装nature-skill。"
+
+### Skills installed (Claude Code skill marketplace)
+
+| Skill | Repo | Install path | Status |
+|-------|------|--------------|--------|
+| matplotlib | tvhahn/matplotlib-skill | `~/.claude/skills/matplotlib` → `matplotlib-skill/skills/matplotlib` | ✓ auto-loaded |
+| scientific-schematics / scientific-writing / literature-review / peer-review / citation-management / venue-templates | jimmc414/Kosmos (kosmos-claude-scientific-writer) | `~/.claude/skills/*` → symlinks | ✓ all 6 auto-loaded |
+| nature-figure / nature-writing / nature-polishing / nature-response / nature-citation / nature-data | Yuan1z0825/nature-skills | `~/.claude/skills/nature-*` → symlinks | ⏳ awaiting session restart |
+| mpl_sizes 0.0.2 (pip pkg) | BayesWatch/mpl_sizes | gnn conda env | ✓ verified |
+
+### Handoff document created
+
+`docs/session_handoff_2026-05-27_storya_paper_plan.md` — 600+ lines, YAML frontmatter per `.claude/rules/docs.md` §5 manifest schema.
+
+Structure:
+- §1 Paper-level structure (ICAIF 2026 ACM SIG, 7-section, 4-narrative-pillar locked)
+- §2 Master Figure List: 10 main + 18 supplementary = up to 28 figures
+- §3 Master Table List: 6 main + 7 supplementary = up to 13 tables
+- §4 **Per-experiment mapping covering 18 experiment families** — both Story A v3 (last 2 days E1/E3/E4/E6/Plan AAA T-1 diagnostic) AND prior work (horizon ablation 360, arch comparison ~150, graph ablation 28, wf5 90, Phase 5 Step 3 Plan Z, Plan AAA 168, Loss horserace ~600, Diagnostic_price 200, Tier 1 Phase A/B ~1400, SelectiveNet 70, sector attribution, Phase 5 diagnostics suite) plus §4.18 HATS-3R-adapt (planned in parallel session, see 2026-05-27-d above)
+- §5 Narrative-pillar → figure/table cross-index (N1/N2/N3/N4)
+- §6 Implementation plan: 7 phases ~2.5 weeks (13 modular `paper_figs/fig_*.py` scripts)
+- §7 Constraints (Drive sync gap; figure-count vs page-limit tradeoff)
+- §8 Skills inventory (7 loaded + 6 awaiting + Python packages)
+- §9 Decision log (4 open questions for H博士) + tri-doc refs
+
+### Open questions for H博士
+
+| Q | Topic | Default if no override |
+|---|-------|------------------------|
+| Q1 | Figure budget: exhaustive 25/12 vs lean 10/6 | Write all 25 + trim at writing |
+| Q2 | One mega script vs 13 modular `paper_figs/fig_*.py` | Modular (Option Y precedent) |
+| Q3 | Venue: ICAIF 2026 ACM SIG (8-10pp) vs Quant Finance journal (no limit) | ICAIF 2026 primary |
+| Q4 | HATS scope (now superseded by parallel HATS-3R-adapt plan with locked claim_scope per Codex Touchpoint 1) | See 2026-05-27-d HATS-3R-adapt entry |
+
+### Tri-doc cross-reference
+
+→ progress: 2026-05-27-f | plan: 2026-05-27 Decision Log (no new rows; handoff references existing) | analysis: 2026-05-27-c (referenced, not modified)
+
+---
+
+## 2026-05-27-e: Honesty pass — numerical corrections to analysis.md 2026-05-27-a + plan.md Decision Log 2026-05-27 rows + record completeness audit
+
+> **Note 2026-05-27-f**: this entry was originally labeled 2026-05-27-d but renamed to -e to resolve ID collision with parallel-session HATS-3R-adapt entry (now occupying 2026-05-27-d). Substance unchanged. Internal "Correction 2026-05-27-d" notes in `docs/analysis.md` 2026-05-27-a Q1 + Q3 item 1 were correspondingly updated to "Correction 2026-05-27-e".
 
 > **Trigger**: H博士 new-conversation challenge "你有记录吗，我开新对话记忆还停留在E1没跑完。多次检查是否如实记录实验结果" — initiated a full audit of recorded-vs-actual experimental outputs per Rule 9 诚信要求 #1 / #5 ("不准捏造" / "不准偷懒验证").
 
@@ -4702,7 +4805,7 @@ Local `experiments/storya_e1_anchor/results.csv` contains only **4 smoke cells**
 
 ### Tri-doc cross-reference
 
-→ progress: 2026-05-27-d | plan: 2026-05-27 (5 Decision Log rows added) | analysis: 2026-05-27-a (corrected in-place + correction notes added)
+→ progress: 2026-05-27-e | plan: 2026-05-27 (5 Decision Log rows added) | analysis: 2026-05-27-a (corrected in-place + correction notes added)
 
 ---
 
