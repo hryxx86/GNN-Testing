@@ -4658,6 +4658,44 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
+## 2026-05-27-b: E1 results + E6 + LOFO + Touchpoint 3 + E3/E4 done + Plan AAA T-1 diagnostic
+
+### Story A v3 — full experimental sweep complete (E1 + E3 + E4-α)
+
+**E1 (400 cells, Colab A100)**: 4 models × 10 canonical seeds × 5 walk-forward folds × 2 universes. 5.58h A100 wall total, mean 50.3s/cell, all converged. Headline: Univ B GAT IC=0.035 / SAGE-Mean 0.032 / MLP 0.029 / LGB 0.006; Univ C all 4 models converge at IC 0.043-0.053. Source: `experiments/storya_e1_anchor/results.csv`.
+
+**E6 post-process** (`compute_e6_dm_spa.py`, CPU ~5 min): Hansen SPA p_consistent = 0.147 / 0.589 / 0.281 (B / C / joint) → **0/all reject H₀** of no candidate dominance over LightGBM. DM/HLN 5-test family per universe, 0/5 reject after BH-FDR. Bootstrap CI (block_size=21, n_boot=5000) excludes 0 for B-neural (GAT/SAGE/MLP) and all 4 Univ C models; LGB Univ B CI [-0.007, 0.019] crosses 0. Outputs at `artifacts/storya_e6_dm_spa/{spa_results.csv, dm_hln_results.csv, bootstrap_ci.csv, cost_ladder.csv, summary.md}`.
+
+**LOFO + per-fold + per-cell decomposition** (`analyze_e1_lofo.py`, CPU ~3 min, addresses Codex Touchpoint 3 Round A-bis findings 02/04/05): Most positive results driven by Fold 4 (Q2-2025 regime outlier). Univ B SAGE-Mean IC drops 53% under LOFO-4; Univ B LightGBM Net Sharpe @10bps flips sign −0.83 → +1.07; Univ C all 4 models lose 47-63% IC; single cell (Univ C GAT, seed=86, fold=4) reports Sharpe_gross=75.0 inflating GAT Univ C Sharpe mean from 0.85 to 3.08. Outputs at `artifacts/storya_e6_dm_spa/{lofo_diagnostic.csv, per_fold_table.csv, per_cell_distribution.csv, lofo_summary.md}`.
+
+**Codex Touchpoint 3 (Rule 9)**: Round A finance-gnn-reviewer fallback (codex-rescue auto-fallback, not saved to disk) + Round A-bis real Codex retry (`artifacts/reviews/2026-05-27_codex_results_e1e6_A-bis.md`) — both verdicts MIXED/PROCEED-WITH-FIXES with convergent substantive recommendations. 7 findings: 0 CRITICAL + 3 MAJOR + 2 CONCERN + 2 OK. All 6 actionable findings addressed (5 in paper §Results LOCKED language per analysis.md 2026-05-27-a; 1 = ledger expansion fixed below).
+
+**Multi-testing ledger expansion** (Codex RR-A-bis-06 MAJOR FIXED): `artifacts/storya_e6_dm_spa/multiple_testing_ledger.json` rewritten with `historical_exploratory_trials` block enumerating Plan AAA (61 group-level tests), horizon ablation (360 cells = 4 models × 6 horizons × 3 seeds × 5 folds), loss horserace (600 cells = 2 models × 3 losses × 2 subsets × 10 seeds × 5 folds), and `spa_scope_clarification` explicitly stating SPA controls only post-E1 confirmatory family (M=3 per universe / M=6 joint), NOT the broader research path.
+
+**E3 (50 cells news-as-edge co-occurrence)**: SAGE-Mean × Universe B × {correlation ∪ news cooccurrence edge}. Colab A100 tmux story_a, ~1.5h wall. IC mean = 0.041 (vs α1 corr-only baseline 0.032; +0.009). Source: `experiments/storya_e3_news_edge/results.csv`. PIT-safe news edges via `news_edge_source_schema.md` v2 NYSE session_close UTC cutoff (D-03 fix).
+
+**E4-α (100 cells edge ablation)**: SAGE-Mean × Universe B × {α2=corr+sector, α4=corr+sector+news}. Colab A100 tmux story_a (auto-launched after E3), ~1h wall. IC means: α2=0.041 (+0.009 over α1), α4=0.038 (+0.006 over α1). Per-fold pattern matches E1 — Fold 4 still dominates. Source: `experiments/storya_e4_alpha/results.csv`. Sector edges from `data/reference/sp500_sectors.csv` GICS 11-sector → 13,535 undirected pairs.
+
+**Plan AAA T-1 stability diagnostic** (`analyze_plan_aaa_t1_diagnostic.py`, M4 CPU 0.3 min — faster than the ~20 min initial estimate because computation is fully vectorized 158 features × 313 days × 2 regimes). Question: would Plan AAA's top-15 groups stay top-15 if input Alpha158 had been T-1-shifted? Result: **proxy-raw ∩ proxy-T1 = 15/15** (single-feature IC ranking robust to T-1 shift; group-level |IC| changes ≤0.007 absolute for top-15 alpha158-affected groups) but **orig ∩ proxy-raw = 5/15** (sanity check failed: proxy single-feature IC ≠ Plan AAA's permutation Δ-IC by construction). Honest verdict per H博士 2026-05-27-b option A: diagnostic is INCONCLUSIVE for permutation-ranking stability but POSITIVELY EVIDENCES small leak magnitude in single-feature IC terms; §Limitations Item 7 written into `docs/analysis.md` 2026-05-27-a covering both findings without overclaiming. Full Plan AAA re-run with T-1-shifted Alpha158 deferred to paper §Future Work (~12-24h M4). Output: `artifacts/plan_aaa_t1_diagnostic/{proxy_ic_per_feature.csv, group_ranking_comparison.csv, summary.md}`.
+
+### Codex review artifacts created today
+
+- `artifacts/reviews/2026-05-27_codex_code_e3build_A.md` — Touchpoint 2 on `scripts/build_news_edge_source.py` (PIT-safe news edge source builder)
+- `artifacts/reviews/2026-05-27_codex_code_e6_A.md` — Touchpoint 2 on `compute_e6_dm_spa.py` (NW-HAC divisor fix CR-E6-A-03 MAJOR)
+- `artifacts/reviews/2026-05-27_codex_code_e3run_A.md` — Touchpoint 2 on `run_storya_e3_news_edge.py` (3 findings, all FIXED)
+- `artifacts/reviews/2026-05-27_codex_code_e4alpha_A.md` — Touchpoint 2 on `run_storya_e4_alpha.py` (PASS, 0 findings)
+- `artifacts/reviews/2026-05-27_codex_results_e1e6_A-bis.md` — Touchpoint 3 real Codex retry on E1+E6
+
+### Pending (not blocking)
+
+- E6 post-process on E3+E4 results: existing `compute_e6_dm_spa.py` written for (model × universe), needs leaner adaptation for (edge_config) ablation question. ~1h Python coding. Required for paper §Results edge-ablation section.
+- Codex Touchpoint 3 on E3+E4 results (after E6 adapted): per Rule 9 must happen before writing analysis claims about edge benefits.
+- Paper writing (weeks 5-8 per plan §8).
+
+→ progress: 2026-05-27-b | plan: 2026-05-26 LOCKED DECISIONS (Story A v3) | analysis: 2026-05-27-a
+
+---
+
 ## 2026-05-27-a: E1 Colab launch + 4 downstream scripts + Codex Touchpoint 2 ×4
 
 ### Session arc (continuation of 2026-05-26-k smoke pass)

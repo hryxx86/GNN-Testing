@@ -1,0 +1,98 @@
+{
+  "schema_version": "2026-05-27-a",
+  "last_updated": "2026-05-27",
+  "update_history": [
+    "2026-05-27: initial version (E1 confirmatory family + cost ladder + bootstrap params)",
+    "2026-05-27-a: added historical_exploratory_trials block + spa_scope_clarification per Codex Touchpoint 3 Round A-bis CODEX-RR-E1E6-A-bis-06 MAJOR"
+  ],
+  "primary_storya_trials": {
+    "description": "Post-E1 confirmatory family — SPA + DM/HLN + bootstrap CI + cost ladder applied here ONLY",
+    "models": 4,
+    "model_names": ["GAT", "SAGE-Mean", "MLP", "LightGBM"],
+    "seeds_per_model": 10,
+    "canonical_seeds": [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026],
+    "folds": 5,
+    "universes": 2,
+    "universe_names": ["B (10-dim hc)", "C (51-dim Plan AAA top-15 members)"],
+    "total_E1_cells": 400,
+    "source_csv": "experiments/storya_e1_anchor/results.csv"
+  },
+  "ablation_storya_trials": {
+    "description": "E3 and E4-alpha edge-ablation families; will be added to SPA family ONLY for the edge-ablation-specific question (NOT pooled with primary E1)",
+    "E3_news_encoding_configs": 2,
+    "E3_cells_new": 50,
+    "E3_baseline_reuse": "E1-B SAGE-Mean (50 cells)",
+    "E4_alpha_edge_configs": 4,
+    "E4_cells_new": 100,
+    "E4_alpha2_baseline_reuse": "E1-B SAGE-Mean (50 cells)",
+    "E4_alpha3_baseline_reuse": "E3 SAGE-Mean (50 cells)"
+  },
+  "historical_exploratory_trials": {
+    "description": "Pre-Story-A exploratory analyses that informed Universe C composition + horizon selection + loss function choice. NOT controlled by post-E1 SPA. Disclosed for transparency per Codex Touchpoint 3 Round A-bis CODEX-RR-E1E6-A-bis-06 MAJOR.",
+    "plan_aaa_group_ranking": {
+      "source_csv": "artifacts/plan_aaa/ranking.csv",
+      "groups_tested": 61,
+      "test_method": "Group permutation Δ-IC vs baseline with NW-HAC SE + BH-FDR q=0.05",
+      "headline_result": "0/61 groups pass BH-FDR at q=0.05; 1/61 (CORD20+1) FDR-rejected in NEGATIVE direction",
+      "informs_storya": "Universe C composition (51 features = top-15 group members) derives from this ranking; ranking step had same-day OHLC leak (Plan AAA §1.9 caveat #5) — paper §Limitations qualifies"
+    },
+    "horizon_ablation": {
+      "source_csv": "experiments/horizon_ablation_results.csv",
+      "models": 4,
+      "model_names": ["SAGE-Mean_all", "SAGE-Mean_price", "MLP_all", "MLP_price"],
+      "horizons_days": [1, 5, 10, 21, 42, 63],
+      "seeds": 3,
+      "seed_values": [42, 123, 456],
+      "folds": 5,
+      "total_cells": 360,
+      "informs_storya": "21d horizon selection (Story A locked) — informed by Plan AAA results + this ablation showing 21d sweet spot for cross-sectional ranking"
+    },
+    "loss_horserace_phase5_step3": {
+      "source_csv": "experiments/loss_horserace/results.csv",
+      "models": 2,
+      "model_names": ["MLP", "SAGE-Mean"],
+      "losses": ["mse", "listmle", "pairwise"],
+      "feature_subsets": ["S6", "S8"],
+      "seeds": 10,
+      "folds": 5,
+      "total_cells": 600,
+      "informs_storya": "MSE loss locked for Story A E1; ListMLE fold-4 catastrophic collapse documented in docs/analysis.md 2026-04-27-b — informed Story A decision to focus on MSE+rank IC reporting, NOT learning-to-rank losses"
+    },
+    "total_exploratory_units": {
+      "plan_aaa_group_tests": 61,
+      "horizon_ablation_cells": 360,
+      "loss_horserace_cells": 600,
+      "sum": 1021,
+      "note": "Counts are heterogeneous (group-level test vs per-cell IC) — sum reported for upper-bound transparency only; should NOT be entered into a single multi-testing correction (different nulls per family)"
+    }
+  },
+  "spa_application": {
+    "universe_B_M_candidates": 3,
+    "universe_C_M_candidates": 3,
+    "joint_BC_M_candidates": 6,
+    "benchmark": "LightGBM (per universe; joint uses per-universe LGB pooled)",
+    "seed_aggregation_policy": "Seeds averaged per (model, universe, date, fold) BEFORE SPA (T=313 per fold-pool) — consistent with DM/HLN treatment per Codex Round D D-04. Treating each (model, seed) as independent SPA candidate is FORBIDDEN."
+  },
+  "dm_hln_application": {
+    "family_size_per_universe": 5,
+    "pairs_per_universe": [
+      "GAT vs LightGBM",
+      "SAGE-Mean vs LightGBM",
+      "MLP vs LightGBM",
+      "GAT vs MLP",
+      "SAGE-Mean vs MLP"
+    ],
+    "small_sample_correction": "HLN 1997 with h=21, T=313, correction factor ≈ 0.935",
+    "bh_fdr_q": 0.05
+  },
+  "cost_ladder_bps": [0, 5, 10, 15, 20, 30],
+  "cost_convention": "L1_one_way (turnover_L1 = 2 × turnover_oneside; at full rotation = 4)",
+  "block_bootstrap": {
+    "n_boot": 5000,
+    "block_size_days": 21,
+    "spa_reps": 10000,
+    "rationale": "block_size = horizon to capture intra-label autocorrelation (21d overlapping labels)"
+  },
+  "horizon_days": 21,
+  "spa_scope_clarification": "SPA controls familywise error over the POST-E1 CONFIRMATORY family ONLY (M=3 candidates per universe vs LGB benchmark; M=6 joint). It does NOT control familywise error over the broader project research path (Plan AAA 61 group-level tests, horizon ablation 360 cells, loss horserace 600 cells). Per Codex Round A-bis CODEX-RR-E1E6-A-bis-06: reviewers should treat post-E1 SPA non-rejection (p_consistent = 0.147 / 0.589 / 0.281 for B / C / joint) as evidence that the four pre-registered confirmatory candidates do not significantly beat LightGBM within their own family. The historical exploratory trials are disclosed for transparency but explicitly NOT in the SPA family — their role was hypothesis generation (which universe / which horizon / which loss), not confirmatory testing."
+}

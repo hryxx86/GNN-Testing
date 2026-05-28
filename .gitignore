@@ -31,6 +31,12 @@ artifacts/**
 !artifacts/README.md
 !artifacts/reviews/
 !artifacts/reviews/**
+# Story A E6 + LOFO + diagnostic — small text/JSON artifacts supporting paper §Results
+!artifacts/storya_e6_dm_spa/*.json
+!artifacts/storya_e6_dm_spa/*.csv
+!artifacts/storya_e6_dm_spa/*.md
+!artifacts/plan_aaa_t1_diagnostic/*.csv
+!artifacts/plan_aaa_t1_diagnostic/*.md
 
 # Claude Code — whitelist shareable team infrastructure, ignore everything else by default.
 # Previously (pre-2026-04-23) blanket-ignored `.claude/`, which broke Rule 9 infra shipping.

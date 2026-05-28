@@ -1,0 +1,4 @@
+universe,benchmark,candidates,M,T,p_lower,p_consistent,p_upper,reject_h0_at_5pct
+B,LightGBM,GAT|SAGE-Mean|MLP,3,313,0.1474,0.1474,0.1474,False
+C,LightGBM,GAT|SAGE-Mean|MLP,3,313,0.353,0.3843,0.3843,False
+JOINT(B+C),LightGBM_pooled,B.GAT|B.SAGE-Mean|B.MLP|C.GAT|C.SAGE-Mean|C.MLP,6,313,0.1364,0.1364,0.1364,False

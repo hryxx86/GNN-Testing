@@ -4,6 +4,119 @@
 
 ---
 
+## 2026-05-27-a: Story A E1 anchor (400 cells) + E6 + LOFO — Fold 4 drives most positive results
+
+> **TL;DR**: E1 anchor finished on Colab A100 (400/400 cells, 5.58h wall — source: `experiments/storya_e1_anchor/_meta.json`). Headline numbers superficially favor the Story A narrative — Univ B neural ICs are 5-8× the LightGBM baseline; Univ C shows 4-model IC convergence at ~0.05 consistent with the "feature-richness" hypothesis (decisions.md:19/20). But LOFO + per-fold + per-cell decomposition (`artifacts/storya_e6_dm_spa/lofo_summary.md`, addressing real-Codex Touchpoint 3 Round A-bis findings 02/04/05) shows **most positive results are Fold 4 (Q2-2025) driven**, and **Hansen SPA fails to reject H₀** for any candidate vs LightGBM (`artifacts/storya_e6_dm_spa/spa_results.csv` p_consistent rows). Paper must report (a) full 5-fold + LOFO-4 robustness side-by-side, (b) bootstrap-IC>0 vs SPA-vs-benchmark distinction explicit, (c) §Limitations strengthened on Q2-2025 regime variance and Plan AAA Alpha158 same-day OHLC leak provenance.
+
+### Question 1: What do the headline E1 + E6 numbers say?
+
+**E1 run**: 4 models × 10 canonical seeds × 5 walk-forward folds × 2 universes = 400 cells; 5.58h A100 wall (source: `experiments/storya_e1_anchor/_meta.json`). Per Codex Plan Round E PASS-WITH-FIXES + Codex Code Touchpoint 2 verdicts on `run_storya_e1_anchor.py` (`artifacts/reviews/2026-05-26_codex_plan_E.md`, `artifacts/reviews/2026-05-27_codex_code_e1anchor_A.md`). Source: `experiments/storya_e1_anchor/results.csv` (n=400 rows).
+
+**E6 post-process** (`compute_e6_dm_spa.py`, ~5 min CPU; outputs at `artifacts/storya_e6_dm_spa/`):
+
+| Test | Universe B | Universe C | Joint B∪C |
+|------|-----------|-----------|-----------|
+| Hansen SPA p_consistent vs LGB benchmark (source: `spa_results.csv` rows univ=B/C/joint) | 0.147 (M=3) | 0.589 (M=3) | 0.281 (M=6) |
+| DM/HLN paired ΔIC at BH-FDR q=0.05 (source: `dm_hln_results.csv`) | 0/3 reject vs LGB; 0/2 reject vs MLP | 0/3 reject vs LGB; 0/2 reject vs MLP | — (per-universe only) |
+
+Headline IC and bootstrap CI per (universe, model) (source: `artifacts/storya_e6_dm_spa/bootstrap_ci.csv` rows by universe×model, block_size=21, n_boot=5000):
+
+| Universe | Model | IC | 95% CI | CI excludes 0? |
+|----------|-------|-----|--------|----------------|
+| B | GAT | 0.035 | [0.018, 0.053] | ✓ |
+| B | SAGE-Mean | 0.032 | [0.014, 0.049] | ✓ |
+| B | MLP | 0.029 | [0.012, 0.046] | ✓ |
+| B | LightGBM | 0.006 | [−0.007, 0.019] | ✗ |
+| C | GAT | 0.043 | [0.026, 0.060] | ✓ |
+| C | SAGE-Mean | 0.048 | [0.031, 0.064] | ✓ |
+| C | MLP | 0.053 | [0.036, 0.069] | ✓ |
+| C | LightGBM | 0.047 | [0.030, 0.063] | ✓ |
+
+**Key tension** (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-01, OK severity): Bootstrap and SPA test different nulls. Bootstrap CI on IC excludes 0 → **absolute** IC > 0. SPA p > 0.05 → no **paired** dominance over LightGBM. Both can hold simultaneously; not a contradiction. Univ C: 4-model IC range 0.043-0.053 (~0.010 spread) consistent with decisions.md:19/20 feature-richness hypothesis IF no shared leak — Codex RR-A-bis-03 qualifies below.
+
+### Question 2: How much of this survives LOFO?
+
+LOFO (Leave-One-Fold-Out) IC means, computed by `analyze_e1_lofo.py` after Codex Round A-bis flagged Fold 4 uniformity (RR-A-bis-02). Full table at `artifacts/storya_e6_dm_spa/lofo_summary.md`; below shows headline change when dropping Fold 4 (the Q2-2025 known regime outlier):
+
+| Universe | Model | none (full) | drop f4 | f4-drop % |
+|----------|-------|-------------|---------|-----------|
+| B | GAT | 0.035 | 0.022 | **−38%** |
+| B | SAGE-Mean | 0.032 | 0.015 | **−53%** |
+| B | MLP | 0.029 | 0.025 | −14% |
+| B | LightGBM | 0.006 | 0.018 | **+200%** |
+| C | GAT | 0.043 | 0.016 | **−63%** |
+| C | SAGE-Mean | 0.048 | 0.024 | **−50%** |
+| C | MLP | 0.053 | 0.028 | **−47%** |
+| C | LightGBM | 0.047 | 0.030 | **−36%** |
+
+Source: `artifacts/storya_e6_dm_spa/lofo_diagnostic.csv` (universe, model, left_out_fold='none' vs '4').
+
+**Net Sharpe @10bps** with LOFO-4 (source: same `lofo_diagnostic.csv` column `Sharpe_net_10bps_mean`):
+
+| Universe | Model | full | drop f4 | Δ |
+|----------|-------|------|---------|---|
+| B | GAT | 1.27 | 0.88 | −31% |
+| B | SAGE-Mean | 1.62 | 0.88 | **−46%** |
+| B | MLP | 1.64 | 1.01 | **−39%** |
+| B | LightGBM | −0.83 | +1.07 | **sign flip** |
+| C | GAT | 3.08 | 0.85 | **−72%** |
+| C | SAGE-Mean | 1.30 | 0.43 | **−66%** |
+| C | MLP | 1.88 | 0.71 | **−62%** |
+| C | LightGBM | 2.03 | 1.14 | **−44%** |
+
+**Per-cell outlier flagging** (source: `artifacts/storya_e6_dm_spa/per_cell_distribution.csv`, top-3 / bot-3 by Sharpe_gross per cell): Univ C GAT cell_id=240 (seed=86, fold=4) reports Sharpe_gross = **75.0**, next-highest at cid=249 = 17.2. This single cell substantially inflates the 50-cell mean (3.62) → headline Sharpe 3.08 is outlier-fragile (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-04 CONCERN materially confirmed).
+
+**Findings**:
+1. **Univ B neural advantage is genuine but smaller than headline**: ~53% of SAGE-Mean's IC and ~46% of MLP's Net Sharpe vanish without Fold 4. GAT survives best (−38% IC, −31% Net Sharpe). All three still positive after LOFO-4.
+2. **Univ C 4-model convergence ≈ disappears without Fold 4**: 0.043-0.053 range collapses to 0.016-0.030 range. The "feature-richness universal lift" narrative loses ~50-60% of its magnitude (CODEX-RR-E1E6-A-bis-03 materially confirmed).
+3. **Univ B LightGBM "failure" is a Fold 4 artifact**: full IC = 0.006 (CI [−0.007, 0.019] crosses 0); without f4, IC = 0.018 (positive) and Net Sharpe @10bps **flips sign** −0.83 → +1.07. Cannot claim Universe B feature deficit "broke" trees (CODEX-RR-E1E6-A-bis-05 materially confirmed).
+4. **Univ C GAT Sharpe 3.08 → 0.85 without f4 (−72%)**: not a stable headline number; cell cid=240 single-handedly distorts the mean.
+
+### Question 3: What does Codex Touchpoint 3 (real Round A-bis) say the paper must say?
+
+Real Codex retry verdict at `artifacts/reviews/2026-05-27_codex_results_e1e6_A-bis.md`: MIXED/PROCEED-WITH-FIXES; convergent with finance-gnn-reviewer fallback Round A on substantive recommendations. 7 findings: 0 CRITICAL + 3 MAJOR + 2 CONCERN + 2 OK.
+
+Paper §Results LOCKED language (per Codex recommendations + LOFO evidence above):
+
+1. **Bootstrap vs SPA framing separated** (CODEX-RR-E1E6-A-bis-01): "Bootstrap CIs reject IC = 0 for all four Universe C models and three of four Universe B models. Hansen SPA does NOT reject H₀ of no candidate dominance over the LightGBM benchmark (p_consistent = 0.147 / 0.589 / 0.281 for B / C / joint — source: `spa_results.csv` rows univ=B/C/joint p_consistent column). The two tests address different nulls: absolute IC > 0 vs paired benchmark dominance. Both findings can hold; we do not claim GNN benchmark dominance."
+
+2. **Fold 4 robustness column mandatory in Table 2** (CODEX-RR-E1E6-A-bis-02): Each headline IC / Sharpe row gets a paired "LOFO-4" column; bolded if drop > 40%. Footnote: "Fold 4 (test period Q2-2025) is a known regime outlier (see §Limitations). LOFO-4 isolates results not driven by this single fold."
+
+3. **Univ C convergence framed as 'similar across families IF no shared leak'** (CODEX-RR-E1E6-A-bis-03): "All four model families perform similarly on the rich Universe C feature set, with full-fold IC range 0.043-0.053 narrowing further to 0.016-0.030 under LOFO-4. The convergence is consistent with feature-richness saturation but cannot be distinguished from a shared signal source. The Universe C composition derives from Plan AAA top-15 group ranking which used same-day-evaluated Alpha158 features (§Limitations item 5)."
+
+4. **Univ C GAT Sharpe presented as economic sensitivity, NOT robust alpha** (CODEX-RR-E1E6-A-bis-04): "Univ C GAT exhibits mean Net Sharpe @10bps = 3.08 (CI [1.05, 6.19], std 9.94) over 50 cells; the distribution is heavy-tailed with a single cell (seed=86, fold=4) at Sharpe_gross = 75.0 substantially inflating the mean. LOFO-4 reduces the mean to 0.85 (−72%). Reported as an unstable economic sensitivity, not a robust alpha."
+
+5. **Univ B LightGBM 'underperformance' qualified, NOT 'failure'** (CODEX-RR-E1E6-A-bis-05): "Univ B LightGBM IC = 0.006 [−0.007, 0.019] is indistinguishable from zero; full Net Sharpe @10bps = −0.83 [−2.21, 0.40] reflects economic underperformance after costs concentrated in Fold 4 (LOFO-4 → +1.07). Characterized as 'Universe B economic underperformance dominated by Q2-2025 regime variance', not a statistical IC failure."
+
+6. **Multi-testing ledger must enumerate historical exploratory families** (CODEX-RR-E1E6-A-bis-06, PENDING fix): Current `multiple_testing_ledger.json` mentions but does not count Plan AAA (61 groups), horizon ablation (360 cells), Phase 5 Step 3 subsets (7). Ledger expansion is the only outstanding Touchpoint 3 fix; tracked in plan §10.
+
+### Question 4: §Limitations consequences
+
+Plan §1.9 honest-caveats list gains one new item from this analysis:
+
+**Item 6 (new, from LOFO)**: "Q2-2025 (Fold 4) regime variance. Per-fold IC and Sharpe means show Fold 4 carries a disproportionate share of positive performance signal. LOFO sensitivity analysis (Table X) shows most headline Universe C IC numbers lose 47-63% magnitude without Fold 4, and Universe B LightGBM Net Sharpe flips sign. We report all results with paired LOFO-4 columns. The 5-fold mean is the headline number; LOFO-4 is the lower bound. Both deserve equal reader weight pending future evaluation on additional regimes."
+
+**Item 5 (existing — Plan AAA leak provenance)**: Already in plan §1.9 caveat #5. Universe C composition derives from Plan AAA top-15 groups which had same-day OHLC leak in the ranking step (`run_plan_aaa_168_ranking.py:219`); E1's runtime T-1 shift in `build_universe_C` keeps the 400 E1 results leak-free, but the composition basis carries this caveat. Re-ranking Plan AAA with proper T-1 shift is paper §Future Work, not a current submission blocker.
+
+**Item 7 (new, from Plan AAA T-1 diagnostic — H博士 verdict A)**: Plan AAA T-1 stability diagnostic (`analyze_plan_aaa_t1_diagnostic.py`, output `artifacts/plan_aaa_t1_diagnostic/`) computed single-feature mean per-day spearman IC for 158 Alpha158 features under both leaky (raw) and T-1-shifted alignment on 313 test days; group-level proxy importance = mean(|feature_IC|) over members. Result: **proxy ranking is robust to T-1 shift (proxy-raw ∩ proxy-T1 = 15/15, group-level IC drops <0.007 absolute for all top-15 alpha158-affected groups)**, but the proxy itself only matches Plan AAA's permutation Δ-IC ranking at 5/15 (proxy ≠ permutation Δ-IC by construction — permutation captures model-training interaction effects single-feature IC misses). Honest conclusion: the leak's **direct effect on single-feature IC magnitude is small** (top-15 alpha158-affected groups change IC by ≤0.007 absolute under T-1 shift); however, the diagnostic cannot rule out that the leak materially changed Plan AAA's permutation Δ-IC group ordering, since the proxy is not a valid stand-in for the permutation framework. A definitive answer requires re-running Plan AAA's full permutation framework with T-1-shifted Alpha158 (~12-24h M4; deferred to paper §Future Work per Codex RR-A-bis-03 + H博士 2026-05-27 verdict A). The §Limitations language reflects this honestly without overclaiming or panicking.
+
+### Outputs
+
+- `experiments/storya_e1_anchor/results.csv` — 400 cells
+- `artifacts/storya_e6_dm_spa/{spa_results.csv, dm_hln_results.csv, bootstrap_ci.csv, cost_ladder.csv, multiple_testing_ledger.json, summary.md}` — E6 framework
+- `artifacts/storya_e6_dm_spa/{lofo_diagnostic.csv, per_fold_table.csv, per_cell_distribution.csv, lofo_summary.md}` — LOFO + per-fold + per-cell decomposition
+- `artifacts/reviews/2026-05-27_codex_results_e1e6_A-bis.md` — Codex Touchpoint 3 real Codex retry verdict (Round A finance-gnn-reviewer fallback was conducted in-session but not saved as a separate file; the convergent recommendations are summarized inside the A-bis review body §"Round-A comparison")
+
+### Decision
+
+Plan §1.9 caveats item 6 added. Paper §Results template language for items 1-5 LOCKED per Q3 above. Multi-testing ledger expansion (Q3 item 6) is the only outstanding Touchpoint 3 fix. No additional E1 seeds (would violate pre-registration A-02 finding; LOFO addresses Fold 4 question directly without seed inflation).
+
+E3 (50 cells news-as-edge co-occurrence) currently running on Colab tmux story_a; E4-α (100 cells edge ablation) auto-launches after. Their results will receive the same LOFO + bootstrap + DM treatment in a subsequent analysis.md entry.
+
+→ progress: 2026-05-27-a | plan: 2026-05-26 LOCKED DECISIONS (Story A v3) | analysis: 2026-05-27-a
+
+---
+
 ## 2026-04-27-b: Diagnostic_price (S_price 9-dim) replication study + ListMLE fold-4 universal collapse discovery
 
 > **TL;DR**: H博士-driven diagnostic to test whether Part B v4 wf5's higher IC (MLP_price +0.037 / SAGE_price +0.027 — source: `experiments/wf5_results.csv` group means by model, n=3 seeds × 5 folds) was driven by feature set choice (9-dim vs Stage 1's 3-dim S6 / 158-dim S8). Result: **Part B's high IC is NOT replicated in the Stage 1 framework with the same 9-dim S_price features** (Diag MLP×S_price IC = -0.004, SAGE×S_price IC = -0.057 — source: `experiments/loss_horserace/results_diagnostic_price.csv` group means by model, n=10 seeds × 5 folds, see Q1 tables below for per-fold breakdown), suggesting Part B's apparent advantage was from setup-specific artifacts (different code path / fold timing / model spec), not feature set. **Major mechanistic discovery**: ListMLE shows **architecture-independent + feature-independent fold-4 catastrophic collapse** (mean IC ∈ [-0.36, -0.28] across 6/6 architecture × feature combinations; σ_fold ≈ 0.18 vs MSE σ_fold ≈ 0.06 — source: ListMLE fold-4 collapse table below + Stage 1 σ_fold rows in `progress.md` 2026-04-27-b §"Per-fold listmle"). This is paper-strength evidence for a learning-to-rank failure mode under regime shift.
