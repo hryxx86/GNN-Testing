@@ -4716,6 +4716,47 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
+## 2026-05-27-g: Codex Touchpoint 1 Plan Review on Story A paper handoff — 1 CRITICAL + 6 MAJOR all FIXED (verdict PROCEED-WITH-FIXES)
+
+- **Target plan**: `docs/session_handoff_2026-05-27_storya_paper_plan.md` (Story A paper figure/experiment plan)
+- **Reviewer**: codex-cli (no fallback needed; returned in 592s = 9.9 min, inside 15-min window)
+- **Full review**: `artifacts/reviews/2026-05-27_codex_plan_storya_handoff_A.md` (Claude transcription — Codex sandbox denied direct write to artifacts/reviews/)
+- **Summary**: 1 CRITICAL + 6 MAJOR + 0 CONCERN
+- **Initial verdict**: BLOCK → **Post-disposition verdict: PROCEED-WITH-FIXES** (7 FIXED + 0 REJECTED + 0 ACCEPTED-AS-CONCERN)
+
+### Independent verification before disposition (Rule 9 #5 — 不准偷懒验证)
+
+Claude personally re-opened each cited evidence file before marking disposition:
+
+| Finding | Evidence file read | Verification result |
+|---------|--------------------|---------------------|
+| A-02 CRITICAL | `artifacts/plan_aaa_t1_diagnostic/summary.md` lines 27-28 | Confirmed verbatim verdict "LOW STABILITY" + action "full Plan AAA re-run required OR Universe C must be re-defined" — handoff softened to "inconclusive" |
+| A-04 MAJOR | `artifacts/storya_e6_dm_spa/spa_results.csv` + `multiple_testing_ledger.json` line 97 | Confirmed: actual values 0.1474/0.3843/0.1364; ledger had stale 0.147/0.589/0.281 |
+| A-01 MAJOR | `experiments/ranking_loss_results.csv` (66 lines), `experiments/comprehensive_metrics.csv` (13 lines) | Confirmed both real + non-trivial; handoff §4 omitted both |
+| A-06 MAJOR | handoff grep 'full reproduction'/'16-paper'/'19 papers' | Confirmed 5 residual locations + 16/19 internal contradiction |
+
+### 7 dispositions (all FIXED)
+
+| Finding | Sev | Disposition | Fix location |
+|---------|-----|-------------|--------------|
+| **A-02 (CRITICAL data_leakage)** Plan AAA T-1 framing contradicts artifact LOW STABILITY verdict | C | **FIXED** | (1) §4.5 rewritten with HONEST RESTATEMENT block citing verbatim verdict + action; (2) analysis.md 2026-05-27-a Item 7 rewritten; (3) §11 NEW Limitations cross-ref matrix; (4) F10/S4 caption mandate |
+| A-01 ranking_loss_results.csv + comprehensive_metrics.csv missing | M | FIXED | §4.26 (ranking-loss N3 lucky-seed) + §4.27 (comp_metrics N4 cost-ladder methodology origin) added |
+| A-03 T-1 + HATS PIT not cross-referenced into §Limitations | M | FIXED | §11 NEW 8-row Limitations cross-ref matrix (L1-L8) mapping source → analysis.md row → plan caveat # → paper ST7 row → §Results sentence → §Methodology disclosure |
+| A-04 ledger.json p_consistent contradicts spa_results.csv | M | FIXED | multiple_testing_ledger.json line 97 corrected (0.147/0.3843/0.1364) + correction note; F9 spec reframed |
+| A-05 §4.19-§4.24 manifest gap + T6/ST1/ST7 ownership unclear | M | FIXED | Phase 6.2b (8 new fig scripts) + clarification note that T6/ST1/ST7 are scientific-writing skill outputs |
+| A-06 residual "full reproduction" + 16/19 paper inconsistency | M | FIXED | 5 residual locations replaced with "HATS-3R-adapt"; "16-paper" globally replaced with "16-paper (TARGET: expand to 19 via literature-review)" |
+| A-07 honest-number protocol not executable | M | FIXED | §6.7 upgraded: pytest test_paper_figs_provenance.py + pre-commit hook + SOURCE_CONTRACT header format + @pytest.mark.skip convention for TBD flags + .provenance_locks.json |
+
+### Critical lesson learned
+
+A-02 is a Rule 9 #5 violation case study: my own self-audit pass (2026-05-27-f handoff creation) noted the §4.5 nuance but failed to surface that the ARTIFACT's actual verdict was LOW STABILITY. Codex's external check caught this because Codex re-read summary.md and found the verbatim verdict. Going forward: any caveat propagation from analysis.md / artifact summary should be DIRECT QUOTE (not paraphrase) for the verdict line.
+
+### Tri-doc cross-reference
+
+→ progress: 2026-05-27-g | plan: 2026-05-27 Decision Log (no new rows; existing 5 rows reference this work) | analysis: 2026-05-27-a Item 7 (REVISED 2026-05-27-g per A-02)
+
+---
+
 ## 2026-05-27-f: Comprehensive paper figure/table/experiment handoff plan + 3 plotting skills installed
 
 > **Trigger**: H博士 directive 2026-05-27 — "写一个详细handoff，我们的图不只是这两天跑的，这两天是补充，而之前的跑过的实验也都出图。围绕paperA的idea，能出多少出多少图，按照不同的实验进行归类。先写一个plan梳理整个paper和实验的流程，你可以参考所有已有的工作。再安装nature-skill。"

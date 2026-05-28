@@ -19,7 +19,7 @@ open_questions:
   - "Q1 (figure-count budget): aim for exhaustive ~25 figures + ~12 tables (current plan) vs. lean ~10 figures + ~6 tables (page-limit conscious)?"
   - "Q2 (single vs. multi-script): one mega `analyze_storya_results.py` (~2000 LOC) vs. modular `analyze_storya_<experiment>_figs.py` (~7 files)?"
   - "Q3 (venue): ICAIF 2026 ACM SIG (8 pages + refs) vs. Quantitative Finance journal (no page limit, more detail)?"
-  - "Q4 (HATS reproduction scope): full KOSPI200 replication vs. SP500 transfer only?"
+  - "Q4 (HATS-3R-adapt scope — RESOLVED in §4.18 post Codex T1; this question is now legacy): full KOSPI200 replication ruled out per Codex A-05/06/07; locked to S&P 500 HATS-3R-adapt with narrowed claim_scope"
 file_state:
   modified_since_last_commit: []
   new_files: [docs/session_handoff_2026-05-27_storya_paper_plan.md]
@@ -135,7 +135,7 @@ next_actions:
 | T3 | Statistical tests: SPA + DM/HLN family-of-5 + BH-FDR (per universe) | spa_results.csv + dm_hln_results.csv | N4 | 8 + 10 |
 | T4 | Cost ladder Net Sharpe @ {0,5,10,15,20,30} bps × 8 (univ × model) | cost_ladder.csv | N1 + N4 | 48 |
 | T5 | Edge ablation: 5 pairs × 3 regime conditions + BH-FDR | edge_pairs_dm.csv + edge_bootstrap_ci.csv | N2 + N3 | 15 |
-| T6 | 16-paper related-work matrix (axes: horizon / feature / graph / regime / seed / PIT / cherry-pick / cost) | plan §1.9 | All | 17 rows |
+| T6 | 16-paper related-work matrix (TARGET: expand to 19 via literature-review skill — see §10.2 Stage 1) (axes: horizon / feature / graph / regime / seed / PIT / cherry-pick / cost) | plan §1.9 | All | 17 rows |
 
 ### Supplementary tables (~6, page-budget-flexible)
 
@@ -214,15 +214,24 @@ next_actions:
 - **Tables**: T3, ST2 (ledger)
 - **Narrative**: N4 (entire framework)
 
-### §4.5 Plan AAA T-1 stability diagnostic — 15 groups, 2026-05-27
+### §4.5 Plan AAA T-1 stability diagnostic — 15 groups, 2026-05-27  (REVISED 2026-05-27 post Codex T1 A-02 CRITICAL)
+
+> **HONEST RESTATEMENT (per Codex Touchpoint 1 Round A finding CODEX-A-02 CRITICAL)**: prior handoff draft led with "HIGH proxy stability" framing which softened the diagnostic's actual verdict. The artifact `summary.md` line 27 explicitly states **"Verdict: LOW STABILITY (Plan AAA orig top-15 ∩ proxy-T1 top-15 = 5/15)"** and line 28 prescribes the action **"Universe C composition basis is leak-driven; full Plan AAA re-run required before submission, OR Universe C must be re-defined."** H博士 2026-05-27 verdict A chose to defer the full re-run to §Future Work; the paper §Limitations MUST explicitly carry the LOW STABILITY verdict + the deferral decision, not softpedal as "inconclusive."
 
 - **Scope**: 158 Alpha158 features × 313 test days × {raw / T-1-shifted} → proxy single-feature mean per-day IC → group-level proxy importance for top-15 Plan AAA groups
 - **Status**: COMPLETE on M4 CPU (0.3 min vectorized)
 - **Source files**: `analyze_plan_aaa_t1_diagnostic.py`, `artifacts/plan_aaa_t1_diagnostic/{group_ranking_comparison, proxy_ic_per_feature, summary.md}`
-- **Headline result**: proxy-raw ∩ proxy-T1 = 15/15 (HIGH proxy stability under T-1 shift; IC magnitudes change ≤0.007 absolute); BUT proxy-raw ∩ orig-Plan-AAA = 5/15 (proxy ≠ permutation Δ-IC by construction — cannot rule out leak affected group ordering via permutation framework). Verdict A per H博士 2026-05-27: accept inconclusive + §Limitations qualifier; full re-run (~12-24h M4) deferred to §Future Work
-- **Figures**: F10 (proxy stability scatter), S4 (Plan AAA ranking dot plot)
-- **Tables**: ST7 (limitations row 5+7)
-- **Narrative**: N3 (Plan AAA T-1 leak provenance)
+- **Headline result (LITERAL from artifact summary.md)**:
+  - Overlap(Plan AAA orig ∩ proxy-raw) = **5/15** (sanity check; proxy does NOT align with Plan AAA permutation framework)
+  - Overlap(Plan AAA orig ∩ proxy-T1) = **5/15** (**KEY metric: LOW STABILITY under leak removal**)
+  - Overlap(proxy-raw ∩ proxy-T1) = **15/15** (direct leak-effect on proxy is small, IC magnitudes change ≤0.007 absolute)
+  - **Artifact verdict (verbatim)**: **"LOW STABILITY"**
+  - **Artifact action (verbatim)**: **"Universe C composition basis is leak-driven; full Plan AAA re-run required before submission, OR Universe C must be re-defined."**
+- **H博士 2026-05-27 verdict A** (decision-level, not artifact-level): defer full Plan AAA re-run (~12-24h M4) to paper §Future Work; current submission carries the LOW STABILITY verdict as §Limitations Item 7 + §Limitations Item 5 cross-reference. **The diagnostic's "action-required" language is acknowledged but deferred; the paper does NOT claim Universe C composition is leak-free.**
+- **Caveat propagation**: §Limitations Item 5 (analysis.md 2026-05-27-a Q4) + Item 7 must both be rewritten to lead with "Per diagnostic verdict: LOW STABILITY" rather than "inconclusive"
+- **Figures**: F10 (proxy stability scatter — caption must explicitly state "Plan AAA orig ∩ proxy-T1 = 5/15 → LOW STABILITY"), S4 (Plan AAA ranking dot plot — caption must annotate which 5/15 of top-15 groups survive)
+- **Tables**: ST7 (limitations row 5+7 — language rewrite required: lead with LOW STABILITY verdict)
+- **Narrative**: N3 (Plan AAA T-1 leak provenance — STRENGTHENED severity per A-02 fix; this becomes one of the strongest "honest failure-mode catalog" entries since it documents a leak in OUR OWN pipeline that we caught + diagnosed + deferred fix on transparently)
 
 ### §4.6 Horizon ablation — 360 data rows, 2026-04-XX  (VERIFIED 2026-05-27)
 
@@ -324,7 +333,7 @@ next_actions:
 - **Headline result** (per analysis.md 2026-04-27-b): MLP×S_price IC = -0.004, SAGE×S_price IC = -0.057 — **Part B v4 wf5's headline 21d MLP_price IC=+0.037 / SAGE_price IC=+0.027 DOES NOT replicate** in Stage 1 framework with identical feature set. Part B's apparent advantage was setup-specific artifact (code path / fold timing / model spec).
 - **Figures**: S14 (Part B replication failure histogram)
 - **Tables**: optional supplementary
-- **Narrative**: N3 (replication-failure failure mode — supports Template 1 narrative element if HATS reproduction joins)
+- **Narrative**: N3 (replication-failure failure mode — supports Template 1 narrative element via §4.18 HATS-3R-adapt comparator)
 
 ### §4.14 Tier 1 Phase A/B (Plan AAA precursor sweeps) — ~1400 cells, 2026-05-XX
 
@@ -473,6 +482,26 @@ next_actions:
 - **Tables**: optional supplementary (mostly subsumed by §4.12's main tables)
 - **Narrative**: N4 (methodology lineage — Story A v3 E6's LOFO + bootstrap + mixed-effects-equivalent (NW-HAC paired tests) pattern comes from this pre-work). Should be CITED in paper §3 Methodology as "the framework was first applied to Loss Horserace (Decision Log 2026-05-20) and refined for Story A v3 E1/E3/E4/E6 (this work)."
 
+### §4.26 Ranking-loss research — 65 rows, 2026-04-XX  (ADDED 2026-05-27-g per Codex T1 A-01 MAJOR)
+
+- **Scope**: {NoGraph_price, MLP_price, SAGE-Mean variants} × {mse, listmle (τ=0.2), pairwise} × seeds × folds = **65 data rows**
+- **Status**: COMPLETE; results in `experiments/ranking_loss_results.csv` (66 lines incl. header; columns: model, seed, fold, loss_type, tau, test_period, IC, IC_std, n_days, Sharpe_gross, Sharpe_net, n_periods, mean_turnover)
+- **Source files**: `experiments/ranking_loss_results.csv` + `experiments/ranking_loss_combined.csv` (aggregated)
+- **Headline result** (TBD — read CSV at script time): listed in inventory as "ListNet τ=0.2 IC range 0.00-0.12 vs MSE 0.00-0.10, no consistent winner; Fold 4 Q2-2025 lucky seed Sharpe 22.76 for MLP+ListNet seed 123 — not reproducible across seeds"
+- **Figures**: optional supplementary S_ranking_loss (lucky-seed Sharpe distribution across seeds for ListNet)
+- **Tables**: optional supplementary
+- **Narrative**: N3 (lucky-seed failure mode — adds pre-Story-A evidence that single-seed Sharpe headlines are unreliable, complements §4.1 E1 LOFO finding)
+
+### §4.27 Comprehensive metrics (Phase 1+2 unified summary) — 12 rows, 2026-03-XX  (ADDED 2026-05-27-g per Codex T1 A-01 MAJOR)
+
+- **Scope**: 12 model-config rows (e.g., sage-mean_all_s42, sage-mean_all_s123, sage-sum_all_s42, ...) with comprehensive metrics including Sharpe at multiple cost levels {0, 5, 10, 15, 20, 30 bps}
+- **Status**: COMPLETE; results in `experiments/comprehensive_metrics.csv` (13 lines incl. header; columns include IC, ICIR, IC_std, Sharpe_overlap, Ann_LS_overlap, Sharpe_nonoverlap, n_periods, mean_turnover, Sharpe_{0,5,10,15,20,30}bps + Ann_LS_*)
+- **Source files**: `experiments/comprehensive_metrics.csv`
+- **Headline result** (TBD — read at script time): provides the FIRST cost-ladder Sharpe analysis in this repo (predecessor of Story A E6 `cost_ladder.csv`); same 6-bps-level convention {0, 5, 10, 15, 20, 30}
+- **Figures**: cross-reference in F5 (cost ladder) — possible overlay of Phase 1+2 + E1 cost-ladder curves to show methodology lineage; or new S_comp_metrics
+- **Tables**: optional supplementary; supersedes by E1 §4.1 cost_ladder.csv
+- **Narrative**: N4 (cost-ladder methodology origin in this repo — informs §3 Methodology paragraph "the 6-level bps ladder is consistent across Phase 1+2 historical baseline and Story A v3 confirmatory")
+
 ### §4.25 (Deprecated artifact note) storya_multiseed/ — SUPERSEDED, do not include in paper  (DISCOVERED 2026-05-27 self-audit)
 
 - **Scope**: `experiments/storya_multiseed/prereg.json` ONLY — superseded design v2 pre-registration; replaced by v3 storya_e1_anchor pre-reg (§4.1) per Codex Round D D-01 fix series
@@ -487,7 +516,7 @@ next_actions:
 
 ### N1: Honest baseline IC under strict multi-seed eval
 
-- **Primary evidence**: E1 anchor (§4.1), HATS reproduction (§4.18 future)
+- **Primary evidence**: E1 anchor (§4.1), HATS-3R-adapt (§4.18 — plan locked, Codex T1 PROCEED-WITH-FIXES, awaiting compute launch)
 - **Supporting**: Arch comparison (§4.7), wf5 baseline (§4.9), Phase 5 diagnostics (§4.17)
 - **Figures**: F2, F3, S1, S3, S15, S17 (+ S+1, S+2 once HATS done)
 - **Tables**: T1, T2 (+ T1 extension with HATS row)
@@ -558,6 +587,24 @@ Scope: figures S4-S14 derived from prior experiments with existing result CSVs (
 
 Each module: ~150-300 LOC, imports rcparams_storya, reads CSV, produces PDF + PNG to `figures/`.
 
+### Phase 6.2b: Newly-discovered prior-experiment scripts (ADDED 2026-05-27-g per Codex T1 A-05 MAJOR — §4.19-§4.27 manifest reconciliation, +1 day)
+
+Scope: scripts for the 8 newly-discovered/missing prior experiments (§4.19 step3 feature expansion + §4.20 permutation v2 + §4.21 SEC Gate 1 + §4.22 Option B LGBM importance + §4.23 Phase 5 audits + §4.24 loss horserace methodology + §4.26 ranking-loss + §4.27 comprehensive metrics).
+
+8a. `paper_figs/fig_step3_expansion.py` → optional supplementary; cross-reference within S6 (Plan Z subset SPA tree) — from §4.19
+8b. `paper_figs/fig_perm_v2_null.py` → optional new S_perm + ST_perm (null distribution + summary) — from §4.20
+8c. `paper_figs/fig_sec_gate1.py` → optional S_gate1 (Lazy Prices SEC failure) — from §4.21
+8d. `paper_figs/fig_lgb_importance.py` → optional S_lgb_imp (top-30 LGB importance bars) — from §4.22
+8e. `paper_figs/fig_audits.py` → methodology box only (prose); no new figure; from §4.23
+8f. `paper_figs/fig_loss_methodology.py` → optional S_loss_methodology (mixed-effects vs naive aggregation comparison) — from §4.24
+8g. `paper_figs/fig_ranking_loss.py` → optional S_ranking_loss (lucky-seed Sharpe distribution for ListNet) — from §4.26
+8h. `paper_figs/fig_comp_metrics.py` → cross-reference overlay in F5 (Phase 1+2 cost ladder + E1 overlay) — from §4.27
+
+Note on §3 Master Table prose tables (T6 / ST1 / ST7 — NOT auto-generated; clarified per Codex T1 A-05 MAJOR):
+- **T6** (16-paper / 19-paper related-work matrix): authored by `scientific-writing` skill + `literature-review` skill in §10.2 Stage 1; NOT by a `paper_figs/fig_*.py` script
+- **ST1** (data + experimental setup summary): authored by `scientific-writing` skill; takes inputs from `run_storya_e1_anchor.py` constants + plan §1.7 hp_grid.json
+- **ST7** (limitations matrix): authored by `scientific-writing` skill; inputs from plan §1.9 honest caveats + analysis.md §Limitations Items 5+6+7 + Codex T1 dispositions
+
 ### Phase 6.3: Story A v3 figures (2 days)
 
 Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
@@ -580,10 +627,35 @@ Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
 
 16. `run_hats_3r_adapt.py` per `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md` (post-Codex-T1-amendments) + `analyze_hats_lofo.py` (mirrors `analyze_e1_lofo.py:167-169`) — run on Colab A100 (mandatory 1-cell smoke benchmark before 50-cell launch per A-10), integrate into T1 row extension + S+1/S+2 supplementary figures; cell_id range [400, 449] (A-04 fix); HATS EXCLUDED from joint SPA M=6 (A-02 fix); locked Codex 3-gate decision rule (A-08); uniform-α extension pre-committed (A-11)
 
-### Phase 6.7: Verification + provenance check (0.5 day)
+### Phase 6.7: Verification + provenance check (1 day; UPGRADED 2026-05-27-g per Codex T1 A-07 MAJOR)
+
+> **Per Codex A-07 disposition**: §7.4 header-comment "self-verification" is documentation, not an executable gate. Replace with pytest + pre-commit hook below.
 
 17. Every figure has source citation in its caption (per `.claude/rules/docs.md` §4)
 18. `python scripts/verify_docs_provenance.py docs/storya_paper_draft.md` passes before send to H博士
+19. **NEW per Codex A-07**: Write `tests/test_paper_figs_provenance.py` (pytest) that:
+    - Parses each `paper_figs/fig_*.py` header `# SOURCE_CONTRACT:` block (YAML-in-comment format)
+    - Reads the cited CSV at the cited path; extracts the cited row/column
+    - Asserts the script's headline numeric output (e.g., main bar height, point estimate annotation) matches the source CSV to ≥3 decimal places
+    - Computes source CSV MD5 + git SHA; stores in `paper_figs/.provenance_locks.json` to detect post-hoc CSV mutation
+20. **NEW per Codex A-07**: Add pre-commit hook `pre-commit run --all-files` invoking the above pytest before any commit that touches `paper_figs/*.py`. CI / commit fails if any fig script's claimed value drifts from CSV.
+21. **NEW per Codex A-07**: Convert §4 "VERIFY"/"TBD" flags into concrete pytest cases. Each TBD becomes a `@pytest.mark.skip(reason="VERIFY at fig-script time")` placeholder that will FAIL once the corresponding fig script is written (forcing the value to be filled-in or the skip removed with rationale). This makes the verification protocol auditable and inversion-resistant — no fig script can ship with a TBD claim.
+
+Concrete header format for fig scripts (NEW spec per A-07):
+```python
+# SOURCE_CONTRACT:
+#   inputs:
+#     - path: artifacts/storya_e6_dm_spa/bootstrap_ci.csv
+#       columns: [IC_mean, IC_mean_ci_lo, IC_mean_ci_hi]
+#       md5: e3a2... (computed at script-write time)
+#   outputs:
+#     - path: figures/T1_headline.tex
+#       headline_values:
+#         - B-GAT-IC_mean: 0.035
+#         - B-GAT-IC_mean_ci_lo: 0.018
+#         # ... etc
+#   tolerance_decimal_places: 3
+```
 
 ---
 
@@ -654,7 +726,7 @@ Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
 
 1. **Figure budget**: upper-bound 25 figures + 12 tables; H博士 to pick subset at writing
 2. **Module split**: 13 individual `paper_figs/fig_*.py` scripts (modular) — H博士 confirmed Option Y pattern for compute_e6_edge_ablation.py, same pattern applied here
-3. **HATS scope**: full reproduction with 10 canonical seeds × 5 walk-forward × S&P 500 (parallel to E1 design)
+3. **HATS scope** (RESOLVED 2026-05-27 post Codex T1): HATS-3R-adapt (S&P 500, 10-seed × 5-fold, SAGE-Mean adapter; narrowed claim_scope per Codex A-05/06/07 — NOT pure Kim 2019 reproduction). See §4.18 for full disposition.
 4. **rcparams source**: matplotlib-skill defaults + ICML preset from mpl_sizes + manual 5-line ACM-SIG override (Times serif, double-column 3.33" half-width / 7.0" full-width)
 5. **PDF + PNG dual export**: keep matplotlib-skill default; PDF for inclusion in paper, PNG for slide / quick share
 
@@ -685,7 +757,7 @@ Scope: F2-F6, F9, S1-S3, S15-S18 from E1/E3/E4/E6 artifacts (last 2 days work).
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ STAGE 1 — LITERATURE & SETUP                                               │
 │ literature-review → citation-management → venue-templates                  │
-│ Output: refs.bib + venue-template.cls + 16-paper related-work matrix.md   │
+│ Output: refs.bib + venue-template.cls + 16-paper related-work matrix (TARGET: expand to 19 via literature-review skill — see §10.2 Stage 1).md   │
 │ Verification: scripts/verify_docs_provenance.py on related-work matrix    │
 └────────────────────────────────────────────────────────────────────────────┘
                                   │
@@ -799,3 +871,27 @@ For now, H博士 + Claude invoke skills manually per §10.2 invocation patterns;
 - **Stage 5 (external review)** = Rule 9 Touchpoint 3 (Results Review) on full draft
 - **Stage 6 (submission)** → final `verify_docs_provenance.py` pass before send-to-H博士
 - All 3 Rule 9 touchpoints + the skill-chain transitions log to `progress.md` with the standard entry format
+
+---
+
+## §11. Limitations cross-reference matrix (ADDED 2026-05-27-g per Codex T1 A-03 MAJOR)
+
+> **Goal**: every data-leakage caveat surfaced in §4 must trace EXPLICITLY to a paper §Limitations row in ST7 + a §Methodology disclosure + an analysis.md item. Codex A-03 flagged that the original handoff named "should be in Limitations" without naming WHICH limitation row WHERE. This matrix closes the loop.
+
+| Caveat ID | Source (§4 entry) | Verdict / severity | analysis.md row | Plan §1.9 caveat # | Paper §Limitations row (ST7) | Paper §Results caveat sentence | Paper §Methodology disclosure |
+|-----------|-------------------|--------------------|--------------------|--------------------|------------------------------|--------------------------------|-------------------------------|
+| L1 | §4.5 Plan AAA T-1 diagnostic | **LOW STABILITY** (5/15) per artifact summary.md line 27; H博士 verdict A defers full re-run | analysis.md 2026-05-27-a Q4 Item 7 (revised 2026-05-27-g per Codex A-02) | Plan §1.9 caveat #5 (Plan AAA Alpha158 same-day leak provenance) + caveat #7 (T-1 diagnostic detail) | ST7 row 5 (composition basis leak); ST7 row 7 (T-1 diagnostic LOW STABILITY verdict) | "Universe C composition derives from a leak-affected Plan AAA ranking; T-1 diagnostic confirms LOW STABILITY (5/15); a definitive re-ranking with T-1-shifted Alpha158 is deferred to future work and the current paper carries this caveat." | §3 Methodology must disclose Universe C composition source + acknowledge that the Plan AAA ranking step used same-day Alpha158 (the runtime T-1 shift in `build_universe_C` keeps E1 IC values leak-free, but the COMPOSITION BASIS — which 51 features were selected — is not) |
+| L2 | §4.18 HATS-3R-adapt sector PIT | **ACCEPTED-AS-CONCERN** per Codex T1 (HATS) A-01 | (n/a — pre-experiment; HATS results not yet) | HATS plan §Limitations (added per A-01 disposition) | ST7 row 8 (HATS sector PIT — `data/reference/sp500_sectors.csv` is one snapshot 2026-02-09, no PIT history) | "Sector edges in HATS-3R-adapt use a single-snapshot membership table fetched 2026-02-09; we do not have point-in-time sector composition history. Sector-based edges therefore carry a small look-ahead risk for any stock that changed sector during the 5y window." | §3 Methodology must declare the sector source + snapshot date |
+| L3 | §4.18 HATS-3R-adapt claim_scope | **NARROWED** per Codex T1 A-05/06/07 | (n/a — by design) | HATS plan claim_scope block | ST7 row 9 (HATS not pure Kim 2019 reproduction) | "We adapt the HATS architecture by replacing Wikidata KG with sector/correlation/news edges, replacing GRU with SAGE-Mean, and evaluating on S&P 500 (not KOSPI 200). Results characterize HATS-3R-adapt as a Story A baseline comparator, not as a reproduction of Kim et al. 2019." | §2 Related Work must NOT cite as "we reproduce Kim 2019"; §4 Setup must explain the 4 architectural deviations |
+| L4 | §4.6 horizon ablation | **VERIFIED 21d horizon selection** (no caveat — methodology choice with literature precedent + ablation evidence) | analysis.md 2026-05-27-a Q1 | (n/a — locked choice) | (n/a — discussed in §3 Methodology as locked choice with sensitivity analysis cited) | (n/a in §Limitations; positive in §3) | §3 Methodology cites horizon ablation as 21d-selection evidence |
+| L5 | §4.12 Loss horserace + §4.26 ranking-loss + §4.13 Diagnostic_price | **REPLICATION FAILURE FRAMING** (Part B v4 wf5 headlines did not replicate in Stage 1 framework) | analysis.md 2026-04-27-b | Plan §1.9 caveat #3 (LSTM absence) — related but different | ST7 row 10 (loss-function choice rationale + framework-replication caveat) | "Earlier in this project's history, a Part B v4 walk-forward run reported MLP_price 21d IC = +0.037 / SAGE_price +0.027 (`experiments/wf5_results.csv`); a follow-up replication in the Stage 1 framework with identical 9-dim S_price features (`experiments/loss_horserace/results_diagnostic_price.csv`) recovered MLP IC = −0.004 and SAGE IC = −0.057. We treat this as evidence that 21d cross-sectional IC is framework-sensitive and prefer the more recent Story A E1 framework (which uses canonical 10 seeds, 21d purge, and the §3 Methodology multi-seed protocol) for the headline results." | §3 Methodology must describe framework lineage |
+| L6 | §4.1 E1 Fold 4 dominance | **REGIME RISK** (Q2-2025 fold is a known outlier per project Rule 10) | analysis.md 2026-05-27-a Q4 Item 6 | Plan §1.9 caveat #6 | ST7 row 6 (Q2-2025 regime risk) | "Most positive Story A IC and Sharpe results lose 38-72% magnitude when Fold 4 (test period Q2-2025) is dropped (LOFO-4 column in Table 2). We report both full and LOFO-4 columns and treat both as equally informative pending future evaluation on additional regimes." | §3 Methodology cites the LOFO-4 protocol; §4 Setup cites the 5-fold walk-forward with Fold 4 as known regime outlier |
+| L7 | §4.3 E4-α full bundle harm | **NEGATIVE FINDING** (multi-edge bundle does not improve over correlation-only) | analysis.md 2026-05-27-c Q2 Finding 1+2 | (n/a — primary finding, not caveat) | (n/a in §Limitations; framed as positive negative finding in §5 Results) | "Bundling sector + news edges on top of the correlation-only baseline does not improve IC under either full or LOFO-4 evaluation; 0/5 pairs survive BH-FDR q=0.05" | §3 Methodology cites the BH-FDR family-of-5 protocol |
+| L8 | §4.17 + §4.23 Phase 5 audits did NOT catch Plan AAA T-1 leak | **METHODOLOGICAL CAVEAT** | (n/a — methodology lineage) | (n/a) | ST7 row 11 (audit scope caveat) | "Our Phase 5 features audit (artifacts/audits/phase5_features_audit.md) covered Phase 5 features but NOT the separately-built Alpha158 features used by Plan AAA. The Plan AAA T-1 leak was therefore discovered LATER via the T-1 diagnostic (L1 above), not by the Phase 5 audit." | §3 Methodology must clarify audit scope to avoid implying full-pipeline coverage |
+
+**Action items derived from this matrix** (must close before paper submission):
+1. analysis.md §Limitations Item 7 — already revised 2026-05-27-g to lead with LOW STABILITY verdict (per A-02 fix)
+2. Plan §1.9 — add caveat #7 explicit row (currently caveats #1-#6 documented; new #7 for T-1 LOW STABILITY needs to land in `/Users/heruixi/.claude/plans/handoff-session-ranking-swirling-lemur.md` §1.9)
+3. ST7 prose table — 11-row generation deferred to `scientific-writing` skill in §10.2 Stage 3
+4. F10 + S4 captions — explicit "5/15 LOW STABILITY" annotations per §4.5 revised version
+5. §3 Methodology + §4 Setup paragraphs — disclosures per the L1-L8 mapping above
