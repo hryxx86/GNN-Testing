@@ -4,6 +4,56 @@
 
 ---
 
+## 2026-05-27-e: Codex Review — Code (Touchpoint 2, Round A) — HATS-3R-adapt (run_storya_e1_6_hats.py)
+
+- Target: `/Users/heruixi/Desktop/GNN-Testing/run_storya_e1_6_hats.py` (1001 lines, untracked at review time)
+- Reviewer: codex-cli (no fallback needed; responded inside 15-min window)
+- Full review: `artifacts/reviews/2026-05-27_codex_code_A.md`
+- Summary: **0 CRITICAL + 0 MAJOR + 1 CONCERN**
+- Initial verdict: **PASS-WITH-CONCERNS** → Post-disposition verdict: **PASS** (1 CONCERN FIXED + 0 OPEN)
+
+### Pre-Codex smoke gates (all PASS)
+
+- Shape unit smoke (4/4): forward shape (490,) ✓, alpha rows sum to 1 (max diff 1.2e-7) ✓, 43/43 params got grads ✓, num_relations=1 → alpha=1.0 exactly ✓, empty news edges + Universe C compat ✓
+- 1-cell training smoke (fold 0 seed 86 Universe B, M4 MPS): wall=461.7s (7.7min, gate <45min ✓), IC=+0.0249 ∈ (-0.05, 0.10) ✓, Sharpe_gross=0.456, Sharpe_net_10bps=0.121, epochs_run=22 ∈ [20,100] ✓, best_val_loss=0.974 finite ✓, alpha=[corr=0.205, sec=0.531, news=0.264] (NO collapse, max_frac_collapsed=0.0) ✓
+- Schema match: results.csv has all E1 RESULTS_COLUMNS + 7 HATS diagnostic columns (n_corr_edges, n_sector_edges, n_news_edges_avg, alpha_mean_{corr,sector,news}_test, alpha_max_fraction_collapsed_test)
+- cell_id check: cid=400 (= 400 + 0*10 + 0), in [400,449] range, disjoint from E1 [0,399]
+
+### Disposition
+
+| Finding | Severity | Disposition | Action taken |
+|---|---|---|---|
+| A-01 PIT-cache bypass | CONCERN | FIXED | Renamed cache → re-ran HATS --smoke → 1254 PIT assertions fired in rebuild (6.9s) → verified bit-equivalence (1255 keys, 0 diffs) with backup → deleted backup |
+
+### Evidence verified by Claude before disposition (Rule 9 诚信要求 #5)
+
+- `run_storya_e1_6_hats.py:762-786`: cache load branch confirmed; `build_per_day_news_edges` only called on cache miss (L774-776)
+- `run_storya_e3_news_edge.py:253-255`: `assert window_max <= cutoff_np` lives inside `build_per_day_news_edges` function body
+- Cache file timestamps before fix: cache mtime 2026-05-27 00:25, E3 source mtime 2026-05-27 00:23 → cache built 2 min after current E3 code (i.e. cache WAS PIT-clean, but bypass of assertion is still an auditability concern)
+- After forced rebuild: 1254 snapshots built, max PIT-eligible ts = 2026-01-26 23:57:06+00:00, no PIT VIOLATION raised
+- numpy array_equal check across all 1255 keys: 0 differing keys → rebuilt cache is bit-equivalent to backup
+
+### Clean items (Codex's "no issues found")
+
+Codex explicitly cleared 17 areas including: frozen correlation alignment, train-only winsor+scaler fit, within-fold purge, label valid mask indexing, HATS3RAdapt forward pass (per-relation GATConv stacks + alpha softmax dim=relation), gradient accumulation with leftover scaling, validation alpha aggregation, edge builder return shape, cell_id injectivity, set_seed ordering, cuDNN determinism, seeded numpy shuffling, squeeze(-1) shape, last_alpha.detach(), alpha division guards, hidden % heads assert, E6 column-concat tolerance, resume identity by (fold, seed).
+
+### Implementation gate status
+
+- Touchpoint 1 (plan): PROCEED-WITH-FIXES applied (2026-05-27-d)
+- Touchpoint 2 (code): **PASS** (this entry)
+- Touchpoint 3 (results): PENDING — triggers when 50-cell results land
+
+### Next actions
+
+- Ready for Colab A100 50-cell launch
+- Awaits H博士 GO signal + Colab SSH hostname
+- Expected timeline: ~3-5h A100 wall (based on smoke 7.7min M4 → conservative 4-5min/cell A100 → 50 cells × 5min = 4.2h, much faster than PROVISIONAL 11-13h plan estimate)
+- After 50-cell completion: `analyze_hats_lofo.py` (LOFO-4 post-process) + `compute_e6_dm_spa.py --include-hats-csv` → Touchpoint 3 Codex Results Review
+
+→ progress: 2026-05-27-e | plan: 2026-05-27-d (no plan amendments needed) | analysis: N/A (no results yet)
+
+---
+
 ## 2026-05-27-d: Codex Review — Plan (Touchpoint 1, Round A) — HATS-3R-adapt baseline (Story A §1.6)
 
 - Target: `/Users/heruixi/.claude/plans/hats-baseline-reproduction-delightful-lighthouse.md`
