@@ -4801,9 +4801,20 @@ Claude personally re-opened each cited evidence file before marking disposition:
 
 A-02 is a Rule 9 #5 violation case study: my own self-audit pass (2026-05-27-f handoff creation) noted the §4.5 nuance but failed to surface that the ARTIFACT's actual verdict was LOW STABILITY. Codex's external check caught this because Codex re-read summary.md and found the verbatim verdict. Going forward: any caveat propagation from analysis.md / artifact summary should be DIRECT QUOTE (not paraphrase) for the verdict line.
 
+### Follow-on closure (immediately after Codex disposition commit `4a98383`)
+
+§11 L1 action item #2 closed: added `caveat #6` (Q2-2025 Fold 4 regime variance) + `caveat #7` (Plan AAA T-1 stability diagnostic VERDICT: LOW STABILITY) to plan file `/Users/heruixi/.claude/plans/handoff-session-ranking-swirling-lemur.md` §1.9 honest-caveats list. Both caveats lead with verbatim verdict language (per Rule 9 #5 lesson learned: no paraphrasing of artifact verdict lines). Plan file lives outside the project git repo (in `~/.claude/plans/`); not tracked by `git status` but audit-trailed here.
+
+Resulting §1.9 caveat structure (7 rows): #1 architecture novelty + #2 regime conditioning absent + #3 LSTM/Transformer absent + #4 single market + #5 Plan AAA Alpha158 same-day leak (composition basis acknowledgment) + #6 NEW Q2-2025 Fold 4 regime variance + #7 NEW Plan AAA T-1 diagnostic LOW STABILITY verdict (post-hoc verification of #5).
+
+§11 remaining action items still open (for paper-writing phase, NOT blocking current handoff):
+- #3 ST7 11-row prose generation → deferred to scientific-writing skill in §10.2 Stage 3
+- #4 F10 + S4 captions with "5/15 LOW STABILITY" annotation → fires when paper_figs/fig_plan_aaa.py is written (per §6.2 Phase 6.2 #2)
+- #5 §3 Methodology + §4 Setup disclosure paragraphs → fires at paper-draft writing (week 5+ per plan §8)
+
 ### Tri-doc cross-reference
 
-→ progress: 2026-05-27-g | plan: 2026-05-27 Decision Log (no new rows; existing 5 rows reference this work) | analysis: 2026-05-27-a Item 7 (REVISED 2026-05-27-g per A-02)
+→ progress: 2026-05-27-g | plan: 2026-05-27 Decision Log (no new rows) + plan §1.9 caveats #6 + #7 added (extra-repo file `~/.claude/plans/handoff-session-ranking-swirling-lemur.md`) | analysis: 2026-05-27-a Item 7 (REVISED 2026-05-27-g per A-02)
 
 ---
 
