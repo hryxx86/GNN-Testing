@@ -162,4 +162,96 @@ with open(f"{OUT_DIR}/lofo_summary.md", "w") as f:
     f.write(outlier_df.to_markdown(index=False))
 
 print(f"[lofo] wrote lofo_summary.md")
+
+# ───────────────────────────────────────────────────────────────────────────────
+# 5) Three-column paper Table 2: (full 5-fold / LOFO-4 / Fold-4-only) × {IC, Sharpe_net_10bps}
+#    with block-bootstrap CI per condition. Per H博士 2026-05-27-b decision: needed for
+#    consistency with E3/E4 edge ablation Table 5 (regime Level 1 + Level 2).
+# ───────────────────────────────────────────────────────────────────────────────
+
+import sys
+sys.path.insert(0, "/Users/heruixi/Desktop/GNN-Testing")
+from compute_e6_dm_spa import (
+    collect_per_day_ic_matrix,
+    stationary_bootstrap_ci,
+    BLOCK_SIZE,
+    N_BOOT,
+)
+
+PER_DAY_IC_DIR = f"{DRIVE}/experiments/storya_e1_anchor/per_day_ic"
+
+def pool_per_day_ic_subset(per_day_ic_dict, fold_subset):
+    """Pool per-day IC across selected folds (concatenate seed×day values)."""
+    out = []
+    for fold in fold_subset:
+        mat = per_day_ic_dict.get(fold)
+        if mat is None:
+            continue
+        flat = mat.flatten()
+        flat = flat[~np.isnan(flat)]
+        out.append(flat)
+    if not out:
+        return np.array([], dtype=np.float64)
+    return np.concatenate(out)
+
+print(f"[lofo] computing 3-column paper Table 2 (full / LOFO-4 / Fold-4-only) with bootstrap CIs ...")
+import time as _t
+t0 = _t.time()
+
+three_col_rows = []
+for universe in ['B', 'C']:
+    for model in ['GAT', 'SAGE-Mean', 'MLP', 'LightGBM']:
+        per_day_dict = collect_per_day_ic_matrix(PER_DAY_IC_DIR, universe, model)
+
+        # IC bootstrap CI per condition
+        ic_full   = pool_per_day_ic_subset(per_day_dict, [0, 1, 2, 3, 4])
+        ic_lofo4  = pool_per_day_ic_subset(per_day_dict, [0, 1, 2, 3])
+        ic_fold4  = pool_per_day_ic_subset(per_day_dict, [4])
+
+        ic_full_mean, ic_full_lo, ic_full_hi    = stationary_bootstrap_ci(ic_full, np.mean, n_boot=N_BOOT, block_size=BLOCK_SIZE)
+        ic_lofo_mean, ic_lofo_lo, ic_lofo_hi    = stationary_bootstrap_ci(ic_lofo4, np.mean, n_boot=N_BOOT, block_size=BLOCK_SIZE)
+        ic_f4_mean,   ic_f4_lo,   ic_f4_hi      = stationary_bootstrap_ci(ic_fold4, np.mean, n_boot=N_BOOT, block_size=BLOCK_SIZE)
+
+        # Sharpe_net_10bps per-cell bootstrap (cells exchangeable across seeds → block_size=1)
+        sub_all   = r[(r.universe == universe) & (r.model == model)]
+        sh_full   = sub_all.Sharpe_net_10bps.values
+        sh_lofo4  = sub_all[sub_all.fold != 4].Sharpe_net_10bps.values
+        sh_fold4  = sub_all[sub_all.fold == 4].Sharpe_net_10bps.values
+
+        sh_full_mean, sh_full_lo, sh_full_hi = stationary_bootstrap_ci(sh_full, np.mean, n_boot=N_BOOT, block_size=1)
+        sh_lofo_mean, sh_lofo_lo, sh_lofo_hi = stationary_bootstrap_ci(sh_lofo4, np.mean, n_boot=N_BOOT, block_size=1)
+        sh_f4_mean,   sh_f4_lo,   sh_f4_hi   = stationary_bootstrap_ci(sh_fold4, np.mean, n_boot=N_BOOT, block_size=1)
+
+        three_col_rows.append({
+            'universe': universe, 'model': model,
+            'n_cells': len(sub_all),
+            'IC_full_mean': round(ic_full_mean, 4), 'IC_full_ci_lo': round(ic_full_lo, 4), 'IC_full_ci_hi': round(ic_full_hi, 4),
+            'IC_lofo4_mean': round(ic_lofo_mean, 4), 'IC_lofo4_ci_lo': round(ic_lofo_lo, 4), 'IC_lofo4_ci_hi': round(ic_lofo_hi, 4),
+            'IC_fold4only_mean': round(ic_f4_mean, 4), 'IC_fold4only_ci_lo': round(ic_f4_lo, 4), 'IC_fold4only_ci_hi': round(ic_f4_hi, 4),
+            'Sharpe_net_10bps_full_mean': round(sh_full_mean, 3), 'Sharpe_net_10bps_full_ci_lo': round(sh_full_lo, 3), 'Sharpe_net_10bps_full_ci_hi': round(sh_full_hi, 3),
+            'Sharpe_net_10bps_lofo4_mean': round(sh_lofo_mean, 3), 'Sharpe_net_10bps_lofo4_ci_lo': round(sh_lofo_lo, 3), 'Sharpe_net_10bps_lofo4_ci_hi': round(sh_lofo_hi, 3),
+            'Sharpe_net_10bps_fold4only_mean': round(sh_f4_mean, 3), 'Sharpe_net_10bps_fold4only_ci_lo': round(sh_f4_lo, 3), 'Sharpe_net_10bps_fold4only_ci_hi': round(sh_f4_hi, 3),
+        })
+
+three_col_df = pd.DataFrame(three_col_rows)
+three_col_df.to_csv(f"{OUT_DIR}/e1_three_column_summary.csv", index=False)
+print(f"[lofo] wrote e1_three_column_summary.csv ({len(three_col_df)} rows = 2 univ × 4 models; {(_t.time()-t0)/60:.1f}m)")
+
+# Append a markdown rendering to lofo_summary.md
+with open(f"{OUT_DIR}/lofo_summary.md", "a") as f:
+    f.write("\n\n## Paper Table 2 — Three-column summary (full / LOFO-4 / Fold-4-only) with bootstrap CI\n\n")
+    f.write("CIs are 95% block-bootstrap (IC: block_size=21 on pooled per-day series; Sharpe: block_size=1 on per-cell values).\n\n")
+    f.write("### IC\n\n")
+    ic_render = three_col_df[['universe','model','n_cells',
+                              'IC_full_mean','IC_full_ci_lo','IC_full_ci_hi',
+                              'IC_lofo4_mean','IC_lofo4_ci_lo','IC_lofo4_ci_hi',
+                              'IC_fold4only_mean','IC_fold4only_ci_lo','IC_fold4only_ci_hi']]
+    f.write(ic_render.to_markdown(index=False))
+    f.write("\n\n### Net Sharpe @10bps\n\n")
+    sh_render = three_col_df[['universe','model','n_cells',
+                              'Sharpe_net_10bps_full_mean','Sharpe_net_10bps_full_ci_lo','Sharpe_net_10bps_full_ci_hi',
+                              'Sharpe_net_10bps_lofo4_mean','Sharpe_net_10bps_lofo4_ci_lo','Sharpe_net_10bps_lofo4_ci_hi',
+                              'Sharpe_net_10bps_fold4only_mean','Sharpe_net_10bps_fold4only_ci_lo','Sharpe_net_10bps_fold4only_ci_hi']]
+    f.write(sh_render.to_markdown(index=False))
+
 print(f"[lofo] DONE → {OUT_DIR}/")

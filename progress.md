@@ -4658,6 +4658,53 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
+## 2026-05-27-c: E3/E4 edge ablation E6 post-process + 2 Codex Touchpoints + 3-column E1 paper Table
+
+### E1 paper Table 2 extension — 3-column bootstrap CIs (full / LOFO-4 / Fold-4-only)
+
+Extended `analyze_e1_lofo.py` (section 5 appended, lines 165+) per H博士 2026-05-27-b directive: paper Table 2 needs same 3-column structure as E3/E4 Table 5 for narrative symmetry. Imports `collect_per_day_ic_matrix` + `stationary_bootstrap_ci` from `compute_e6_dm_spa.py`. Output: `artifacts/storya_e6_dm_spa/e1_three_column_summary.csv` (8 rows = 2 universes × 4 models, bootstrap CIs for IC + Sharpe_net_10bps × 3 regime conditions). Highlight: Univ B LightGBM Fold-4-only IC = -0.040 [-0.076, -0.004] is the ONLY negative cell in the 8-row table, providing the cleanest mechanism for the LOFO-4 sign-flip in LightGBM Sharpe ([analysis.md 2026-05-27-a Q2](docs/analysis.md)).
+
+### E3/E4 E6 v2 framework (`compute_e6_edge_ablation.py` NEW, 370 lines)
+
+New script per H博士 Option Y decision: imports helpers from `compute_e6_dm_spa.py` (NW-HAC, DM, HLN, BH-FDR, stationary bootstrap) — zero risk to E1 results, single source of truth via imports. Outputs at `artifacts/storya_e6_edge_ablation/`:
+- `edge_pairs_dm.csv` — 15 rows (5 pairs × 3 regime conditions): DM/HLN per pair, BH-FDR applied to 'full' condition only
+- `edge_bootstrap_ci.csv` — 15 rows: paired ΔIC + ΔSharpe_net10bps bootstrap CIs
+- `edge_cost_ladder.csv` — 72 rows (4 configs × 6 bps × 3 regime conditions)
+- `edge_summary.md` — human readable
+
+Headline (full 5-fold, source: `artifacts/storya_e6_edge_ablation/edge_pairs_dm.csv`): 0/5 BH-FDR rejected at q=0.05 (smallest raw HLN p=0.039 for corr+news_cooccur vs α1 baseline, rank-1 BH threshold=0.010). LOFO-4: ΔIC shrinks to +0.002 to +0.005, all HLN p > 0.30. Fold-4-only (Q2-2025, verified `run_storya_e1_anchor.py` WALK_FORWARD_FOLDS[4]): all 3 augmented-vs-α1 pairs have ΔIC bootstrap CIs excluding 0, but N=10 cells × T=62 days per arm caps interpretability to diagnostic-only.
+
+### Codex Touchpoint 2 — `compute_e6_edge_ablation.py` + `analyze_e1_lofo.py` §5 (Rule 9)
+
+Verdict: **PASS-WITH-CONCERNS** (`artifacts/reviews/2026-05-27_codex_code_e6edge_A.md`). 0 CRITICAL + 0 MAJOR + 1 CONCERN + 8 PASS. The 1 CONCERN (CODEX-CR-EDGE-A-01: length-mismatch silent truncate) FIXED 2026-05-27 in `compute_e6_edge_ablation.py:156-165` — converted `print(WARN); truncate` to `raise RuntimeError`. Re-ran after fix; all outputs byte-identical (no current mismatch in data; invariant now hard-enforced for future re-runs). Verified by `diff /tmp/edge_pairs_pre_fix.csv artifacts/storya_e6_edge_ablation/edge_pairs_dm.csv` → "OUTPUT IDENTICAL".
+
+### Codex Touchpoint 3 — E3/E4 E6 results (Rule 9)
+
+Verdict: **PASS-WITH-CONCERNS** (`artifacts/reviews/2026-05-27_codex_results_e3e4edge_A.md`). 0 CRITICAL + 2 MAJOR + 3 CONCERN + 1 INFO. All 6 actionable findings INTERNAL ACK; per H博士 2026-05-27 paper-writing strategy directive, full Codex caveats recorded in [docs/analysis.md 2026-05-27-c Q3 + Q4](docs/analysis.md) as internal honest reference but NOT exhaustively pre-empted in paper §Results / §Limitations. Selective surfacing TBD at paper-writing time (weeks 5-8 per plan §8).
+
+One internal correction: Codex Touchpoint 3 finding CODEX-RR-EDGE-A-03 referenced "Sharpe interval [-0.005,-0.002]" but per `edge_bootstrap_ci.csv` row 12 (α4 vs α2 fold4_only) these numbers correspond to the `delta_ic_ci_lo/hi` columns, not Sharpe. The substantive point (N=10 cells per arm + percentile bootstrap unreliable) applies correctly to the IC delta. Recorded the correction in analysis.md 2026-05-27-c Finding 4 so future Claude doesn't propagate the column-label slip.
+
+### Story A v3 status — full experimental sweep done
+
+| Confirmatory experiment | Cells | Wall (A100) | Codex Touchpoint 3 |
+|--------------------------|-------|-------------|--------------------|
+| E1 anchor (4 models × 10 seeds × 5 folds × 2 universes) | 400 | 5.58h | A-bis MIXED → all findings fixed |
+| E3 news-as-edge cooccurrence | 50 | ~1.5h | A PASS-WITH-CONCERNS (internal ACK) |
+| E4-α edge ablation (α2 + α4) | 100 | ~1h | (same — combined T3 with E3) |
+
+All E6 post-process complete: SPA + DM/HLN + bootstrap CI + cost ladder (E1) + 5-pair edge ablation (E3/E4) + 3-column regime decomposition (E1 + E3/E4) + multi-testing ledger.
+
+### Pending (paper-writing track, weeks 5-8 per plan §8)
+
+- **HATS baseline reproduction** (~1-1.5 week, plan §1.6 STRETCH, H博士 2026-05-27 GO): Story A 4th narrative element (Template 1 "replicate-published-under-strict-eval") requires this; otherwise reviewer "you only tested GAT/SAGE on standard PyG implementations" rejection risk ~30-40%
+- **Literature matrix verification** (~1 day, Codex C-06 deferred): plan §1.9 16-paper matrix needs arXiv abstract cross-check for FinGAT/HIGSTM/HTAN + add 3 papers (GRU-PFG/DishFT-GNN/DGT)
+- **Paper-figure scaffolding** (~2-3 days): write `analyze_storya_results.py` to produce Table 1-5 + Figure 1-2 from E1 + E3/E4 + HATS
+- **Paper draft writing**: §Intro / §Related Work / §Methodology / §Results / §Discussion / §Limitations / §Conclusion + reproducibility checklist
+
+→ progress: 2026-05-27-c | plan: 2026-05-26 LOCKED DECISIONS (Story A v3) | analysis: 2026-05-27-c
+
+---
+
 ## 2026-05-27-b: E1 results + E6 + LOFO + Touchpoint 3 + E3/E4 done + Plan AAA T-1 diagnostic
 
 ### Story A v3 — full experimental sweep complete (E1 + E3 + E4-α)

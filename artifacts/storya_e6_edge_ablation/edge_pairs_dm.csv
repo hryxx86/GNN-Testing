@@ -1,0 +1,16 @@
+pair_id,description,regime_condition,n_days_paired,n_cells_paired,mean_delta_ic,mean_delta_sharpe_net10bps,DM_stat,HLN_stat,HLN_p_two_sided,BH_FDR_rejected_q05_full_family5
+alpha2_corr_sector_vs_alpha1_corr_only,sector adds to corr,full,313,50,0.00969,0.1424,1.6717,1.5622,0.119246,False
+alpha2_corr_sector_vs_alpha1_corr_only,sector adds to corr,lofo4,251,40,0.00457,-0.0371,0.7091,0.6512,0.515547,
+alpha2_corr_sector_vs_alpha1_corr_only,sector adds to corr,fold4_only,62,10,0.03044,0.8606,,,,
+alpha3_corr_news_vs_alpha1_corr_only,news adds to corr,full,313,50,0.01001,0.2054,2.2156,2.0705,0.039232,False
+alpha3_corr_news_vs_alpha1_corr_only,news adds to corr,lofo4,251,40,0.00497,-0.1673,1.0372,0.9525,0.341756,
+alpha3_corr_news_vs_alpha1_corr_only,news adds to corr,fold4_only,62,10,0.03041,1.6961,,,,
+alpha4_corr_sector_news_vs_alpha1_corr_only,full bundle adds to corr,full,313,50,0.00714,1.1429,1.1724,1.0956,0.274103,False
+alpha4_corr_sector_news_vs_alpha1_corr_only,full bundle adds to corr,lofo4,251,40,0.0022,-0.2225,0.3226,0.2963,0.767272,
+alpha4_corr_sector_news_vs_alpha1_corr_only,full bundle adds to corr,fold4_only,62,10,0.02714,6.6043,,,,
+alpha4_corr_sector_news_vs_alpha2_corr_sector,news on top of corr+sector,full,313,50,-0.00255,1.0004,-1.4159,-1.3232,0.186739,False
+alpha4_corr_sector_news_vs_alpha2_corr_sector,news on top of corr+sector,lofo4,251,40,-0.00237,-0.1854,-1.1338,-1.0412,0.298781,
+alpha4_corr_sector_news_vs_alpha2_corr_sector,news on top of corr+sector,fold4_only,62,10,-0.0033,5.7437,,,,
+alpha4_corr_sector_news_vs_alpha3_corr_news,sector on top of corr+news,full,313,50,-0.00287,0.9375,-0.7895,-0.7378,0.461201,False
+alpha4_corr_sector_news_vs_alpha3_corr_news,sector on top of corr+news,lofo4,251,40,-0.00278,-0.0552,-0.6739,-0.6189,0.536577,
+alpha4_corr_sector_news_vs_alpha3_corr_news,sector on top of corr+news,fold4_only,62,10,-0.00327,4.9082,,,,
