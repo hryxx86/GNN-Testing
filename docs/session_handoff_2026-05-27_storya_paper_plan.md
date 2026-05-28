@@ -21,7 +21,7 @@ open_questions:
   - "Q2 RESOLVED → 13 modular paper_figs/fig_*.py scripts (Option Y precedent; shared rcparams_storya.py import)"
   - "Q3 RESOLVED → ICAIF 2026 ACM SIG primary (highest-prestige feasible for AI+finance 8-week timeline); QF journal backup if rejected"
   - "Q4 RESOLVED → HATS-3R-adapt (Codex T1 PROCEED-WITH-FIXES; narrowed claim_scope per A-05/A-06/A-07)"
-  - "NEW open question 2026-05-27-h: Drive-sync strategy for Story A 400 .npy per-day_ic files — pull from Drive (~50MB) to local for offline fig scripts, OR run scripts on Colab + push small PDFs back? (Phase 6.1 decision)"
+  - "NEW open question 2026-05-27-h RESOLVED 2026-05-27-h same day: Drive→local pull (Option A) executed via scripts/sync_storya_from_drive.sh (commit c8dc052); 550 .npy + 3 results.csv synced to local, 13MB total. All open questions in this handoff are now CLOSED."
 file_state:
   modified_since_last_commit: []
   new_files: [docs/session_handoff_2026-05-27_storya_paper_plan.md]

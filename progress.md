@@ -4766,6 +4766,39 @@ Then Round 3 decision: full E1 (400 cells on Colab A100, ~35-40h) launch criteri
 
 → progress: 2026-05-26-k | plan: 2026-05-26-a (v3 + Touchpoint 2 fully cleared) | analysis: N/A
 
+## 2026-05-27-h: Drive→local sync of Story A v3 outputs + 3 paper-production decisions LOCKED
+
+### Drive-to-local sync (resolves handoff §9.1 NEW open question 2026-05-27-h)
+
+Wrote `scripts/sync_storya_from_drive.sh` (reverse of `sync_to_drive.sh`); pulled Story A v3 confirmatory results from Drive Desktop mount → local. Verification:
+- `storya_e1_anchor/`: 400 .npy + 401-line results.csv + manifest.csv ✓
+- `storya_e3_news_edge/`: 50 .npy + 51-line results.csv ✓
+- `storya_e4_alpha/`: 100 .npy + 101-line results.csv ✓
+- Total 13 MB across 3 experiments (smaller than initial 50MB estimate)
+
+Spot-checked 3 random .npy files load via `np.load` — all shape=(62,) float32, no NaN, plausible IC means in [0.17, 0.27]. Paper-figure scripts (`paper_figs/fig_*.py` Phase 6.1+) can now read per-day IC arrays locally without Colab SSH.
+
+### 3 paper-production decisions LOCKED (per H博士 2026-05-27 answers to handoff §9.1 Q1/Q2/Q3)
+
+| Q | Decision | Plan.md Decision Log row added |
+|---|----------|--------------------------------|
+| Q1 | 图表全出 = exhaustive 25 figures + 13 tables (upper bound; trim at writing time) | 2026-05-27 paper figure scope |
+| Q2 | 13 modular `paper_figs/fig_*.py` scripts (NOT 1 mega script; Option Y precedent) | 2026-05-27 figure-script architecture |
+| Q3 | ICAIF 2026 ACM SIG primary (highest-prestige feasible for AI+finance 8-week timeline); QF journal backup | 2026-05-27 paper venue |
+
+handoff §9.1 open_questions frontmatter updated: 4 original questions all RESOLVED; 1 new question (Drive-sync) also now RESOLVED.
+
+### Commits this entry
+
+- `a74ed3c` Lock 3 paper-production decisions (Q1/Q2/Q3) to plan.md Decision Log + handoff frontmatter
+- `c8dc052` Add scripts/sync_storya_from_drive.sh + run + verify
+
+### Tri-doc cross-reference
+
+→ progress: 2026-05-27-h | plan: 2026-05-27 Decision Log (3 new rows for paper-production locks; total 2026-05-27 rows now 8 = 5 experimental + 3 paper-production) | analysis: N/A (no new analysis findings; logistics only)
+
+---
+
 ## 2026-05-27-g: Codex Touchpoint 1 Plan Review on Story A paper handoff — 1 CRITICAL + 6 MAJOR all FIXED (verdict PROCEED-WITH-FIXES)
 
 - **Target plan**: `docs/session_handoff_2026-05-27_storya_paper_plan.md` (Story A paper figure/experiment plan)
