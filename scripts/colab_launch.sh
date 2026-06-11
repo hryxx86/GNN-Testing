@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # One-line launcher for Colab GPU training jobs via SSH.
 #
-# IMPORTANT (2026-05-26 update): Code lives on GitHub; DATA lives in Google Drive.
-# The project root on Colab is the Drive mount, NOT a fresh GitHub clone:
+# IMPORTANT (2026-06-10 path-B update): Code lives on GitHub; DATA lives in Google Drive.
+# The project root on Colab is a GitHub CLONE on local disk (set up by colab_bootstrap.sh):
 #
-#   /content/drive/MyDrive/GNN测试   ← project root (Drive mount, also a git working tree)
+#   /content/GNN-Testing   ← project root (git clone; data/experiments/… symlinked from Drive)
 #
 # Usage (run from project root on Colab side):
 #   bash scripts/colab_launch.sh <run_script.py> [run_args...]
@@ -15,7 +15,7 @@
 #
 # Or remote-trigger from local Mac (cloudflared SSH):
 #   sshpass -p "GNNTEST" ssh <host>.trycloudflare.com \
-#     "cd '/content/drive/MyDrive/GNN测试' && git pull && \
+#     "cd /content/GNN-Testing && git pull && \
 #      bash scripts/colab_launch.sh run_storya_e1_anchor.py"
 #
 # What it does:
@@ -39,8 +39,8 @@ if [[ ! -f "$SENTINEL" ]]; then
     echo "ERROR: cwd=$PWD does not look like the GNN-Testing project root."
     echo "       Missing sentinel: $SENTINEL"
     echo ""
-    echo "       The project root (with data/) lives in Google Drive on Colab:"
-    echo "           cd '/content/drive/MyDrive/GNN测试'"
+    echo "       The project root on Colab is the GitHub clone (data/ symlinked from Drive):"
+    echo "           cd /content/GNN-Testing   # if missing, run colab_bootstrap.sh first"
     echo ""
     echo "       Then re-run: bash scripts/colab_launch.sh <run_script.py> [args...]"
     exit 2
