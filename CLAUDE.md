@@ -76,12 +76,22 @@ Entry IDs are date-based: `## YYYY-MM-DD-x: Title`. Tri-doc cross-reference is m
 - Local project: `/Users/heruixi/Desktop/GNN-Testing`
 - Conda env: `gnn` — Python: `/opt/homebrew/Caskroom/miniforge/base/envs/gnn/bin/python`
 - GitHub repo: `https://github.com/hryxx86/GNN-Testing`
-- **Colab SSH** (Pro, 需要每次重新启动):
-  - 在 Colab notebook 里运行: `from colab_ssh import launch_ssh_cloudflared; launch_ssh_cloudflared(password="GNNTEST")`
-  - SSH 命令模板: `sshpass -p "GNNTEST" ssh <HOSTNAME>.trycloudflare.com "命令"`
-  - 依赖: `brew install cloudflared sshpass`（本地已安装）
-  - SSH config 已配置 (`~/.ssh/config`): 自动通过 cloudflared 代理所有 `*.trycloudflare.com`
-  - **注意**: hostname 每次重启 runtime 会变，需要 H博士 提供新地址
+- **Colab 架构**: **Code = GitHub（clone 到 Colab 本地盘），Data = Google Drive（软链）**。Drive 挂载**不是** git 仓库，`cd <drive> && git pull` 一直无效 → 改用 `scripts/colab_bootstrap.sh`（git clone 代码到 `/content/GNN-Testing` + 软链 `data/experiments/plots/wandb` 自 Drive）。`artifacts/` 不软链（git 管理）。
+- **Colab 每次 runtime 的 3 个 cell**（path B, locked 2026-06-10）:
+  ```python
+  # Cell 1 — 挂 Drive
+  from google.colab import drive; drive.mount('/content/drive')
+  # Cell 2 — 代码自 GitHub + 数据软链 Drive
+  !curl -sSL https://raw.githubusercontent.com/hryxx86/GNN-Testing/main/scripts/colab_bootstrap.sh | bash
+  %cd /content/GNN-Testing
+  # Cell 3 — SSH 隧道（自建 sshd + http2 cloudflared，打印 hostname）
+  !bash scripts/colab_ssh_tunnel.sh
+  ```
+- **SSH 不变式（铁律）**: sshd 监听端口 **必须 == 隧道转发端口**。`colab_ssh_tunnel.sh` 强制 sshd 绑 22 + 隧道指 22。**不要再用 `colab_ssh` / `launch_ssh_cloudflared`**（PyPI 停在 0.3.27 / 2021-10；其 sshd 配 2222 而隧道指别处 → 永久 origin 502 + 本地 `websocket: bad handshake`）。
+- 隧道强制 `--protocol http2`（cloudflared 默认 QUIC/UDP 易被掐 → 本地连接超时）。
+- SSH 命令模板: `sshpass -p "GNNTEST" ssh <HOSTNAME>.trycloudflare.com "命令"`。依赖: `brew install cloudflared sshpass`（本地已安装）。
+- 本地 `~/.ssh/config` 已代理所有 `*.trycloudflare.com`（含 keepalive；脚本输出兼容，本地无需改动）。
+- **注意**: hostname 每次重启 runtime 会变，需要 H博士 提供新地址。
 
 ---
 

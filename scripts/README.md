@@ -13,6 +13,8 @@
 | `process_news.py` | 新闻文本清洗 |
 | `verify_docs_provenance.py` | 检查 advisor 文档中每个数字 claim 是否有 source 引用（`.claude/rules/docs.md` §4） |
 | `colab_launch.sh` | 一行启动 Colab 训练 (tmux + nohup + log)，用于 SSH 远程跑长任务 |
+| `colab_ssh_tunnel.sh` | 一行建立 Colab SSH 隧道（sshd + http2 cloudflared），替代弃用的 `colab_ssh` 包 |
+| `colab_bootstrap.sh` | Colab 每 runtime 引导：git clone 代码到本地盘 + 软链 Drive 数据（Code=GitHub/Data=Drive）|
 
 ---
 
@@ -25,6 +27,8 @@
 | `process_news.py` | News cleaning | 2026-04-08 | active |
 | `verify_docs_provenance.py` | Doc provenance linter | 2026-04-23 | active; invoked via `/verify-docs-provenance` |
 | `colab_launch.sh` | Colab training launcher (tmux + nohup) | 2026-05-26 | active; one-liner: `bash scripts/colab_launch.sh <run_script.py> [args...]` |
+| `colab_ssh_tunnel.sh` | Colab SSH tunnel (sshd + http2 cloudflared) | 2026-06-10 | active; one-liner: `bash scripts/colab_ssh_tunnel.sh`; replaces unmaintained `colab_ssh` |
+| `colab_bootstrap.sh` | Colab per-runtime bootstrap (git clone code + symlink Drive data) | 2026-06-10 | active; `curl -sSL .../colab_bootstrap.sh \| bash`; realizes Code=GitHub/Data=Drive |
 
 ---
 
@@ -39,3 +43,5 @@
 - **2026-04-20**: 新增 README（→ progress: 2026-04-20-d）
 - **2026-04-23**: 新增 `verify_docs_provenance.py` — doc provenance linter（→ progress: 2026-04-23-a）
 - **2026-05-26**: 新增 `colab_launch.sh` — Colab SSH 远程一行启动训练（tmux + nohup + log）
+- **2026-06-10**: 新增 `colab_ssh_tunnel.sh` — 替代弃用的 `colab_ssh`，自建 sshd + http2 cloudflared 隧道（→ progress: 2026-06-10-b）
+- **2026-06-10**: 新增 `colab_bootstrap.sh` — 解决 git 问题：clone 代码到 Colab 本地盘 + 软链 Drive 数据（→ progress: 2026-06-10-b）

@@ -6,6 +6,53 @@
 
 ---
 
+## 2026-05-28-a: Phase 6 paper-figure pipeline COMPLETE ✅
+
+### What was delivered
+
+Story A 论文 figure 生产 pipeline 完整落地。Phase 6.1 rcparams + Phase 6.2 (8 prior-experiment fig 模块) + Phase 6.3 (5 Story A v3 fig 模块 + 2 split helpers) + F1 architecture schematic = **16 Python 模块**, **~3,150 LOC**。
+
+| 维度 | 数量 |
+|---|---|
+| `paper_figs/` 模块 | 16 .py (含 1 rcparams + 8 Phase 6.2 + 5 Phase 6.3 + 2 split helpers + 1 F1 schematic) + 1 throwaway `_inspect.py` |
+| `figures/` PDFs (paper 引用) | 27 (F1-F10 main + S1-S18 supp minus S5 deferred) + 27 PNG previews + 1 F1 SVG |
+| `tables/` LaTeX | 10 (T1-T5 main + ST2-ST6 supp; T6/ST1/ST7 由 scientific-writing skill 单独产) |
+| `tables/` caption .txt | 13 (一个/fig 模块) |
+| `docs/storya_paper_inspirations.md` | 12K 字范式提炼，3 篇真实顶刊 verbatim quote (Feng 2019 TOIS + Sawhney 2021 AAAI STHAN-SR + Hou-Xue-Zhang 2020 RFS) |
+| `docs/paper_sources/sawhney_2021_sthansr_AAAI.pdf` | 6.7MB 引用 provenance 本地副本 |
+
+### Rule 9 T2 触发 + 落地
+
+3 轮 self-review，因 H博士 directive "自己 review 吧"（Codex CLI 可用但调用被中断 2 次）走 claude-self-review fallback path:
+
+- **Round A** (Phase 6.2 八模块): 0 CRITICAL + 4 MAJOR (all FIXED) + 7 CONCERN (3 ACCEPTED). Verdict PASS.
+- **Round B** (Phase 6.2 CONCERN backlog): 4 OPEN CONCERN FIXED. Verdict PASS.
+- **Round C** (Phase 6.3 + F1 八文件): 0 CRITICAL + 1 MAJOR (FIXED) + 7 CONCERN (1 FIXED + 5 ACCEPTED + 1 OPEN visual). Verdict PASS-WITH-CONCERNS.
+
+**累计**: 0 CRITICAL + 5 MAJOR (all FIXED) + 14 CONCERN (9 FIXED + 4 ACCEPTED + 1 OPEN visual)。
+
+最严重的一个 catch (Round C CLAUDE-C-01) 是 T5 LaTeX 表的 `bool(NaN)=True` 静默 bug — pre-fix 会展示 10 个 false-positive `\checkmark` BH-FDR rejection，直接违背 N3 narrative "0/5 pairs survive BH-FDR"。这正是 Rule 9 T2 的核心价值。
+
+### 写作可立即引用的状态
+
+- 所有强制 caveat verbatim 入 caption（L1 Universe C LOW STABILITY → F5/T4/F10/S4; L6 Fold 4 regime → F3/F4/S3/S15/S17/T2; N3 0/5 BH-FDR → F6/T5）
+- 4 个新子目录全部含 README（`paper_figs/`、`figures/`、`tables/`、`docs/paper_sources/`），每 figure / 每 table 有完整解释
+- SOURCE_CONTRACT md5 全部 spot-check 通过
+- F1 schematic 同时产 PDF + SVG 供 Illustrator 调整
+
+### What's next
+
+进入 paper draft writing 阶段（Stage 1-3 per session_handoff_2026-05-27_storya_paper_plan.md §10）：
+
+1. **Stage 1**: `literature-review` skill 把 plan §1.9 的 16-paper matrix 扩到 19 paper (Codex C-06 deferred 任务)；`citation-management` skill 生成 BibTeX
+2. **Stage 3 draft writing**: `scientific-writing` skill 写 §1-§7 IMRAD prose，输出 `docs/storya_paper_draft_v1.md`
+3. **Stage 5 external review**: `/codex-results-review` on draft + figures
+4. HATS-3R-adapt A100 launch (依赖 H博士 SSH hostname)
+
+→ progress: 2026-05-28-a..f | analysis: N/A
+
+---
+
 ## 2026-05-26-a: Phase Milestone — Pivot from Plan AAA to Story A Paper ⏳ START
 
 ### What's now decided
@@ -1851,7 +1898,14 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-05-27 | **Paper figure scope LOCKED: exhaustive 25 figures + 13 tables (upper bound)** | H博士 2026-05-27 directive "图表全出" — exhaust §2 Master Figure List (10 main + 18 supplementary) and §3 Master Table List (6 main + 7 supplementary) at upper bound; trim at writing time per venue page budget. Captures both Story A v3 (last-2-days E1/E3/E4/E6/Plan AAA T-1 diagnostic) AND 13 prior-work experiments (horizon ablation / Plan AAA 168 / Loss horserace / Tier 1 Phase A/B / SelectiveNet / etc.) plus HATS-3R-adapt. Source: `docs/session_handoff_2026-05-27_storya_paper_plan.md` §2-§3. |
 | 2026-05-27 | **Paper figure-script architecture LOCKED: 13 modular `paper_figs/fig_*.py` (NOT 1 mega script)** | H博士 2026-05-27 directive "13 modular"; matches Option Y precedent (compute_e6_edge_ablation.py imports compute_e6_dm_spa.py helpers). Each module 150-300 LOC, imports `rcparams_storya`, reads exactly one experiment's CSV, produces PDF+PNG to `figures/`. Phase 6.2 (8 prior-experiment scripts) + Phase 6.2b (8 newly-discovered §4.19-§4.27 scripts) + Phase 6.3 (5 Story A v3 scripts) + 1 F1 architecture diagram via `scientific-schematics` skill = 22 fig-producing artifacts in `paper_figs/`. Single source of truth via shared `rcparams_storya.py` import. |
 | 2026-05-27 | **Paper venue LOCKED: ICAIF 2026 (ACM SIG full paper)** | H博士 2026-05-27 directive "哪个高级就哪个" — ICAIF 2026 chosen over Quantitative Finance journal backup. Rationale: (a) ICAIF is the premier ACM-affiliated venue specifically for AI+finance; (b) audience aligned with GNN+methodology contribution; (c) 8-week timeline rules out longer-review options (JFE/JF 1-2 years; QF Taylor & Francis 6-12mo); (d) higher AI/CS community visibility than QF journal; (e) NeurIPS/ICML main track ruled out (Story A's contribution is methodology framework + conditional findings, not novel architecture — risk of "limited contribution" desk reject). QF journal retained as backup if ICAIF rejection. Concrete commitments: `venue-templates` skill fetches ACM SIG `.cls` + bibstyle; `mpl_sizes.get_format('ICML')` preset (closest match to ACM SIG); 8-10 page budget; figure trim at writing time. |
+| 2026-05-28 | **Paper-figure pipeline COMPLETE — 16 modules, 27 figures, 10 LaTeX tables, 13 captions** | Phase 6.1 rcparams + Phase 6.2 (8 modules) + Phase 6.3 (5 modules + 2 helpers) + F1 schematic, all under `paper_figs/`. All scripts pass conda env smoke test. Honest caveats verbatim in caption: L1 (LOW STABILITY) → F5/T4/F10/S4; L6 (Fold 4 regime) → F3/F4/S3/S15/S17/T2; N3 ("0/5 pairs survive BH-FDR") → F6/T5. Source: `paper_figs/README.md` + `figures/README.md` + `tables/README.md`. |
+| 2026-05-28 | **F2 cumulative-IC trajectory adaptation (NOT cumulative L/S PnL)** | `per_day_ic/*.npy` 文件存的是日 Spearman IC 数组，**不是** daily L/S 收益序列。原计划 "cumulative L/S PnL curves" 改为 "cumulative daily IC trajectory" — 同样表达 ranking quality 的时间稳定性，但避免发明合成收益数据。Documented in `paper_figs/_fig_e1_anchor_perday.py` docstring + caption. |
+| 2026-05-28 | **STHAN-SR (Sawhney 2021 AAAI) selected as the contemporary GNN-finance comparator** (not Cui 2021 HGTAN) | H博士 拒绝沙盒受限时的 Cui 2021 替代方案，directive "重试拿 STHAN-SR"。主 session bash curl + Mozilla User-Agent 拿到 6.7MB PDF 本地存于 `docs/paper_sources/sawhney_2021_sthansr_AAAI.pdf`。STHAN-SR 优于 Cui 的原因：(a) 8 页 AAAI 双栏 ↔ ICAIF 8 页 ACM SIGCONF 完美对应; (b) 显式 ranking-aware combined loss; (c) named-baseline Wilcoxon `*` `†` 上标编码模式可直接借用 to Story A T1/T2 显著性 superscripts; (d) §5.3 degeneration-as-validation 设计可搬到 E4-α edge ablation 章节。inspirations doc §2 全部用真实 STHAN-SR PDF verbatim quotes 重写。 |
+| 2026-05-28 | **Rule 9 T2 self-review path adopted as Codex fallback when codex:rescue 调用被中断** | Codex CLI 实际 ready=true (codex-cli 0.125.0 + ChatGPT login active) 但 2 次 codex:rescue 调用被 H博士 interrupt 在 runtime startup 前；H博士 directive "自己 review 吧"。Round A+B+C self-review 严格遵守 .claude/rules/docs.md §6 YAML schema + Rule 9 #5 personal-verification (亲自跑 smoke test 验证每条 fix)。最严重 catch (Round C CLAUDE-C-01): T5 LaTeX 表 `bool(NaN)=True` Python 真值陷阱会让 10 个 lofo4/fold4_only 行错误显示 `\checkmark` BH-FDR rejection，违背 N3 narrative "0/5 pairs survive BH-FDR"；如未 catch 直接 ship 入 paper draft 会严重破坏 credibility。 |
+| 2026-05-28 | **4 new subdirectories with full READMEs (Rule 5 §2 structural-change trigger)** | 新建子目录 `paper_figs/`、`figures/`、`tables/`、`docs/paper_sources/` 各含一份 README。每 figure / table 完整解释：源数据 → 坐标编码 → 关键发现 → narrative pillar → caveat。测试/缓存文件 (`paper_figs/_inspect.py`、`paper_figs/__pycache__/`、`figures/test_rcparams.{pdf,png}`) 保留不删，在 README 中显式说明保留理由 (H博士 2026-05-28 directive "测试缓存文件不删，readme 里面说一下")。 |
+| 2026-06-10 | **Colab SSH = manual cloudflared (`scripts/colab_ssh_tunnel.sh`, `--protocol http2`); `colab_ssh` package dropped** | colab_ssh unmaintained (PyPI 0.3.27 / 2021-10). Live probe of a real tunnel hostname returned HTTP 502 from Cloudflare edge + local `websocket: bad handshake` = tunnel UP but Colab-side sshd dead on :22 (origin down). New script explicitly installs/restarts sshd + opens an http2 quick tunnel (QUIC/UDP default is a separate timeout cause) + parses the hostname itself. Local `~/.ssh/config` unchanged (already proxies `*.trycloudflare.com`; added keepalive). |
 
-→ progress: 2026-05-27-g | analysis: 2026-05-27-c
+→ progress: 2026-05-28-a..f | analysis: N/A
+→ progress: 2026-06-10-b | analysis: N/A
 
-*Last updated: 2026-05-27 (Story A v3 confirmatory experiments COMPLETE: E1 400 cells + E3 50 + E4-α 100; E6 SPA/DM/LOFO/edge_ablation all post-processed; 8 Codex Touchpoints across plan/code/results; 8 Decision Log rows for 2026-05-27 closure: 5 experimental + 3 paper-production locks)*
+*Last updated: 2026-06-10 (Colab SSH fix: `colab_ssh` → `scripts/colab_ssh_tunnel.sh`; root cause = origin-502 / sshd-down, verified by live tunnel probe; CLAUDE.md Rule 7 + ~/.ssh/config keepalive updated.)*

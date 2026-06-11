@@ -4,6 +4,310 @@
 
 ---
 
+## 2026-06-10-b: Colab SSH fixed — `colab_ssh` → manual cloudflared (`scripts/colab_ssh_tunnel.sh`)
+
+**Problem**: Colab SSH broke. Local connect failed with `websocket: bad handshake` +
+`Connection closed by UNKNOWN port 65535`.
+
+**Diagnosis (live probe of `bid-allied-drain-penetration.trycloudflare.com`)**:
+- Local side healthy: `cloudflared` 2026.3.0, `sshpass` present, `~/.ssh/config` proxy correct.
+- `curl https://<host>/` → **HTTP 502** with `cf-ray` / `server: cloudflare` headers; the
+  cloudflared tunnel reaches the Cloudflare edge but the **origin is down**.
+- **Root cause confirmed by live Colab debugging (port mismatch)**: `colab_ssh` (unmaintained,
+  PyPI 0.3.27 / 2021-10) configured sshd on **port 2222** (`127.0.0.1:2222`, verified via
+  `ss -tlnp` → pid 23145) but its cloudflared tunnel pointed at a **different port** → origin
+  always 502. Restarting sshd on 2222 did NOT fix the old tunnel (still 502); a **fresh http2
+  tunnel pointed explicitly at `ssh://localhost:2222` connected immediately** (`CONNECT_OK`,
+  Drive mount + data sentinel reachable). NOT a QUIC timeout, NOT hostname parsing — port mismatch.
+
+**Fix**:
+1. New `scripts/colab_ssh_tunnel.sh` — **forces sshd onto port 22** (neutralizes any stale
+   `Port 2222` directive, pins `Port 22` via high-priority drop-in, kills pre-existing sshd) so
+   sshd and the tunnel can never port-mismatch (the exact bug above); sets root password auth +
+   host keys; downloads cloudflared from the current GitHub release URL; opens a quick tunnel
+   pinned to `--protocol http2` (avoids the separate QUIC/UDP-blocked timeout mode) → `ssh://localhost:22`;
+   parses the `*.trycloudflare.com` hostname itself; prints a ready-to-paste local command.
+   Run on Colab via `!bash scripts/colab_ssh_tunnel.sh`. Syntax-checked locally (`bash -n` OK).
+2. `CLAUDE.md` Rule 7 — replaced the `launch_ssh_cloudflared(...)` instruction with the new script;
+   noted colab_ssh deprecated + why http2.
+3. `~/.ssh/config` `*.trycloudflare.com` block — added `StrictHostKeyChecking accept-new`,
+   `ConnectTimeout 30`, `ServerAliveInterval 30`, `ServerAliveCountMax 3` (idle-drop hardening).
+4. `plan.md` Decision Log + `scripts/README.md` updated.
+
+**Rule 9 note**: infrastructure tooling — touches no data/label/graph/statistics logic, so outside
+the Rule 9 correctness-review scope (data leakage / stat methodology). Self-read + `bash -n` done.
+
+**Verified live (2026-06-10)**: manual http2 tunnel → `ssh://localhost:2222` connected from local
+(`CONNECT_OK`, `PWD=/content/drive/MyDrive/GNN测试`, data sentinel present). The permanent script
+was then hardened (force port 22) so a fresh `!bash scripts/colab_ssh_tunnel.sh` run reproduces this
+without the 2222/tunnel mismatch.
+
+**Two non-SSH findings surfaced during the live test**:
+- The test Colab runtime had **no GPU** (`torch.cuda.is_available() = False`) — a runtime-type choice, not an SSH issue.
+- `/content/drive/MyDrive/GNN测试` is **not a git repo** on that mount (`git rev-parse` → "not a git repository"),
+  so the `git pull` step in the `colab_launch.sh` remote-trigger command would always fail there.
+
+**Git problem RESOLVED (path B, H博士 chosen 2026-06-10)** — realizes the stated "Code = GitHub, Data = Drive":
+- New `scripts/colab_bootstrap.sh` — `git clone`/`pull` code to Colab **local disk** `/content/GNN-Testing`
+  (a real git working tree → `git pull` works, code always GitHub-current), then **symlinks**
+  `data/ plots/ wandb/` from Drive, and for `experiments/` (mixed git-config + gitignored outputs)
+  rsyncs git config INTO Drive first (preserving outputs) then symlinks. `artifacts/` left git-managed.
+- Root cause of the git problem: the local **Drive Desktop folder** `~/Library/.../GNN测试` is also not a
+  git repo; code reached Colab only via `sync_to_drive.sh` (which rsyncs root `*.py` + `utils/` + 3 md —
+  **not `scripts/`**) + flaky Drive sync. Path B replaces that with proper git clone.
+- `CLAUDE.md` Rule 7 rewritten with the canonical **3-cell Colab workflow** (mount → bootstrap → tunnel)
+  and the SSH invariant "sshd port == tunnel port".
+- Committed + pushed to `main` so Colab can `git clone`/`curl` it.
+
+→ progress: 2026-06-10-b | plan: 2026-06-10 Decision Log | analysis: N/A
+
+---
+
+## 2026-06-10-a: Codex Review — Plan (Touchpoint 1, Round A) — Sanity-Check Suite E0–E4
+
+- Target: `/Users/heruixi/.claude/plans/sanity-check-sorted-lark.md`(发布 null 前的管线证伪套件,源 `sanity_check_preregistration.md`)
+- Reviewer: **codex**(primary;~5min 响应,无需 fallback)
+- Full review: `artifacts/reviews/2026-06-10_codex_plan_A.md`
+- Summary: **2 CRITICAL + 3 MAJOR + 2 CONCERN**
+- Verdict: **BLOCK-EXECUTION** → 全部 7 条接受并已并入修订 plan(0 rebuttal)
+- Resolutions: 7 FIXED(plan 修订);见 review file 逐条 status + resolution_notes
+
+### 两条 CRITICAL(亲自读码核实)
+
+| ID | Bug | 修正 |
+|---|---|---|
+| CODEX-A-01 | E3 planted label 用 `X[t-1]`,但 anchor 是 `features_t[d]↔labels_t[d]` 同 index([:580](run_storya_e1_anchor.py#L580))且 labels 已 forward-aligned([:397](run_storya_e1_anchor.py#L397))→ 信号不可观测 → **假阴 SICK** 一个正常管线 | label 改同 index `y[d]=β·(A_norm@X[d,:,0])+ε`;合成噪声无 PIT 顾虑;加 smoke recoverability assert |
+| CODEX-A-02 | E3 用同一 `A_alpha1` 既 plant 又 train([:564](run_storya_e1_anchor.py#L564) 无 provenance 校验)→ 图构造错(ticker 置换/snapshot off-by-one)仍 **假阳 PASS** | E0 升级为 graph-provenance canary + planted-block fixture(置换/±1 下必 FAIL);E3 不得单独认证图构造 |
+
+### 三条 MAJOR
+
+- **A-03**:E1 同期 return-corr oracle 非**必要**控制(label 是 21d-forward,[:400](run_storya_e1_anchor.py#L400))→ E1 降为 upper-bound 诊断、删 sick 分支;新增 **E1b** 泄露 forward-label-similarity oracle 作 topology-based 必要控制(与 Claude 开场对 H博士 提的顾虑 + H博士 升 E3 为 co-primary 一致)。+40 cells。
+- **A-04**:E3 显著性防 seed-day 伪复制 → 推断单元改 seed-average-per-fold 配对逐日 ΔIC + HLN+BH-FDR(仿 [compute_e6_edge_ablation.py:138](compute_e6_edge_ablation.py#L138))。
+- **A-05**:E2 等价门预注册(单边 95% bootstrap CI < 0.01001 且 TOST ±0.005);seed 2→4。
+
+### 两条 CONCERN
+
+- A-06:shuffled builder 无向 canonical + re-symmetrize + 5 项 assert。
+- A-07:E4 共线性 AUC 改描述性,去因果"冗余"措辞,不作独立 verdict。
+
+### 待 H博士 决策
+
+1. E1b(+40 cells/~3.5h)keep or drop(E3-only 也是有效必要控制);E2 加 seed(+40)keep or 退回 2 seed。
+2. 是否需 Codex Round B 复审修订后 plan,还是直接进实现(全部修正机械且已接受)。
+
+→ progress: 2026-06-10-a | plan: 2026-06-10-a(plan 文件修订) | analysis: N/A(无实验结果)
+
+---
+
+## 2026-06-10-b: Sanity-Check Suite 实现 + Codex Code Review(Touchpoint 2)+ E1b 降级
+
+### 实现(3 新文件,~750 LOC,零改动 anchor,import-only 复用)
+
+- `sanity_common.py` — 4 builder(E1 oracle / E1b label-sim oracle / E2 shuffled / E3 planted)+ verdict 逻辑
+- `run_sanity.py` — E0 provenance canary + E1/E1b/E2/E3 runner(`--experiment/--graph_type/--smoke/--resume`)
+- `analyze_sanity.py` — E4 零训练诊断 + verdict + `sanity_summary.md`(复用 `compute_e6_dm_spa.hln_test`+`bh_fdr`)
+
+### 本地已跑(2 个零成本环节 + smoke)
+
+- **E0 wiring + provenance:10/10 PASS** — 图确接进 GAT/SAGE(α1 vs shuffled 输出差 0.20/0.59;MLP 边-不变);ticker-order invariant=True;独立重算 fold-0 边匹配(3026 edges);off-by-1 + 置换负测试都正确 FAIL。→ A-02"图建错"类病灶零训练即排除。
+- **E4 诊断(进论文)**:density 0.7–1.9%(远非完全图,排除稠密过平滑);log-log 斜率 ~−1.0(scale-free/hub);Fold 4 并不稠密(1.0%);边-特征 AUC ~0.73(描述性)。source: `experiments/sanity_e4_diagnostics/*.csv`
+- **smoke 全 exit 0**:E3 planted **GAT 80% / SAGE 83% 恢复、MLP≈0**(achievable 0.0437)——黄金标准必要控制两方向都成立;E1 return-corr oracle ≈0(实证 Codex A-03);E2 shuffled ≈ baseline。
+
+### E1b 降级(2026-06-10 smoke 发现 + H博士 directive)
+
+smoke 显示 E1b(label-sim oracle)IC 反低于 baseline(|ρ| 版 +0.013、正相关版 −0.058 且 std 0.27 过平滑)。机制:label-共动拓扑只**二阶**传 label 信息 → 弱 lift 不代表管线 SICK(否则重犯 A-03)。**E1b 从必要控制降为支持诊断,总 verdict 改由 E3 单独决定**。E3 仍是黄金标准(label=邻居特征函数,健康 GNN 必然恢复 / MLP 必然不能,真实 α1 拓扑)。
+
+### Codex Code Review(Touchpoint 2)— BLOCK-EXECUTION,1 CRIT + 2 MAJOR + 1 CONCERN,全部处理
+
+- Reviewer: codex(~6.5min,无 fallback)。Full: `artifacts/reviews/2026-06-10_codex_code_A.md`
+- **C-01 CRITICAL FIXED**:E3 verdict 原用 `hln_p < bh_thr`(strict <)→ 边际 BH-rejected 模型必 fail → E3(唯一必要控制)结构上永不 pass。改用 BH reject 布尔。亲自读 analyze_sanity.py:246-257 核实。
+- **C-02 MAJOR FIXED**:E0 provenance 原循环(同 anchor helper 重算)→ 重写为独立重算 + ticker-order invariant + 负测试。重跑 10/10 PASS。
+- **C-03 MAJOR FIXED**:append-only CSV + 行平均会被重复行污染 → analyze 按 cell key dedup keep='last'。
+- **C-04 CONCERN ACCEPTED**:逐日配对按位置对齐;但 valid-day skip 是 model-independent → 不会错配;加长度护栏。
+
+### 下一步
+
+E0+E4 本地已出;待 Colab A100 跑 E1/E1b/E2/E3(~19h)→ Touchpoint 3 results-review → 写 analysis.md。
+
+→ progress: 2026-06-10-b | plan: 2026-06-10-a(verdict 结构改 E3-only) | analysis: N/A(全量结果待 Colab)
+
+## 2026-05-28-c: Code Review Fallback — Claude Self-Review took Touchpoint 2 for paper_figs/
+
+- Trigger: Codex CLI `ready=true` (codex-cli 0.125.0, ChatGPT login active for heruixi86@gmail.com per `codex-companion.mjs setup --json`), but two consecutive `codex:rescue` skill invocations interrupted by H博士 before runtime startup. H博士 directed 2026-05-28: "自己review吧" (self-review path).
+- Rule 9 fallback compliance: this entry exists per the rule "启用 fallback 必须在 progress.md 记录". Self-review is per the 2026-05-23-b "claude-as-fallback Round B" precedent.
+- Reviewer: claude-self-review (not finance-gnn-reviewer this time, per H博士 directive)
+- Full review: `artifacts/reviews/2026-05-28_claude-self-review_code_A.md`
+
+→ progress: 2026-05-28-c | plan: N/A (paper-figure pipeline plan in `docs/session_handoff_2026-05-27_storya_paper_plan.md` §6, no plan amendments) | analysis: N/A (no experiment results yet)
+
+---
+
+## 2026-05-28-f: Round C self-review on Phase 6.3 + F1 (8 new files, 1,663 LOC)
+
+- Trigger: Phase 6.3 agent + F1 schematic produced 8 new files (5 main modules + 2 split helpers + F1 schematic). Rule 9 T2 fires on new code per protocol.
+- Reviewer: claude-self-review (continuation of Round A/B Codex fallback path per 2026-05-28 H博士 directive)
+- Full review: `artifacts/reviews/2026-05-28_claude-self-review_code_C.md`
+- Summary: **0 CRITICAL + 1 MAJOR + 7 CONCERN**
+- Initial verdict: PROCEED-WITH-FIXES → Post-fix: **PASS-WITH-CONCERNS** (1 MAJOR FIXED + 1 CONCERN FIXED + 5 ACCEPTED + 1 OPEN)
+
+### 1 MAJOR FIXED in-session
+
+| ID | Severity | Bug | Fix |
+|---|---|---|---|
+| CLAUDE-C-01 | MAJOR | T5 LaTeX table rendered `\checkmark` for 10 rows where `BH_FDR_rejected_q05_full_family5` was NaN. `bool(NaN)=True` in Python triggered the truthy branch. Would have shown 10 false-positive BH-FDR rejections, contradicting the N3 narrative "0/5 pairs survive BH-FDR". | Added `pd.isna(rej_raw)` guard before the bool branch in `fig_edge_ablation.py:table_T5`. NaN now renders as `--` (BH-FDR family-of-5 not applicable to lofo4/fold4_only regimes). Smoke-verified via `sed -n '5,11p' tables/T5_edge_ablation.tex`. |
+
+**Significance**: this is the type of bug Rule 9 T2 exists to catch — silent narrative-contradiction via Python truthiness gotcha. If T5 had shipped to the paper draft with 10 false-positive `\checkmark` marks, the entire N3 narrative pillar would have been undermined.
+
+### 1 CONCERN FIXED + 5 ACCEPTED + 1 OPEN (visual)
+
+- C-02 FIXED: S18 npz key `__article_counts__` triggered matplotlib's `_`-prefixed-label silent-ignore; legend warning. Stripped leading `_`.
+- C-03/C-04 ACCEPTED: F2 cumulative-IC `min_len` truncation + first-seed fold_boundaries — current data is deterministic, no actual issue.
+- C-06 ACCEPTED: S15 calendar uses illustrative TRAIN_YEARS / VAL_DAYS_CAL constants (documented in docstring).
+- C-07 ACCEPTED: T4 assumes constant n_cells across bps levels (true by construction).
+- C-08 ACCEPTED: S2 filters to TOP3_Sharpe / BOT3_Sharpe rank_classes only (intentional; caption explicit).
+- C-05 OPEN: F9 DM/HLN annotation y-offset visual tightness — defer to paper-revision typography pass.
+
+### Caveat compliance verified (all PASS)
+
+- L1 in F5 + T4 captions ✓
+- L6 in 6 captions (F3, F4, S3, S15, S17, T2) ✓
+- N3 "0/5 pairs survive BH-FDR q=0.05 in full condition" in F6 + T5 captions ✓
+- F1 Universe C amber-highlight annotation present ✓
+
+### Source CSV md5 spot-check 3/14
+
+| CSV | Match |
+|---|---|
+| experiments/storya_e1_anchor/results.csv | ✓ |
+| artifacts/storya_e6_dm_spa/bootstrap_ci.csv | ✓ |
+| artifacts/storya_e6_edge_ablation/edge_pairs_dm.csv | ✓ |
+
+### Final Phase 6 figure/table inventory
+
+| Asset | Count |
+|---|---|
+| Main figures (F1-F10) | 10 |
+| Supplementary figures (S-series, S5 skipped) | 17 |
+| Main tables (T1-T5) | 5 |
+| Supplementary tables (ST2-ST6) | 5 |
+| Caption .txt files | 13 |
+| paper_figs/*.py modules | 16 (1 rcparams + 8 Phase 6.2 + 5 Phase 6.3 + 2 helpers + F1 schematic, excluding _inspect tool) |
+
+### Cumulative Rule 9 T2 across all rounds
+
+- Round A (Phase 6.2): 0 CRIT / 4 MAJOR FIXED / 7 CONCERN (3 ACCEPTED)
+- Round B (Phase 6.2 CONCERN backlog): 4 OPEN CONCERN FIXED
+- Round C (Phase 6.3 + F1): 0 CRIT / 1 MAJOR FIXED / 7 CONCERN (5 ACCEPTED + 1 OPEN)
+- **Aggregate: 0 CRITICAL + 5 MAJOR (all FIXED) + 14 CONCERN (9 FIXED + 4 ACCEPTED + 1 OPEN visual)**
+
+→ progress: 2026-05-28-f | plan: N/A | analysis: N/A
+
+---
+
+## 2026-05-28-e: Phase 6.3 — Story A E1/E3/E4/E6 + F1 schematic fig modules complete (8 new files, 1,663 LOC)
+
+- 5 Phase 6.3 fig modules + 2 split helpers produced by general-purpose agent (write-only)
+- F1 architecture schematic written by main session via scientific-schematics skill
+- All 8 files smoke-tested PASS on conda env Python
+- 14 new figure PDFs in `figures/`: F1, F2, F3, F4, F5, F6, F9 + S1, S2, S3, S15, S16, S17, S18
+- 5 new LaTeX tables in `tables/`: T1, T2, T3, T4, T5 + ST2
+- 6 new caption .txt files
+- All caveat captions (L1 / L6 / N3 narrative) verified verbatim per Rule 9 #5 personal verification
+
+### Notable design adaptations
+
+- **F2 cumulative-IC trajectory** (replaces planned "cumulative L/S PnL curves"): per_day_ic .npy files contain daily Spearman IC arrays, not L/S returns. Documented in module docstring + caption.
+- **S18 dual-path**: primary reads `news_snapshots_cache.npz` (1255-day `__article_counts__` array), falls back to per-cell aggregates from E3 results.csv if schema mismatches. NPZ path succeeded.
+- **S15 illustrative calendar**: train/val/purge/test windows use calendar-day approximations; docstring discloses the approximation.
+
+→ progress: 2026-05-28-e | plan: N/A | analysis: N/A
+
+---
+
+## 2026-05-28-d: Round B — 4 OPEN CONCERN FIXED on Story A paper_figs/
+
+- Trigger: H博士 directive "同意处理" on 2026-05-28 — agreed to process the OPEN CONCERN backlog from Round A
+- Reviewer: claude-self-review (continuation of Round A self-review)
+- Review addendum: appended to `artifacts/reviews/2026-05-28_claude-self-review_code_A.md` Round B section
+
+### Fixes applied + verified
+
+| ID | Fix |
+|---|---|
+| CLAUDE-A-05 | `fig_phase5_step3.py` — defensive p-format `"p<0.001" if p<0.001 else f"p={p:.3f}"` |
+| CLAUDE-A-06 | `fig_loss_horserace.py:fig_S14` — shared bin-edge array (combined data + claimed-arrow range) for honest visual comparison |
+| CLAUDE-A-07 | `rcparams_storya.py` add `'three_panel'` format; `fig_tier1_phaseb.py` switched to public `setup('three_panel')` (dropped private `_apply_rc` import) |
+| CLAUDE-A-08 | `fig_phase5_diagnostics.py:fig_S11` — split signed-stackplot into two positive-only panels (long_contrib + short_contrib) with shared palette + clarified caption |
+
+### Final review status
+
+- 0 CRITICAL + 4 MAJOR (all FIXED Round A) + 7 CONCERN (4 FIXED Round B + 3 ACCEPTED-AS-CONCERN)
+- 0 OPEN findings
+- **Final post-Round-B verdict: PASS**
+
+→ progress: 2026-05-28-d | plan: N/A | analysis: N/A
+
+---
+
+## 2026-05-28-b: Code Review — Code (Touchpoint 2, Round A) — Story A paper_figs/ (9 new scripts)
+
+- Target: 9 Python files in `paper_figs/`, ~1500 LOC, all untracked at review time
+  - `paper_figs/rcparams_storya.py` (223 lines) — shared rcparams + setup/save/model_color/write_tex_table helpers
+  - `paper_figs/fig_horizon_ablation.py` (212 lines) — F7, F8, ST3
+  - `paper_figs/fig_plan_aaa.py` (225 lines) — F10, S4, ST4 (S5 skipped, documented)
+  - `paper_figs/fig_phase5_step3.py` (148 lines) — S6, ST5
+  - `paper_figs/fig_loss_horserace.py` (288 lines after fixes) — S7, S8, S14, ST6
+  - `paper_figs/fig_graph_ablation.py` (109 lines) — S9
+  - `paper_figs/fig_phase5_diagnostics.py` (114 lines) — S10, S11
+  - `paper_figs/fig_selectivenet.py` (94 lines) — S12
+  - `paper_figs/fig_tier1_phaseb.py` (119 lines) — S13
+- Reviewer: claude-self-review (Codex fallback, see 2026-05-28-c above)
+- Full review: `artifacts/reviews/2026-05-28_claude-self-review_code_A.md`
+- Summary: **0 CRITICAL + 4 MAJOR + 7 CONCERN**
+- Initial verdict: **PROCEED-WITH-FIXES** → Post-disposition verdict: **PASS-WITH-CONCERNS** (4 MAJOR all FIXED + 2 CONCERN ACCEPTED-AS-CONCERN + 5 CONCERN OPEN/deferable)
+
+### Fixes applied (Rule 9 #5 — Claude personally verified each fix)
+
+| Finding | Severity | Fix | Smoke-test evidence |
+|---|---|---|---|
+| CLAUDE-A-01 | MAJOR | `fig_horizon_ablation.py` — replace independent bootstrap with paired bootstrap (inner-join cells_all and cells_price on (seed, fold) before resampling). Added `_paired_delta` helper. F8 caption + suptitle updated to "paired". | `python paper_figs/fig_horizon_ablation.py` PASS; MLP 21d ΔIC = -0.0452 unchanged (point invariant); SAGE 21d ΔIC = -0.0158 unchanged |
+| CLAUDE-A-02 | MAJOR | `fig_loss_horserace.py:table_ST6` — replace iid bootstrap over 24K daily ΔIC rows with cluster bootstrap on (fold, seed) cells (B=1000, seed=42). Column header n → n_cells. Caption documents cluster design. | `python paper_figs/fig_loss_horserace.py` PASS; ST6 LaTeX written |
+| CLAUDE-A-03 | MAJOR | `fig_loss_horserace.py:fig_S7` — stratify by feature_set (two panels, S6 and S_price). Global colormap norm across panels for visual comparability. Caption explains rationale + cross-references S14. | `python paper_figs/fig_loss_horserace.py` PASS; S7 PDF written |
+| CLAUDE-A-04 | MAJOR | `fig_plan_aaa.py:write_caption` — add `{VERDICT}` substitution to S4 caption (was only in F10). | `grep 'S4 —' tables/fig_plan_aaa_caption.txt` shows verbatim "Plan AAA orig ∩ proxy-T1 = 5/15 → LOW STABILITY" |
+
+### Mandatory caveat compliance (all PASS post-fix)
+
+- F10 title: verbatim VERDICT ✓
+- F10 caption: verbatim VERDICT ✓
+- S4 caption: verbatim VERDICT ✓ (CLAUDE-A-04 fix)
+- S14 caption: verbatim Part B v4 wf5 21d replication-failure caveat ✓
+- F8 caption: dynamic ΔIC = -0.0452 number ✓
+
+### CONCERNS not fixed in Round A (5 OPEN + 2 ACCEPTED-AS-CONCERN)
+
+- CLAUDE-A-05 (p-format defensive `<0.001`), CLAUDE-A-06 (S14 shared bin edges), CLAUDE-A-07 (setup() three-panel mode), CLAUDE-A-08 (S11 negative stackplot semantics) — deferred to Round B per H博士 disposition
+- CLAUDE-A-09 (PNG metadata gap), CLAUDE-A-10 (redundant string condition), CLAUDE-A-11 (F10 y-invert visual) — ACCEPTED-AS-CONCERN; non-blocking
+
+### Source CSV md5 spot-check (3/21 sampled)
+
+| CSV | Claimed md5 | Disk md5 | Match |
+|---|---|---|---|
+| experiments/horizon_ablation_results.csv | `dae8089fb12df086cef20a412fc057c1` | `dae8089fb12df086cef20a412fc057c1` | ✓ |
+| artifacts/plan_aaa/ranking.csv | `fcc9b8390efbb21fa54cc858df693570` | `fcc9b8390efbb21fa54cc858df693570` | ✓ |
+| experiments/graph_ablation_results.csv | `ba72ab2c9442bf6e46e5bd2bebc586e3` | `ba72ab2c9442bf6e46e5bd2bebc586e3` | ✓ |
+
+### Files written / modified
+
+- New: 9 paper_figs/*.py scripts (1500+ LOC), 13 PDFs + 13 PNGs in `figures/`, 4 LaTeX `tables/ST*.tex`, 8 caption `tables/*_caption.txt`
+- New: `artifacts/reviews/2026-05-28_claude-self-review_code_A.md`
+- Modified post-review: paper_figs/fig_horizon_ablation.py (4 edits), paper_figs/fig_plan_aaa.py (1 edit), paper_figs/fig_loss_horserace.py (4 edits)
+- New: `docs/storya_paper_inspirations.md` (12K words, Feng 2019 + Sawhney STHAN-SR 2021 + Hou-Xue-Zhang RFS 2020 craft extraction)
+- New: `docs/paper_sources/sawhney_2021_sthansr_AAAI.pdf` (6.7MB, STHAN-SR PDF for citation provenance)
+
+→ progress: 2026-05-28-b | plan: N/A | analysis: N/A
+
+---
+
 ## 2026-05-27-e: Codex Review — Code (Touchpoint 2, Round A) — HATS-3R-adapt (run_storya_e1_6_hats.py)
 
 - Target: `/Users/heruixi/Desktop/GNN-Testing/run_storya_e1_6_hats.py` (1001 lines, untracked at review time)
