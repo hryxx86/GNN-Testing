@@ -59,13 +59,23 @@ Port 22
 PermitRootLogin yes
 PasswordAuthentication yes
 EOF
+# The drop-in above is IGNORED if the main sshd_config has no `Include sshd_config.d/*.conf`
+# (observed live 2026-06-12: PermitRootLogin stayed `without-password` = OpenSSH's compiled
+# default for root → password login impossible). Belt-and-suspenders: also delete any existing
+# Port/PermitRootLogin/PasswordAuthentication from the MAIN config (always read) and append ours.
+sed -i -E '/^[[:space:]]*(Port|PermitRootLogin|PasswordAuthentication)[[:space:]]/d' /etc/ssh/sshd_config 2>/dev/null || true
+printf '\nPort 22\nPermitRootLogin yes\nPasswordAuthentication yes\n' >> /etc/ssh/sshd_config
 
 # Kill any pre-existing sshd (e.g. a stale colab_ssh one on :2222) so the fresh start
 # binds cleanly on :22. Safe here: this runs from a Colab notebook cell, not over SSH.
-pkill -x sshd 2>/dev/null || true
-pkill -f '/usr/sbin/sshd' 2>/dev/null || true
-sleep 1
-service ssh restart >/dev/null 2>&1 || /usr/sbin/sshd
+pkill -9 -x sshd 2>/dev/null || true
+pkill -9 -f '/usr/sbin/sshd' 2>/dev/null || true
+sleep 2
+mkdir -p /run/sshd
+# Start sshd directly — `service ssh restart` can report success WITHOUT actually replacing the
+# running daemon on Colab (observed 2026-06-12), leaving the old config live. Direct start is
+# deterministic; the force-kill above frees :22 first.
+/usr/sbin/sshd
 
 # Confirm sshd is actually listening on :22 before bothering with the tunnel.
 if ! (ss -tlnp 2>/dev/null | grep -q ':22 ' || netstat -tlnp 2>/dev/null | grep -q ':22 '); then
