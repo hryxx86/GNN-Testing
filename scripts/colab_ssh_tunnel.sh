@@ -49,10 +49,10 @@ echo "root:${PASS}" | chpasswd
 # high-priority drop-in (Ubuntu/Colab parses sshd_config.d/*.conf first), so sshd binds
 # exactly :22 and the tunnel below (→ ssh://localhost:22) can never port-mismatch.
 # The drop-in also wins on PermitRootLogin/PasswordAuthentication over any cloud-image conf.
-sed -i 's/^[[:space:]]*Port[[:space:]].*/# &  (disabled by colab_ssh_tunnel.sh)/' /etc/ssh/sshd_config 2>/dev/null || true
+sed -i -E 's/^[[:space:]]*(Port|PasswordAuthentication|PermitRootLogin)[[:space:]].*/# &  (disabled by colab_ssh_tunnel.sh)/' /etc/ssh/sshd_config 2>/dev/null || true
 mkdir -p /etc/ssh/sshd_config.d
 for f in /etc/ssh/sshd_config.d/*.conf; do
-    [ -f "$f" ] && sed -i 's/^[[:space:]]*Port[[:space:]].*/# &  (disabled by colab_ssh_tunnel.sh)/' "$f" 2>/dev/null || true
+    [ -f "$f" ] && sed -i -E 's/^[[:space:]]*(Port|PasswordAuthentication|PermitRootLogin)[[:space:]].*/# &  (disabled by colab_ssh_tunnel.sh)/' "$f" 2>/dev/null || true
 done
 cat > /etc/ssh/sshd_config.d/00-colab-ssh.conf <<'EOF'
 Port 22
