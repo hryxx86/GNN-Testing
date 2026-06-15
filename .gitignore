@@ -35,6 +35,10 @@ artifacts/**
 !artifacts/storya_e6_dm_spa/*.json
 !artifacts/storya_e6_dm_spa/*.csv
 !artifacts/storya_e6_dm_spa/*.md
+# frozen 5-fold E6 snapshot (pre-12-fold-overwrite; source-of-record for analysis.md 2026-05-27-a/c)
+!artifacts/storya_e6_dm_spa_5fold/*.json
+!artifacts/storya_e6_dm_spa_5fold/*.csv
+!artifacts/storya_e6_dm_spa_5fold/*.md
 !artifacts/plan_aaa_t1_diagnostic/*.csv
 !artifacts/plan_aaa_t1_diagnostic/*.md
 !artifacts/storya_e6_edge_ablation/*.csv

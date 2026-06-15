@@ -4,6 +4,199 @@
 
 ---
 
+## 2026-06-15-d: §4 等预算调参搜索空间显式冻结（协议 → v2.2）+ untuned 12-fold 结果统一标 PILOT-CENTER
+
+**根因**：协议 §4 此前只写「搜索空间同 v2-frozen 版」——一个**空指针**，实体范围从未落入桌面/仓库/git/archived 任何文件（本次踩坑）。经 H博士 + Codex 顾问最终确认，**显式冻结**并填入 `docs/protocol_v2_freeze.md` §4（协议升 v2.2）。
+
+**冻结搜索空间（每维中心 = pilot 默认值 `NN_HPARAMS`/`LGB_HPARAMS` → pilot 即 N=1 中心点样本，保 pilot-vs-调参可对比；H博士「不对比随便改完全无法对比」）**：
+- NN/GAT/L6/L7（6 维）：lr log[1e-4,1e-2]（中心 1e-3）· wd log[1e-5,1e-3]（1e-4）· dropout {0.1,0.2,0.3,0.5}（0.3）· hidden {32,64,128}（64）· num_layers {1,2,3}（2）· heads {2,4,8}（4）。
+- LGB（6 维，匹配 NN 维数）：num_leaves {15,31,63,127}（31）· lr log[0.01,0.1]（0.05）· min_data {10,20,50,100}（20）· n_estimators early-stop（100）· lambda_l1 log[1e-8,1]（1e-8）· lambda_l2 log[1e-8,1]（1e-8）。
+- 固定不调：epochs=100/patience=15/grad_accum=32；HATS num_relations=3/linear_shared（结构，非超参）。L6 self-attn heads 单列（守 Cn1 边界）。
+- **3 处偏离 v2-frozen**（记入协议 §11 v2.2）：(1) dropout 连续[0,0.5]→离散（N=30 预算）；(2) LGB 8维→6维（去 feature_fraction/bagging_fraction、补 lambda_l1/l2）匹配 NN 维数+保等预算（thesis 防护：基线不可因少调维显弱，防审稿「NN 调 6 维基线只调 4 维」攻击）；(3) hidden {64,128,256}→{32,64,128}（对称、中心 64=默认，防 hidden 卡底档 confound「图 vs 无图」对比）。
+- 流程不变：20 作业 × Optuna N=30；调参窗口 train 2021-07→2022-06 / val 2022H2；选模 val 日均 Rank IC；top-5 × 3 调参 seed 定冠军；调参 seed 与 canonical 10 互斥（预检 #6）。
+
+**PILOT-CENTER 标记（重要）**：所有 untuned 12-fold 结果——本 ladder pilot（2026-06-15-b）+ 并发 anchor E1–E6 的 DM/SPA/LOFO/cost-ladder 套件（2026-06-13-c/-d，定位见 2026-06-15-a）——身份一律为 **「PILOT-CENTER, N=1 中心点, pending tuning」**，**不得以「主结果」身份流进 draft**。调参后用冻结 HP 重跑才是正式主表（D-RERUN-12F）。
+
+**Desktop `protocol_v2_freeze.md` 现已落后**（仍 v2.1，无 §4 表）；仓库 `docs/protocol_v2_freeze.md` = v2.2 为准。
+
+→ progress: 2026-06-15-d | plan: Decision Log 2026-06-15（§4 冻结 + PILOT-CENTER）| analysis: N/A
+
+---
+
+## 2026-06-15-c: Doc hygiene — backfilled ALL 112 numeric-provenance citations in docs/analysis.md (verifier 0) + RESOLVED storya_e6_dm_spa overwrite hazard via frozen 5-fold snapshot
+
+**Task (H博士 2026-06-15 "(c) 清理"）**：`scripts/verify_docs_provenance.py docs/analysis.md` 报 112 处未引源数字（全在 2026-03-03→2026-05-27 的 27 个旧条目；3 个最新条目本就干净）。注意 **analysis.md 不在 docs.md §4 强制 provenance 的文件类**（§4 只管 advisor_*/project_findings_*/session_handoff_*/REPORT*），故这是**卫生不是违规**；H博士 选**全量分层补全**。
+
+**做法**：每个 violation 簇加 1 条 `(source: …)` 标记覆盖其 ±5 行窗（验证器机制：±5 行内有 `.csv` 路径 OR 字面 `source:` token OR `per/from <path>` 即放行）→ ~40 处插入清掉 112。**铁律遵守**：(a) 一个数值都没改（只加引用）；(b) 无伪造路径（Rule 2）。
+
+**分层结果（verifier 现 0 violations）**：
+- **Tier 1 prior-art（6 数，引论文）**: 2026-03-05-b（MASTER IC=0.064 / FinMamba Sharpe=2.06 / MDGNN IC=0.032 / THGNN IC=4.93%）+ 2026-03-03-b（ChatGPT-GNN F1=0.41 ×2）— 源是被引论文，非本项目 CSV。
+- **Tier 2 live（最大宗，引 `experiments/` + `artifacts/` 活 CSV）**: Step-0 rerun→`horizon_ablation/arch_comparison/permutation_v2_results.csv`；Plan Z++→`step3_plan_z/{part_b_summary,hansen_spa_results}.csv`；comprehensive→`comprehensive_metrics.csv`；graph-ablation→`graph_ablation_results.csv`；phase5-diag→`diag_phase5_*.csv`；sector/selective/permutation/ranking→`diag_sector_*/selectivenet/permutation_test/ranking_loss_*.csv`；Path-A→`step3_plan_z/{pairwise_fdr,part_c_s8_daily_ic}.csv`；horse-race(594)→`loss_horserace/cluster_bootstrap_pred_cs_std.csv`；storya E6(197/291)→`storya_e6_edge_ablation/edge_pairs_dm.csv` + `storya_e6_dm_spa/{bootstrap_ci,spa_results}.csv`。
+- **Tier 3 archived（引 `archived/stale_results/` CSV）**: week2→`news_contribution/ablation_features/walkforward_gnn_results.csv`；week1+SAGE+arch(2026-04-08-a/b/c)→`{gat,sage,lgb,sage_sum,transformer}_21d_multiseed.csv`。
+- **Tier 4 irrecoverable（23 数 / 5 条目，诚实标注「CSV not retained」无伪造路径）**: 2026-03-05-e v3-first-Colab(13)、2026-03-06-b v3-Run2(4) → 仅存 `archived/colab_results/v3_ranking_pipeline.ipynb - Colab.pdf`（含 GAT 21d IC=0.04420 单一 lucky-seed，已就地标注「5-seed mean=0.032, see 2026-04-08-a」）；2026-03-03-a Phase C D.1/D.2(2)、2026-03-03-h Phase 1d/1e(2)、2026-03-04-a Phase 2 LLM(2) → notebook 已删，标注「recorded in progress.md <entry>」。
+
+**⚠️ MAJOR 发现（anti-T_SPA spot-check 抓出，需 H博士 知悉）**：spot-check 5 条跨层数字对源 CSV，4 条逐字匹配（pairwise_fdr p_BH 0.769/0.938 ✓、graph_ablation True-MLP 0.041 ✓、gat_21d mean 0.032 ✓、edge_pairs_dm lofo4 0.298 ✓），但第 5 条 **`artifacts/storya_e6_dm_spa/bootstrap_ci.csv` 被本会话 5→12 fold 就地覆盖**：committed(HEAD 5bef3b9) 是 5-fold（Univ C GAT 0.043…，对得上 2026-05-27-a），working-tree 已是 12-fold（C GAT 0.018…）。**同一路径复用于 5-fold 与 12-fold 两次运行**→ 2026-05-27-a/c 对 `storya_e6_dm_spa/*.csv`（bootstrap_ci / spa_results / dm_hln）的引用一旦 commit 就指向 12-fold 数。**已按 H博士 2026-06-15「(a)」执行**：从 git HEAD（5bef3b9）抽出 5-fold 版的 11 个 tracked 文件 → 新目录 `artifacts/storya_e6_dm_spa_5fold/`（+ README 说明冻结来由 + 5↔12 数值对照）；3 个 12-fold-only untracked 文件（cgat_anomaly.md / headline_ic_ci_seedavg.csv / pairwise_power_mde.csv）正确排除（无 5-fold 版）。验证快照确含 5-fold 数（C GAT IC=0.043、SPA B/C/joint=0.147/0.384/0.136、n_cells=50）。然后把 **2026-05-27-a/c 两个 5-fold 条目里所有 `storya_e6_dm_spa/` 引用（11 处）重指向 `_5fold/`**；12-fold 条目（2026-06-15-a）仍指 live 目录 → 干净分离（5-fold 条目↔冻结快照，12-fold 条目↔live 目录）。一个数值未改、live 目录未动（只是 COPY 出 HEAD 版本，Rule 2 安全）；verifier 重跑仍 0。
+
+**验证**：`verify_docs_provenance.py docs/analysis.md` → **All numeric claims have citations**（0）。仅改 analysis.md；非结构变更（无 README）；非新实验/代码/结论 → 不触发 Rule 9 Codex 触点。
+
+→ progress: 2026-06-15-c | plan: N/A (doc-hygiene, not a planned phase) | analysis: N/A (no new finding; provenance-only edits to existing entries)
+
+---
+
+## 2026-06-15-b: v2.1 ladder 调参前 PILOT (run_storya_v21_main12.py，旧 anchor HP) COMPLETE 2160/2160 + 本地交叉校验 + 诊断预览 — ⚠️ 非 confirmatory 主表（§4 调参待做）
+
+**修正（H博士 2026-06-15 指出，本条原误标为「confirmatory 主表」）**：协议 **§4「等预算调参」** + 决议 **D-RERUN-12F**（原文「**调参后** 12-fold 全量于**冻结新超参**下重跑」，源 H博士「必须调参，选b」）要求 **先 Optuna 调参 → 冻结调参后 HP → 再跑 ladder**。「冻结新超参」= 调参得到的新 HP 再冻结，**非**旧 anchor HP。本次跑用 `run_storya_e1_anchor.NN_HPARAMS`（**旧 anchor HP，未调参**）→ 故为**协议 ladder 的调参前 PILOT**（端到端验证管线 + 诊断预览 + 踩平 Colab 坑），**不入主表**。confirmatory 主表 = §4 调参后用新 HP 重跑这 2160 cell。`run_storya_v21_main12.py` 完成 9 臂 × 2 univ(B/C) × 12 fold × 10 seed = **2160 cell，0 缺 / 0 重 / 0 NaN / 0 不收敛 / manifest 0 失败**（本地 untuned-anchor expanding+sliding 是另一条 PILOT 线，见 2026-06-15-a）。
+
+**运行轨迹（Colab 极不稳）**：起初 A100，H博士换 T4（同价位、对这些小 GNN 同速：T4 L2=72s/L6 250s，A100 优势喂不饱 38% util）；T4 runtime 跨夜被回收 ×2、cloudflared 快速隧道掉 4+ 次（换 6 个 hostname）。**靠 Drive 持久化 + `--resume --universe C --folds N` 全程零丢失**，分段续跑到 2160。教训记入 handoff（隧道不稳 + resume 边重建）。
+
+**数据已落本地 + 端到端交叉校验**：scp tarball 拉到 `experiments/storya_v21_main12/`（results.csv + manifest.csv + _meta.json + per_day_ic/×2160 + 备份 v21main.tar.gz）。同一脚本 `/tmp/verify_match.py` 在 Drive 源 vs 本地各跑：results/manifest/meta md5 + 2160 npy 合并 md5 **全部逐字节一致**；完整性双侧 0 NaN/0 重/0 缺。Colab 现可安全断开，§2a 全部本地跑。
+
+**诊断预览（裸均值+符号，NOT 推断；source: experiments/storya_v21_main12/results.csv）**：
+- Univ B：全 wash，所有对子 |ΔIC|≤0.005、符号 6–9/12，无方向性 → GNN 不帮忙。
+- Univ C 有结构：corr-GAT(L2) **差于** MLP(L1)（ΔIC −0.0117，3/12）；dense(L6) **超过** MLP（+0.0048，9/12）且**强压稀疏 corr 图**（L6−L2 +0.0165，10/12，Cn1 核心）；多边(L5−L2 +0.0109，10/12)、sector(L4−L2 +0.0101，9/12) 有用；news(L3−L2 +0.0005) 低于 M2 可探测下限；SAGE>GAT(L2s−L2 +0.0071，9/12)。
+- ⚠️ per-fold sd 0.01–0.04 ≫ ΔIC（regime：C fold1/2 全负、fold9 全员+0.15）→ 裸均值不可信，必须 DM-HLN 同-fold 配对。
+
+**下一步（修正）**：① §4 等预算调参 harness（新代码 → Touchpoint 2）→ 跑 20×30 + top-5×3 → 冻结调参后 HP 表；② 用调参后 HP **重跑 2160 cell**（本 pilot 降对照）；③ 对调参后结果做 §2a（DM-HLN+FDR+SPA）→ Touchpoint 3 → analysis.md。本 pilot 诊断预览仅作早期 sanity，不入正式结论。
+
+→ progress: 2026-06-15-b | plan: Decision Log D-RERUN-12F (2026-06-12) | analysis: PENDING (§2a，待调参后数据)
+
+---
+
+## 2026-06-15-a: 副轴 sliding run COMPLETE (8/10 same-sign) + tri-doc recorded + POSITIONING fixed (local = untuned PILOT, not protocol main table)
+
+**POSITIONING CLARIFICATION (the important one).** Surfaced + recorded that the entire local 12-fold track — the untuned anchor expanding main axis (2026-06-13) AND the sliding 副轴 — is a **PILOT / robustness cross-check, NOT the protocol confirmatory main table**. The frozen protocol (`docs/protocol_v2_freeze.md` §5/§1.1) mandates the TUNED L0–L7 ladder (`run_storya_v21_main12.py`, running on Colab) as the only confirmatory main table and explicitly rejected reusing the untuned anchor (M3). This traces to H博士's earlier "只补窗口，用本地 / 其他不要管" scoping — the local untuned-anchor work was a deliberate local pilot sub-task while the protocol ladder waits for Colab. The two tracks are INDEPENDENT/parallel (no dependency). Headline confirmatory numbers await the Colab ladder; the local pilot is an early sanity read.
+
+**副轴 sliding-252d COMPLETE**: `experiments/storya_anchor_sliding/results.csv` 960/960, all converged, 12 folds (~3.5h local MPS, 26s/cell). Descriptive same-sign vs expanding main axis = **8/10** (the 2 flips are Univ-B GAT/SAGE vs MLP, tiny-positive→negative → REINFORCE "graph edges don't help in B"). Sliding IC uniformly lower (≈3-quarter train; Cn2). Formal §2b (seed-avg daily-ΔIC same-sign + block-bootstrap CI) still pending — deferred pending positioning (full value pairs with the tuned-ladder main axis).
+
+**E4 resume COMPLETE**: stalled overnight at 163/240 (Mac sleep); `--resume` finished it → 240/240 all converged. E3 120/120. Edge-ablation inputs ready, BUT the simple `compute_e6_edge_ablation.py` (SAGE/untuned 5→12) is **superseded by the ladder's edge arms (L3/L4/L5−L2)** → not worth running separately (kept historical/exploratory).
+
+**Q1 (IC/Sharpe inversion) verdict recorded** in analysis.md 2026-06-15-a §2: MECHANISM + small-sample, NOT a bug (code-verified `run_storya_e1_anchor.py:791-861`); C-GAT Sharpe 1.82 is Fold-4 (n=3) dominated, LOFO→0.79.
+
+Full findings + all numeric provenance: `docs/analysis.md` 2026-06-15-a. Codex reviews: results A+B (`2026-06-13_codex_results_{A,B}.md`), sliding code (`2026-06-14_codex_code_sliding_A.md`).
+
+→ progress: 2026-06-15-a | plan: Decision Log 2026-06-14 + 2026-06-15 | analysis: 2026-06-15-a
+
+---
+
+## 2026-06-14-a: 副轴 sliding-252d runner built (Option A, 4-model anchor) + Codex T2 PASS; E4 resumed
+
+**Decision (H博士 2026-06-14)**: run the protocol §2b **secondary axis (sliding-252d)** — but Option A = the **simple 4-model anchor** (GAT/SAGE/MLP/LightGBM, untuned), NOT the set-aside v2.1 ladder. Robustness/replication only (no independent inference): same 12 test quarters as the main axis, train window fixed at 252 td rolling (train_start = val_end − 252 td, effective train ≈3 quarters), success = ΔIC **same-sign** vs main axis, report X/N + block-bootstrap CI, **no p/SPA/BH-FDR** (protocol §2b). Purpose: block "null is an artifact of the expanding window's stale early data."
+
+**New file** `run_storya_anchor_sliding.py` — **import-only monkeypatch** of `run_storya_e1_anchor` (protocol §5 铁律): overrides only output-dir paths (→ `experiments/storya_anchor_sliding/`), `WALK_FORWARD_FOLDS` (12 sliding folds, ids 0-11), `create_fold_masks` (per-fold train_start), `assert_purge_no_leak`, `write_run_meta_json`. All data/graph/snapshot/training/IC-Sharpe logic reused verbatim. Dry-validated read-only: 12 folds build, sliding purge + cell_id asserts PASS, leak-safe (frozen 126d snapshot window starts ≥ train_start for all folds).
+
+**Rule 9 Touchpoint 2** (codex): **PROCEED-WITH-FIXES**, 0 CRITICAL / 1 MAJOR / 2 CONCERN, all 3 FIXED + re-validated. Full: `artifacts/reviews/2026-06-14_codex_code_sliding_A.md`.
+- **F3 (MAJOR, FIXED)**: anchor's `--folds` default is `0,1,2,3,4` → bare invocation would silently run 5/12 folds. Runner now injects all 12 fold ids when --folds omitted.
+- **F1 (CONCERN, FIXED)**: `_meta.json` experiment_id hardcoded `storya_e1_anchor_v3` → wrapped writer relabels to `storya_anchor_sliding` + sliding semantics.
+- **F2 (CONCERN, FIXED)**: snapshot leak assert tightened to the ACTUAL selected snapshot point (train_days[-1] snapped to corr_step grid), proving snap_window_start ≥ train_start for all 12 folds.
+- Codex confirmed: monkeypatch takes effect (module-global lookup at call time), winsor/scale/purge propagate, feature 60d lookback before train_start is acceptable sliding-window semantics (window = admitted (feature_date,label) pairs), cell_id/resume sound.
+
+**E4 resume**: the 12-fold E3→E4 chain stalled overnight (E3 complete 120/120; E4 stopped at 163/240 — `corr+sector+news` folds 5-11 + `corr+sector` fold 11 tail missing, process gone, likely Mac sleep). Relaunched `run_storya_e4_alpha.py --resume` (tuple-keyed, safe) → finishing the ~77 remaining cells (~2.8h) to complete the edge-ablation input.
+
+**Pending**: launch sliding run (~960 cells, ~15h MPS) AFTER E4 resume frees the device; then §2b same-sign analysis vs the main-axis DM table; Touchpoint 3; analysis.md.
+
+→ progress: 2026-06-14-a | plan: Decision Log 2026-06-14 (副轴 Option A) | analysis: PENDING (sliding results)
+
+---
+
+## 2026-06-13-d: T3 fixes applied (R9-A-01..09) + Codex Results Round B — all FIXED, headline reframed + calibrated
+
+Implemented all Codex T3 Round-A fixes on the 12-fold anchor stats (independent of the still-training E3/E4). Full Round B: `artifacts/reviews/2026-06-13_codex_results_B.md` (6 FIXED / 3 partial→FIXED / 2 NEW→FIXED). Code: `compute_e6_dm_spa.py` (+`run_headline_seedavg_ci_and_power`, dm/hln `lag` param, SPA `role` col) + new `analyze_cgat_anomaly.py`.
+
+**New artifacts** (`artifacts/storya_e6_dm_spa/`): `headline_ic_ci_seedavg.csv`, `pairwise_power_mde.csv` (+lag21 cols), `cgat_anomaly.md`; `dm_hln_results.csv` +`HLN_p_t_lag21`; `spa_results.csv` +`role`.
+
+**Corrected/calibrated findings** (provenance = those CSVs):
+- **Seed-averaged IC CIs** (R9-A-04): ~3× wider than the (anti-conservative) seed-stacked. Half the cells include 0 — incl. LightGBM both universes (B [-0.003,0.046], C [-0.001,0.055]) and C-GAT [-0.014,0.051]. IC is small/noisy; weak separation.
+- **Edge test is the better-powered, cleaner test** (R9-A-02/05): GAT/SAGE-vs-MLP paired SE ≈0.003-0.004 → power@+0.01 = 0.68-0.91 (auto-lag) / 0.41-0.74 (lag=21, MDE 0.011-0.016). vs-LightGBM is under-powered (MDE 0.018-0.041). Result: **B no edge benefit** (ΔIC +0.004, CI incl 0, well-powered); **C edge HARM** (GAT-MLP −0.0135, CI excl 0, sig at both lags p 0.0002/0.0048; SAGE-MLP −0.006 non-sig at 74-91% power = genuine no-benefit).
+- **C-GAT cost-ladder "win" = Fold-4 artifact** (R9-A-07): gross Sharpe 1.82 dominated by Fold-4 (Q2-2025, n_periods=3, Sharpe 13.18); LOFO-best collapses 1.82→0.79. NOT turnover (GAT trades more than LightGBM yet wins net); corr(IC,Sharpe) GAT=0.50 weakest. IC null unaffected. Decile attribution needs a return-logging re-run (flagged, not available).
+- **HAC lag=21 robustness** (R9-A-09): all conclusions survive; p-values uniformly more conservative.
+- **Joint SPA → supplementary** (R9-A-03): per-universe SPA is primary.
+
+**Honest headline (no proven-equality language)**: across 3 years / 12 folds, **no statistically reliable evidence that predefined graph edges improve 21-day cross-sectional IC**; the graph-vs-MLP edge test (better-powered) finds no benefit in Univ B and significant harm in Univ C; the +0.01 vs-LightGBM gap is unresolved (under-powered, MDE ~0.018-0.041), not disproven.
+
+→ progress: 2026-06-13-d | plan: N/A | analysis: PENDING write-up (next)
+
+---
+
+## 2026-06-13-c: Codex Touchpoint 3 (Results) on 12-fold formal null — CONDITIONAL_PASS, 7 MAJOR all ACCEPTED, 2 self-reporting errors caught
+
+Full review: `artifacts/reviews/2026-06-13_codex_results_A.md`. Reviewer: codex (no fallback). All 9 findings independently verified by Claude against the artifacts; **0 rejected**. The computation is sound — issues are interpretation + one anti-conservative CI methodology + missing power/HAC robustness.
+
+**Two errors in my own H博士 report, verified + corrected:**
+- **R9-A-07 (factual)**: I claimed "neural incl MLP beats LightGBM net-Sharpe in both universes." FALSE for Univ C — `cost_ladder.csv` @10bps: GAT 1.29 > LightGBM 0.65 > MLP 0.31 > SAGE 0.30 (MLP/SAGE BELOW LGB). My turnover causal story is contradicted: C-GAT turnover 2.92 (highest) yet net Sharpe highest → it is an IC-vs-Sharpe divergence (IC 0.018 lowest, gross Sharpe 1.82 highest), not a turnover effect. Needs explicit decomposition before citation.
+- **R9-A-04 (stats)**: headline IC CIs were seed-STACKED (N=7490, 10 non-independent seeds) → anti-conservative. Recompute on seed-AVERAGED T=749 gives CIs 2.5–3.5× WIDER, mostly overlapping 0 (e.g. B/LightGBM [−0.003,0.046]; C/GAT [−0.014,0.051]; C/LightGBM [−0.001,0.055]).
+
+**Framing corrections (R9-A-01/05)**: "null holds / +0.01 was a 5-fold artifact" overstated. Correct: **no statistically reliable evidence** that predefined-edge models beat baselines; the +0.01 Univ-B lead is **unresolved** (test power ~17–20% for a true +0.01 effect; MDE for 80% power ≈ 0.025–0.028 IC), NOT disproven. R9-A-02: SPA-vs-LightGBM is a strong-baseline test, not the clean edge test — the edge test is GAT/SAGE vs non-graph MLP (B: ns; C: GAT<MLP p=0.0002). R9-A-06: GAT<MLP harm is Univ-C-only, do not generalize. R9-A-03: joint SPA benchmark construction muddy. R9-A-08: SPA+DM correlated (same series), not independent confirmation. R9-A-09: add NW_lag=21 HAC sensitivity.
+
+**Pending fixes before any claim enters analysis.md** (awaiting H博士 scope decision): seed-averaged headline CI (R9-A-04), power/MDE section (R9-A-05), cost-ladder correction + C-GAT decomposition (R9-A-07), framing (R9-A-01/02/06/08), joint-SPA reconstruction (R9-A-03), HAC lag=21 (R9-A-09). analysis.md NOT yet written — held pending these.
+
+→ progress: 2026-06-13-c | plan: N/A | analysis: PENDING (held per Rule 9 until R9-A fixes applied)
+
+---
+
+## 2026-06-13-b: 12-fold formal-stats code generalization (E3/E4/e6/lofo) + Codex T2 + E3→E4 re-run launched
+
+**方案 B (H博士 directive): full-paper 12-fold consistency.** Generalized the 5→12 fold extension into 4 downstream/sibling scripts so formal stats + edge ablation run on 3 years:
+- **compute_e6_dm_spa.py**: `N_FOLDS` now data-driven in `main()` from results.csv fold column (was hardcoded 5); `e1_n_cells` dynamic (was 400); docstring "T=313/5-fold" labels made fold-agnostic.
+- **analyze_e1_lofo.py**: input paths Drive→LOCAL (12-fold run is local; Drive copy is stale 5-fold/400); `FOLDS` data-driven; asserts 400→2·4·N·10; §5 Table 2 "full"→all folds (fold-4 kept as regime placeholder pending regime-convention decision); **fixed a hidden bug**: `_e6.N_FOLDS = N_FOLDS` propagation, else the imported `collect_per_day_ic_matrix` would silently pool only folds 0-4.
+- **run_storya_e3_news_edge.py**: `cell_id_e3` assert generalized (formula `fold*10+seed` already injective for 12; no backfill — old 0-49 / new 50-119 no collision).
+- **run_storya_e4_alpha.py**: `cell_id_e4` config stride 50→N_FOLDS*10 (=120; old 50 would alias config-0/fold-5 onto config-1/fold-0); assert generalized; existing 100 rows backfilled to new formula (backups `.bak_20260613`, 0 mismatch).
+
+**Rule 9 Touchpoint 2** (codex, no fallback): **PASS_WITH_CONCERNS**, 0 CRITICAL/0 MAJOR/2 CONCERN, both dispositioned. Full: `artifacts/reviews/2026-06-13_codex_code_12fold_A.md`.
+- **T2-01 (CONCERN, RESOLVED-BY-REBUILD)**: news cache load path lacks provenance check. Provenance verified safe (PIT builder introduced in the ONLY commit 039eb36 @ 05-27 00:30; cache built 05-27 22:24 → necessarily PIT-safe). Resolved the lightweight way: deleted cache → rebuilt fresh on launch (per-day runtime PIT assertion validates every snapshot), rejecting Codex's heavy metadata-schema suggestion (Rule 9 anti-defensive-code). E3 leak-safety on new folds independently verified earlier (cache covers full panel, 0 missing snapshot-days folds 5-11, news data spans 2021-01→2026-01).
+- **T2-02 (CONCERN, FIXED)**: stale "50 cells" provenance string → dynamic `len(WALK_FORWARD_FOLDS)*len(CANONICAL_SEEDS)`.
+
+**Launch**: E3→E4 12-fold chain running in background (local MPS, sequential, +210 cells ~8-9h). Clean start verified via side-effects (stdout block-buffered): cache rebuilt (Jun 13 mtime), resume skipped old cells, first new cell `cell_id=50 fold=5 seed=86 IC=-0.021` (sane: Q1-2023 weak quarter). HATS (`run_storya_e1_6_hats.py`, 1-row smoke) excluded from 方案 B — superseded by the set-aside v2.1 `run_storya_v21_l7_hats.py`.
+
+→ progress: 2026-06-13-b | plan: N/A | analysis: 2026-06-13-c
+
+---
+
+## 2026-06-13-a: 12-fold window run COMPLETE (960/960) — null strengthens, 5-fold edges were regime-concentrated
+
+- Full run of folds 5–11 finished: **960/960 cells `completed`, 0 errors**, 13.06h local MPS (`--resume` reused 401). results.csv 960 rows, cell_id all unique.
+- **Headline shifts** (descriptive; full findings + tables in analysis 2026-06-13-a): (1) Univ-B neural-vs-LightGBM gap collapses ≈0.03→≈0.01 (LightGBM's 5-fold 0.0060 was an artifact; new-7 = 0.0336). (2) Univ-C high IC does NOT generalize to 2023 (all C models crash old-5 ≈0.05 → new-7 0.0007–0.016). Net: 3-yr picture more conservative, null stronger; single-fold-dominance relieved (~5 strong quarters, not 1) but still strongly regime-dependent.
+- **Next**: formal SPA/DM/BH-FDR/CI/LOFO over 12 folds — `compute_e6_dm_spa.py` hardcodes 5 folds (Codex T2 note), needs fold-count generalization before re-stating the formal "no model beats LightGBM" claim on 3 years.
+
+→ progress: 2026-06-13-a | plan: N/A | analysis: 2026-06-13-a
+
+---
+
+## 2026-06-12-b: Anchor window extension 5→12 folds ("补窗口") + Codex Touchpoint 2 (2 findings FIXED)
+
+**What changed** (`run_storya_e1_anchor.py`, window-only — same 4 models / HPs / TRAIN_START, no tuning):
+- `WALK_FORWARD_FOLDS` extended 5→12 quarterly expanding folds: added ids 5–11 (test 2023Q1,Q2,Q3,Q4, 2024Q1, 2025Q3, 2025Q4). ids 0–4 (test 2024Q2..2025Q2) unchanged → `--resume` reuses the existing 400 cells; default `--folds` stays `'0,1,2,3,4'` (anchor default behaviour byte-identical; extension opt-in). Full coverage: test 2023Q1→2025Q4 (~3yr / 750 test days vs the old 1.25yr).
+- `cell_id` formula widened `*200/*50/*10` → `*480/*120/*10` (injective over 960 cells); `assert_cell_id_injective` generalized to `len(WALK_FORWARD_FOLDS)`.
+- Pre-review validation (no training): all 12 folds pass `assert_purge_no_leak`; cell_id 960 unique; fold-5 (Q1-2023) end-to-end smoke trained + wrote IC/per_day_ic, frozen_si=13 (window inside train); resume skipped the 400 existing cells.
+
+**Rule 9 Touchpoint 2** (Codex, no fallback): verdict **PROCEED-WITH-FIXES**, 0 CRITICAL + 1 MAJOR + 1 CONCERN, both FIXED + re-validated in-session. Full review: `artifacts/reviews/2026-06-12_codex_code_anchorwindow_A.md`.
+- **CODEX-A-01 (MAJOR, FIXED)**: fold 11 test_end 2025-12-31 silently dropped 3 unlabelable days (data ends 2026-01-28). Truncated test_end → 2025-12-26 (last valid 21d-label date); fold 11 now 61 eval days, declared==evaluated.
+- **CODEX-A-02 (CONCERN, FIXED)**: widened cell_id collided with old-formula cached ids (dup 170). Backfilled cell_id deterministically across results.csv + manifest.csv (backups `.bak_20260612`) → 401 rows, 0 dup. resume/per_day_ic unaffected (tuple-keyed).
+- Codex independently confirmed NO leak path in the new folds (train/val purge, train-only winsor/scale, frozen-snapshot ≤ train_end).
+
+**Discovery**: a separate `run_storya_v21_main12.py` (v2.1 full ladder L0–L7 main-axis runner) already exists + was Codex-reviewed today (`artifacts/reviews/2026-06-12_codex_code_A.md`). That is the "其他" (tuned ladder); this anchor extension is the simple window-only path H博士 scoped ("只管补窗口").
+
+**Pending**: full run of the 7 new folds = 560 cells. Local MPS ≈ 34h; A100 ≈ 8h → needs Colab SSH hostname (Rule 7).
+
+→ progress: 2026-06-12-b | plan: N/A | analysis: N/A (results pending the 560-cell run)
+
+---
+
+## 2026-06-12-a: E2 + E1b seed top-up to canonical 10 (background) + analyze_sanity [:4]→10 fix
+
+**What ran**: `run_sanity.py --experiment E2` / `--experiment E1b` at the full canonical 10 seeds, local M4 MPS background (`--resume` skipped existing E2 80 / E1b 40 cells → +120 E2, +160 E1b new). Both reached 200/200 `completed`, chain exit 0 (E1b leg 593.6 min ≈ 3.7 min/cell on MPS).
+
+**Code fix (verified in-session)**: `analyze_sanity.py:363` E2 verdict seed list `CANONICAL_SEEDS[:4]` → `CANONICAL_SEEDS` — the `[:4]` slice had silently excluded the 6 new seeds (first regeneration reproduced stale 4-seed numbers bit-for-bit). E3 left at `[:4]` by design. Re-ran `analyze_sanity.py` → `verdicts.json` + `sanity_summary.md` regenerated on 10-seed E2. Verified by side-by-side 4-seed vs 10-seed recompute.
+
+**Results** (full findings + provenance in analysis 2026-06-12-a):
+- **E1b**: mean lift −0.0441 (10-seed) vs −0.0438 (2-seed) → cross-seed STABLE; GAT −0.058 / SAGE −0.030 (both negative, attention hurts more); Fold-3-dominated (−0.126; ex-Fold-3 −0.024). Stays supporting diagnostic.
+- **E2**: all 4 conditions still INCONCLUSIVE; CI is day-variance-dominated (not seed) → formal TOST equivalence likely unreachable at 5-yr scale; report descriptively.
+
+**Rule 9**: seed extension of the 2026-06-11 Codex-reviewed sanity suite — no new Touchpoint 1; the 1-line analyze seed-slice change verified by reading data + recompute (no separate Touchpoint 2 for a seed-list constant); Touchpoint 3 substantively covered 2026-06-11. 2026-06-11-a pipeline-INNOCENT verdict unchanged.
+
+→ progress: 2026-06-12-a | plan: N/A | analysis: 2026-06-12-a
+
+---
+
 ## 2026-06-10-b: Colab SSH fixed — `colab_ssh` → manual cloudflared (`scripts/colab_ssh_tunnel.sh`)
 
 **Problem**: Colab SSH broke. Local connect failed with `websocket: bad handshake` +
@@ -99,7 +292,9 @@ without the 2222/tunnel mismatch.
 
 ---
 
-## 2026-06-10-b: Sanity-Check Suite 实现 + Codex Code Review(Touchpoint 2)+ E1b 降级
+## 2026-06-10-c: Sanity-Check Suite 实现 + Codex Code Review(Touchpoint 2)+ E1b 降级
+
+> **ID 注**:原编为 2026-06-10-b,与上个 session 的"Colab SSH fixed"条目(本文件顶部 2026-06-10-b)撞号,2026-06-11 改为 -c。
 
 ### 实现(3 新文件,~750 LOC,零改动 anchor,import-only 复用)
 
@@ -129,7 +324,252 @@ smoke 显示 E1b(label-sim oracle)IC 反低于 baseline(|ρ| 版 +0.013、正相
 
 E0+E4 本地已出;待 Colab A100 跑 E1/E1b/E2/E3(~19h)→ Touchpoint 3 results-review → 写 analysis.md。
 
-→ progress: 2026-06-10-b | plan: 2026-06-10-a(verdict 结构改 E3-only) | analysis: N/A(全量结果待 Colab)
+→ progress: 2026-06-10-c | plan: 2026-06-10-a(verdict 结构改 E3-only) | analysis: N/A(全量结果待 Colab)
+
+---
+
+## 2026-06-11-a: Sanity-Check 全量跑完(本地 MPS)+ Codex Touchpoint 3 — 管线无罪,null 可发表
+
+### SSH 死路 → 本地跑
+
+colab_ssh tunnel 坏(3 hostname × 2 cloudflared 版本 = 6 次 `bad handshake`,edge 始终 502;Colab 端 quick tunnel 不支持 `cloudflared access ssh`,客户端修不了)。改本地 MPS 全量,`caffeinate` 防睡眠 + `--resume`。
+
+### 全量结果(220 cell,0 失败,~9h:16:09→01:11)
+
+- **E3 planted(决定性必要控制,60 cell):管线无罪 PASS** — **GAT 恢复 82% / SAGE 91% / MLP≈0(0.0024)**,两 GNN 都过 BH-FDR(HLN p≈0),achievable=0.0469。跨 5 fold × 4 seed 一致。source: `experiments/sanity_summary/verdicts.json`
+- E0 wiring+provenance:**14/14 PASS**(图确接入、ticker-order invariant、5 fold 独立重算全匹配、off-by-1 + 置换负测试正确)
+- E4 诊断:density 0.7-1.9%(非完全图)、log-log 斜率~-1.0、Fold4 不稠密、AUC~0.73
+- E1 return-corr oracle(上界诊断):lift 混合(UB GAT +0.031≈3×,UC SAGE -0.020)→ 拓扑有信息时能助,非均匀阳性
+- E1b label-sim oracle(支持诊断):**lift −0.044(−4.4×),过平滑伤 IC** → 支持 null
+- E2 shuffled(负控,80 cell):全 INCONCLUSIVE,点估计近零但 CI 越过 ±0.005 TOST margin → **等价未建立(欠功效)**,非"consistent with no effect"
+
+### Codex Touchpoint 3(results)— OVERSTATED-REVISE,6 条全处理
+
+Full: `artifacts/reviews/2026-06-11_codex_results_A.md`。**实验统计无误**(E3 的 HLN+BH-FDR/seed 聚合/阈值/分母都对),修的是 claim scoping + presentation:
+
+- **R-A-01 MAJOR ACCEPTED**:E3 PASS 推断收窄为"管线 operational,gross H2 排除",非"null 证明是任务属性"(残留超参 caveat)
+- **R-A-02 MAJOR ACCEPTED**:E2 报"equivalence not established(欠功效)",非"no effect"
+- **R-A-03 MAJOR FIXED**:E1b `_meta.json` 还写"necessary control"(漏改)→ 统一为 supporting,亲自读 run_sanity.py:127-129 核实 + 重生成
+- **R-A-04/05 CONCERN ACCEPTED**:recovery 0.7/0.8/0.9× 敏感性 + β 标定披露;oracle 绝对数→appendix + leaked 警示
+- **R-A-06 CONCERN FIXED**:E0 独立重算 fold-0→扩到全 5 fold,重跑 14/14
+
+### 结论
+
+**RESULT A:graph 管线 operational,gross 破管线失效面(H2)排除 → Story A null 不是管线伪影,可发表。** 决定性证据 = E3 阳性对照(GNN 恢复 82-91%、MLP≈0)。论文 §Methods/§Limitations 用收窄后的 claim。
+
+→ progress: 2026-06-11-a | plan: 2026-06-10-a | analysis: 2026-06-11-a
+
+---
+
+## 2026-06-11-b: Session Closeout Audit(4-agent parallel)— PASS
+
+- Scope: 3 新脚本(sanity_common/run_sanity/analyze_sanity,1357 LOC)+ 改动 docs(analysis/progress/plan)
+- Agents: explore-leakage / explore-statistics / explore-correctness / explore-doc-drift(并行)
+- Full: `artifacts/reviews/2026-06-11_explore-closeout_A.md`
+- Summary: Leakage PASS(泄露全为 intentional+fenced)| Stats SOUND(无伪复制/无循环/BH 正确)| Correctness PASS | Doc-drift PASS(§7 耦合齐、provenance 全、无相对时间泄露)
+- **唯一被两 agent 标的 CRITICAL(CLOSEOUT-A-01:`_all_fold_match` NameError)= 验证为 FALSE POSITIVE**:两 agent 误读 Python 三元 `X and Y if C else Z`(先判 C,fold0 走 else 分支定义该名,后续 fold 才读)。亲自双验证(Rule 9 #5):(a) 复现该构造无 NameError;(b) E0 全程跑 14/14 PASS 三次(有 NameError 会崩)。非 bug。但因 2 个 reviewer 误读,加了可读性修正(loop 前 init + 简化表达式),E0 再确认 14/14。
+- Critical fixes applied: 无(唯一 CRITICAL 是 FP);可读性修正 1(run_sanity.py:210 三元简化)
+- Verdict: **PASS**
+
+→ progress: 2026-06-11-b | plan: N/A | analysis: N/A
+
+---
+
+## 2026-06-12-d: 实验协议 v2.1-frozen + Touchpoint 1 disposition 落档（双轴 12-fold 全重跑）
+
+> **ID 注**：并发多 session 写入致两次撞号（外部已占顶部 -a「E2+E1b seed top-up」、-b「Anchor window 5→12 补窗口」）。本 session 三条最终编：**-d**（本条，协议 freeze）/ **-c**（runner 建成）/ **-e**（边臂）。plan.md 里程碑仍为 2026-06-12-a。
+> **与「补窗口」(-b) 关系**：互补非冲突。-b = 旧 anchor（同 4 模型/旧 HP/无调参）窗口扩到 12 fold = **旧 HP 扩覆盖 pilot**；本 session 的 `run_storya_v21_main12.py` = v2.1 **全 ladder + 调参**冻结协议 = confirmatory 主表（D-RERUN-12F 新 HP 重跑）。对方 session 已知本 runner（其条目 line 19 Discovery）。
+
+协议 **v2.1 已冻结**（Codex T1 + H博士确认）。Touchpoint 1: 1 CRITICAL + 3 MAJOR + 5 CONCERN
+→ **8 ACCEPTED + 1 PARTIAL-REJECT(M3 后半复用驳回)**。两份原件自 H博士 桌面逐字落盘：
+`docs/protocol_v2_freeze.md` + `artifacts/reviews/2026-06-12_codex_plan_T1.md`。
+
+> **背景**：v2.1 是从已完成的 5-fold Story A 转向**架构级扩展的双轴 12-fold 协议**。此前
+> progress/plan/analysis 0 处提到 protocol_v2 / 12-fold / D-RERUN-12F；协议 §11 第二行本身
+> 写明冻结动作含「progress.md 校正」，故本条落档。fold 数 / 重跑 / 双轴拆分三类问题以 §11
+> 修订日志为准（H博士 directive）。
+
+### fold 数（双轴，§2a/§2b）
+
+- **主轴 = expanding 12-fold**（2023Q1→2025Q4 逐季，train 起点 2021-07 固定，全局 cold-start）：
+  **唯一 confirmatory 家族**。DM-HLN 对子表 20 检验（阶梯五对 + 边 DAG 五对 × 2 universe）+
+  BH-FDR q=0.05 + Hansen SPA(M=9 含 HATS)。
+- **副轴 = sliding-252d 14-fold**（12 季 + 2022Q3/Q4 case study）：robustness/复现轴，**无独立推断**。
+  每对只报 ΔIC 符号 + block-bootstrap CI；一致性判据 = 与主轴点估计**同号**；汇报为 **X/8 计数**
+  （4 对 × 2 universe）。副轴表格**无 p 值 / 无星号 / 无 BH-FDR / 无 SPA**。逃生口封条：副轴任何
+  "有意思"模式只能作 exploratory/假设生成，**不进摘要、不进任何 claim**。
+- 旧 **5-fold（`experiments/wf5_results.csv` 等）→ pilot/smoke 对照**，不入主表。
+
+### 重跑（D-RERUN-12F，已注册决议 ID）
+
+主表 12-fold **全部在冻结新超参下重跑**。M3 reviewer 建议复用旧 anchor 5-fold 的 L0/L1/L2(~40%)
+被**驳回**（主表混"旧超参 5 fold + 新超参 7 fold" = 秒杀级硬伤；省额实际 <0.3 A100·天——L0 CPU
+秒级、L2 共 240 cells≈4.7h）。源：H博士「不用管钱，必须调参，选b」。算力总账 ≈ **3.5–4.5 A100·天**
+（本地 MPS 后备）。
+
+### 双轴拆分（= 主轴/副轴，非两篇论文）
+
+主轴 = 可发表 confirmatory；副轴 = exploratory robustness，不进摘要/不 claim（M1 核心处置）。
+
+### disposition 八条 + 1 驳回
+
+C1 import-only 铁律 + 两条 per-fold assert + E0-canary-on-new-runner｜M1 副轴降 robustness
+(同号判据 / 无推断 / 逃生口封条；SPA 一并删除)｜M2 MDE→2.8×block-bootstrap SE + n_eff，√750 废除，
+正文披露「不可探测边级增量 +0.006–0.009」｜M3 (i) 代码/结果状态双列 FIXED /(ii) 复用 REJECTED｜
+Cn1 L6 claim 收窄 dense learned attention(MASTER/AD-GAT)｜Cn2 并入 M1｜Cn3 regime 标签改
+"2022H2 压力段"（原"熊市"→中性；reviewer 误引"牛市"已记事实链）｜Cn4 grep 预检 ≤106d（106d=burn-in
+预算阈值，60d=预期实测 max）｜Cn5 HATS contingency 20% 机械规则（cell_id assert 失败 / >20%
+发散 / >20% α 塌缩 → 整臂降 exploratory，SPA M=9→8）。
+
+### v2-frozen 校正（§11 第二行）
+
+实测成本 ≈3.5–4.5 A100·天｜canonical 10-seed（调参 3 seed 互斥）｜BH-FDR q=0.05｜schema v2
+（新闻边 PIT = nyse_session_close_utc DST-aware cutoff）｜Univ-C runtime T-1 shift｜burn-in 126 满窗实跑 PASS。
+
+### 影响
+
+旧 5-fold Story A 结论（E1–E6，已完成）按 v2.1 freeze **降为 pilot/smoke 对照**，主表 confirmatory
+结论待 12-fold 全重跑产出后重立。下一步 = 预检 smoke（§10 清单：Cn4 grep / L6 评审 / L7 cell_id+contingency
+代码化 / C1 验收 / seed 池互斥）。
+
+→ progress: 2026-06-12-d | plan: 2026-06-12-a (Decision Log + 双轴 12-fold) | analysis: N/A
+
+---
+
+## 2026-06-12-c: v2.1 预检 + 12-fold 主轴 runner 建成（import-only spine+L6）+ E0-canary + Codex T2 PASS
+
+承 2026-06-12-d freeze，按 §10 预检清单推进，建成主轴 12-fold runner 的 spine。
+
+### 预检（§10）
+
+- **#2 (Cn4) PASS**：`build_alpha158_features.py` 滚动窗族 `[5,10,20,30,60]`，max window=60d，+T-1 shift=61d ≤106d burn-in 预算（裕度 ~45 交易日）。
+- **#6 seed 池**：canonical 10 全代码一致 `[86,123,456,789,1024,2024,7,34,99,2026]`。⚠️ flag：v2.1 的 3 个调参 seed **必须新选、与 canonical 不相交**（现存 pilot seed [86,123,456] 是 canonical 子集，不得复用作调参 seed）——建调参 harness 时 enforce。
+- 数据覆盖确认：prices 2021-01-29→2026-01-28（1255 天），2025Q4=64 交易日 → 12-fold 测到 2025Q4 **可跑，无需 refetch**。
+
+### 新 runner：`run_storya_v21_main12.py`（~440 LOC）
+
+- **§5 import-only 铁律**：全部数据/边/快照构造 `import` 自 `run_storya_e1_anchor.py`（E0-validated），零重写。import 实测无副作用（1.9s，无 chdir）。
+- **12-fold (§2a)**：`WALK_FORWARD_FOLDS_12`，train 起点 2021-07-01 固定，"train→YYYY-MM"=val_end，test 2023Q1→2025Q4 逐季。复用 imported `create_fold_masks`；`assert_purge_no_leak_12` 全 12 折通过。
+- **两条 C1 assert**：(a) imported `build_universe_C` 自带 `a158_slice[1]==raw[0]&row0==0` + runner `assert_univ_c_t1_contract`(row0==0) 重确认；(b) 新闻边 assert 随 L3 follow-up 并入。
+- **spine 臂**（frozen-snapshot train_nn 路径，全实现无 stub）：L0 LightGBM / L1 MLP / L2 GAT+corr / L2s SAGE+corr。
+- **L6 full-attention-no-graph**（唯一新代码）= `make_nn_model('GAT')` 喂 `build_complete_graph_edge_index`（全 i≠j 对），**参数与 L2 相同，diff 仅 edge（mask）**——契合 §3/预检 #4，claim_scope=dense learned attention(MASTER/AD-GAT)。
+- **cell_id** = u*1200+arm_idx*120+fold*10+seed，over 2×10×12×10 单射、range [0,2399]。
+
+### E0-canary-on-new-runner（预检 #7 / C1）— ALL PASS
+
+`--canary`（无训练）import sanity_common：(a) 块 fixture mis-map 灵敏 within_ok=1.000/within_perm=0.332；(b) 实数据 provenance signature match + **off-by-1 负测试 caught**；(c) 完全图 |E|=250500=501×500 unique+无自环+穷尽对称。
+
+### 本地 MPS smoke（fold0/B/seed86）
+
+4/5 臂干净完成、schema(25 列)+cell_id 正确：L0 0s(IC -0.002)｜L1 24s(-0.030)｜L2 137s(-0.064)｜L2s 92s(-0.025)。
+**L6 finding**：完全图 250K 边在 MPS 上单 cell >18min 未完（已停）。正确性继承（同 L2 已验证 train_nn + canary 已验证完全图），慢是协议设计（GAT-on-complete-graph）固有，非 bug。**L6 是主轴最贵臂，§8「标准神经 60-90s」未计入完全图开销，单价待 A100 回填**。
+
+### Codex Touchpoint 2（code）— PASS-WITH-CONCERNS，2 CONCERN 均 FIXED
+
+Full: `artifacts/reviews/2026-06-12_codex_code_A.md`。阻塞项全清（无重写数据构造 / 12-fold 映射对 / purge 对 / C1 asserts 在位 / L6 仅 edge diff / cell_id 单射 / seed-resume-schema 一致）。
+- **CODEX-A-01 FIXED**：canary-b 加 off-by-1 负测试（adjacent snapshot signature 必须 != indep）。亲自重跑 `off-by-1 caught=True (2 adj)`。
+- **CODEX-A-02 FIXED**：canary-c 改穷尽（uniqueness len(fwd)==expected + 全对称，去抽样）。亲自重跑 `unique=250500 symmetric=True`。
+
+### 下一步
+
+1. **L6 单价**（待 H博士）：A100 实测 L6 完全图 cell 时长 → 接受多花 / 减 seed / 限 epoch（协议变更，待定）。
+2. **边臂 follow-up**：L3/L4/L5/L5s 走 per-day 动态边（import e3/e4，泛化 `train_*_per_day_edges` 的 model_name 至 GAT）。
+3. **Colab 全量**：T2 已 PASS，可上 A100（待 H博士 SSH hostname）。
+
+→ progress: 2026-06-12-c | plan: 2026-06-12-a | analysis: N/A（无 confirmatory 结果；smoke 仅管线验证，单 seed 不入论文）
+
+---
+
+## 2026-06-12-e: 12-fold runner 边臂 L3/L4/L5/L5s 建成（per-day 动态边 + 静态 sector）+ Codex T2 Round B PASS
+
+承 2026-06-12-c，把主轴 ladder 从 spine 补全到 **9 臂（除 L7）**，覆盖 §6 confirmatory 边 DAG 对子（L3−L2, L4−L2, L5−L2, L5−L4, L5−L3）。
+
+### 新代码（均 §5 import-only 边构造）
+
+- **`train_gnn_per_day_edges(model_name, ...)`**：泛化的 per-day 动态边训练器，**逐字镜像 imported `train_nn`**（同 Adam/ReduceLROnPlateau/grad_accum=32/clip 1.0/MSE/patience=15/best-state/同 train-val-test mask），仅 model_name 参数化 + 每日 edge_index 切换——保证 L3−L2/L5−L2 apples-to-apples。
+- **`build_fold_edges`**：per-fold 边集，全用 imported builder：`corr_sector`=`union_static_edges`(静态，L4 走 frozen train_nn)；`corr_news`=`union_edges_per_day`(L3)；`corr_sector_news`=`union_edges_per_day_e4`(L5/L5s)。
+- ARM_SPEC 加 L3(GAT,corr_news)/L4(GAT,corr_sector)/L5(GAT,corr_sector_news)/L5s(SAGE,corr_sector_news)；run_arm_cell dispatch + main 一次性 sector/news 设置。
+- **C1 assert b**（`max(pub_ts)<=session_close(t-1)`）随 imported `build_per_day_news_edges` 构造时触发——smoke 实测 `News per-day edges built (C1 assert b PIT-checked)`，max PIT-eligible ts ≤ cutoffs。
+
+### smoke（fold0/B/seed86，全 exit 0）
+
+| 臂 | edge_config | 路径 | 单价 | IC | cell_id |
+|---|---|---|---|---|---|
+| L3 GAT | corr_news | per-day | 168s | -0.035 | 0360 |
+| L4 GAT | corr_sector | frozen 静态 | 253s | -0.036 | 0480 |
+| L5 GAT | corr_sector_news | per-day | 281s | -0.030 | 0600 |
+| L5s SAGE | corr_sector_news | per-day | 163s | -0.017 | 1080 |
+
+cell_id/edge_config 列正确，IC 合理（单 seed，不入论文）。corr∪sector 静态边 |E|≈45-58K（解释 L4 较慢，仍远小于 L6 250K）。
+
+### 修复
+
+- **F-NameError**（train_gnn_per_day_edges 用 F.mse_loss 但 v21 runner 漏 import）→ 加 `import torch.nn.functional as F`，重跑通过。
+
+### Codex Touchpoint 2 Round B — PASS-WITH-CONCERNS，1 CONCERN FIXED
+
+Full: `artifacts/reviews/2026-06-12_codex_code_B.md`。Codex 确认 apples-to-apples ✅ / 无 edge-less-day bias / L4 路由对 / C1 assert b 充分 / F import 在位。
+- **CODEX-B-01 FIXED**：per-day 训练器有 `ei=None→skip` 静默路径；当前 builder 每天填充无 bias，但缺显式覆盖断言（confirmatory 隐患）。在 `build_fold_edges` 加覆盖 assert（每 used_day 必有边集）。亲自验证 fold0(399d)/fold11(1089d) **0 天缺失**、不假触发。
+
+### 下一步
+
+L7 HATS（cell_id 重映射 + 注入 assert + §6 contingency 触发器，separate runner）→ Optuna 调参 harness（20 作业 × N=30，调参 seed 须与 canonical 互斥）→ Colab A100 全量（含 L6 真实单价）。
+
+→ progress: 2026-06-12-e | plan: 2026-06-12-a | analysis: N/A（smoke 仅管线验证）
+
+---
+
+## 2026-06-12-f: L7 HATS 12-fold runner 建成（新文件，import-only）+ 注入 canary + §6 contingency + Codex T2 Round C
+
+承 -c/-e，造主轴最后一臂 L7（HATS-3R-adapt，关系注意力，§8 单独 runner）。**新文件 `run_storya_v21_l7_hats.py`，零碰并发 session 在跑的 e1_anchor**。
+
+### 新代码（import-only：HATS 模型/训练/3 关系边全 import 自 `run_storya_e1_6_hats.py`）
+
+- import `HATS3RAdapt` / `train_hats` / `build_three_relation_edges_per_fold`（3 关系 corr/sector/news 分开不并）；12-fold + `cell_id` 自 `run_storya_v21_main12.py`；数据自 anchor；sector/news 自 e4/e3。
+- **cell_id 重映射**：L7 = v21 空间 arm 'L7'(index 7)，240 cell（12 fold×10 seed×2 univ），range [840,2159]，与其他臂结构互斥。
+- **注入 canary**（§10 #5，`--canary` 无训练）：(a) 关系赋值 provenance（rel0==frozen corr、rel1==sector、rel2==news[day]，精确 signature）；(b) corr off-by-1 负测；(c) HATS forward(3 关系)→α(N,3)。**ALL PASS**。
+- **§6 contingency 触发器**（Cn5，机械锁定）：240 cell 中 (a) 注入 assert 失败 / (b) >20% 发散 / (c) >20% α 塌缩(max_frac>0.9) → HATS 降 exploratory（移出对子表 + SPA M=9→8）。逻辑单测 7 例全过。
+- C1 assert b（news PIT）随 import 的 build_per_day_news_edges 触发。
+
+### Codex Touchpoint 2 Round C — PROCEED-WITH-FIXES，1 CRITICAL + 1 MAJOR 均 FIXED
+
+Full: `artifacts/reviews/2026-06-12_codex_code_C.md`。import-only/cell_id/注入 canary/NaN 处理/repro 判 clean。
+- **CODEX-C-01 CRITICAL FIXED**：我原把"发散"判为 `epochs_run>=100`——**在 patience=15 早停下是反的**：跑满 epoch 恰代表晚熟（健康），真发散会在 ~16 epoch 早停。改为真健康失败：无有效 IC / val loss 非有限。⚠️ **偏离 Cn5 字面措辞，待 H博士 确认**（Rule 2）——见下。
+- **CODEX-C-02 MAJOR FIXED**：contingency 用 `len(已完成)` 当分母 → 失败/未跑 cell 被排除。改为 **240 全格分母**，失败 cell 计为发散，未跑完报 KEEP-PENDING。单测含"190 完成+50 失败=20.8%→DEMOTE"。
+
+### 状态 + 待办
+
+- L7 **结构层造完 + 验证**（syntax/import/cell_id/注入 canary/contingency 全过），**训练 smoke 故意 DEFER**——本地显卡被并发 session（补窗口 e1_anchor）占用，不抢。训练 smoke 等显卡空或上 Colab，跑前再做一次每 cell 发散 sanity。
+- **✅ H博士 已确认（2026-06-12）**：CODEX-C-01 的发散判据（健康失败 = 无有效 IC / val loss 非有限，不用 epochs_run）通过；§6 Cn5 字面"跑满 epoch 无 val 改善"在 patience 早停下反向/不可实现，按此健康失败判据 locked。
+
+→ progress: 2026-06-12-f | plan: 2026-06-12-a | analysis: N/A（无训练结果）
+
+---
+
+## 2026-06-12-g: Colab SSH bug 彻底修复 + 代码推送 + Colab CPU-runtime 拦路虎（待 GPU runtime）
+
+为上 Colab 跑 v2.1 全量。
+
+### SSH bug 根因 + 修复（`scripts/colab_ssh_tunnel.sh`，已推 cbbaed9）
+
+三层 bug 逐个打掉：(1) sshd 在 2222 vs 隧道指 22（旧，6-10 已修）；(2) drop-in 写了 `PasswordAuthentication yes` 但只中和主配 `Port`、没中和主配 `PasswordAuthentication`；(3) **真根因**：主配 `/etc/ssh/sshd_config` 无 `Include sshd_config.d/*.conf` → drop-in 全被忽略 → `PermitRootLogin` 退回 OpenSSH 编译默认 `without-password`（root 只能密钥）→ `sshpass -p GNNTEST` 永远 publickey 拒。**修法**：脚本现把 Port/PermitRootLogin/PasswordAuthentication **直接 delete+append 进主配置**（必读）+ 强杀 sshd 直起（`service ssh restart` 在 Colab 是 no-op）。现场用等效一行命令已让 H博士 那台通过 → 验证 `permitrootlogin yes` + `passwordauthentication yes`。
+
+### 代码推送 + Colab 现状
+
+- 推 GitHub（ed981b1）：`run_storya_v21_main12.py` + `run_storya_v21_l7_hats.py`，Colab `git pull` 已拿到。
+- **⚠️ 拦路虎：当前 Colab runtime 无 GPU**（`torch.cuda.is_available()=False`，torch 2.11.0+cu128 但 CPU 机器）。CPU 跑全量不可行。
+- 缺包：`torch_geometric`（GAT/SAGE 用，未装）、`pandas_market_calendars`（已装）。
+
+### UPDATE：A100 全量已启动 ✅
+
+GPU runtime（**A100-SXM4-40GB**）就绪。SSH shell 缺 GPU 库路径（`torch.cuda` 假阴），设 `LD_LIBRARY_PATH=/usr/lib64-nvidia:...` 后 torch 认到卡（/dev/nvidia0 一直在）。装 torch_geometric+pandas_market_calendars，tmux 后台启 `run_storya_v21_main12.py --resume`（**pre-tuning：用 anchor locked HP，非调参后**；属全 ladder pilot + L6 单价 + 规模验证；tuned 重跑为后续）。outputs → Drive 软链（`experiments → /content/drive/MyDrive/GNN测试/experiments`），断电/重启安全。
+
+**A100 各臂实测单价**（249 cell）：L0 1s｜L1 18s｜L2/L3/L4/L5 37-40s｜L2s/L5s 21-23s｜**L6 完全图 avg 64s/max 96s**。
+**L6 单价问题 RESOLVED**：A100 上 L6≈64s 正落 §8「60-90s」区间，**非预算问题**（MPS >18min 纯属 MPS 处理 250K 边图太差，A100 快 ~17×）→ L6 不必减 seed/限 epoch，照原计划全量。主轴全量 ETA ≈19h（avg 30s/cell × ~2160）。
+
+→ progress: 2026-06-12-g | plan: 2026-06-12-a | analysis: N/A（pilot pre-tuning；confirmatory 结果待全量完成 + Touchpoint 3）
+
+---
 
 ## 2026-05-28-c: Code Review Fallback — Claude Self-Review took Touchpoint 2 for paper_figs/
 

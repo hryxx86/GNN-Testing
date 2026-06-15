@@ -4,6 +4,155 @@
 
 ---
 
+## 2026-06-15-a: 12-fold formal null + sliding 副轴 on the UNTUNED anchor — this is a PILOT / robustness cross-check, NOT the protocol confirmatory main table
+
+> **POSITIONING (read first).** Everything below is computed on the **untuned 4-model anchor** (GAT / SAGE-Mean / MLP / LightGBM; `run_storya_e1_anchor.py`, self-labelled "untuned anchor"). Per the frozen protocol (`docs/protocol_v2_freeze.md` §5 / §1.1 freeze note: "主表 12 fold 全部在冻结新超参下重跑，旧 anchor 仅作 pilot/smoke；M3 复用旧 anchor 驳回"), **the confirmatory main table is the TUNED L0–L7 ladder** (`run_storya_v21_main12.py`, running on Colab). So these results are a **PILOT / robustness preview**, not the paper's headline confirmatory result. They give an early sanity read for the ladder; the headline numbers (and the confirmatory SPA/DM/BH-FDR family) come from the tuned ladder.
+
+> **TL;DR (pilot).** Across 3 years / 12 quarterly folds on the untuned anchor: **no statistically reliable evidence that any model beats LightGBM** (Hansen SPA p_consistent B=0.295, C=0.338, joint=0.466, none reject; source `artifacts/storya_e6_dm_spa/spa_results.csv`). The edge-specific test (graph GAT/SAGE vs the non-graph MLP) is the **better-powered** contrast and shows **no edge benefit in Univ B / significant harm in Univ C** (C GAT−MLP ΔIC=−0.0135, HLN p=0.000229, BH-FDR reject, survives HAC lag=21 p=0.0048; source `dm_hln_results.csv`). The sliding-252d 副轴 reproduces the same-direction null (**8/10 same-sign**, the 2 flips REINFORCE "graph edges don't help"). Framing is "no reliable evidence", NOT "proven equal" — the vs-LightGBM comparison is under-powered (MDE ≈ 0.018–0.041).
+
+### 1. Main (expanding) axis — formal null, seed-averaged + power-honest [Codex T3 rounds A+B, all 9 findings fixed]
+Reviews: `artifacts/reviews/2026-06-13_codex_results_A.md` (+ `_B.md`). Stats recomputed by `compute_e6_dm_spa.py` on `experiments/storya_e1_anchor/results.csv` (960 cells, T=749 pooled test days).
+
+- **Hansen SPA (cherry-pick defense)** — none reject H0 (source `spa_results.csv`): Univ B p_consistent=0.2948, Univ C=0.3377, JOINT(B+C)=0.4661 (joint marked `role=supplementary` — pooled-benchmark construction not a clean matched test, R9-A-03).
+- **DM/HLN pairwise + BH-FDR (source `dm_hln_results.csv`)**: 0/5 pairs beat LightGBM in either universe; the ONLY BH-FDR rejection is **C GAT−MLP = −0.0135 (HLN p=0.000229; lag=21 p=0.004784, survives)** — graph model significantly WORSE than non-graph MLP in Univ C. Bounded claim (R9-A-06): Univ-C / GAT only; Univ B shows no such pattern.
+- **Headline IC CI = seed-AVERAGED T=749** (NOT the anti-conservative seed-stacked N=7490, which was ~3× too narrow; R9-A-04). Source `headline_ic_ci_seedavg.csv`: half the cells' 95% CI **include 0** — incl. B/LightGBM [−0.0027, 0.0461], C/GAT [−0.0139, 0.0507], C/LightGBM [−0.0007, 0.0546], C/SAGE [−0.0038, 0.0562]. IC is small and noisy; weak separation everywhere.
+- **Power / MDE (R9-A-05; source `pairwise_power_mde.csv`)**: the vs-LightGBM benchmark comparison is **under-powered** (power@+0.01 ≈ 0.18–0.49 auto-lag / 0.11–0.33 lag-21; MDE@80% ≈ 0.018–0.041) → "no reliable evidence of superiority", NOT "no effect"; the +0.01 Univ-B neural lead is **unresolved**, not disproven. The **edge test (GAT/SAGE vs MLP) is the better-powered contrast** (power@+0.01 ≈ 0.68–0.91 auto / 0.41–0.74 lag-21; MDE ≈ 0.011–0.016) — so the no-edge-benefit-in-B / harm-in-C conclusion rests on a moderately-powered test, not an underpowered one.
+- HAC lag=21 robustness (R9-A-09): all conclusions survive (p-values uniformly more conservative).
+
+### 2. Q1 — Univ-C GAT "lowest IC / highest Sharpe" inversion = MECHANISM + small-sample, NOT a bug (code-verified)
+Verified by reading `run_storya_e1_anchor.py:791-861` (Sharpe) + `:776-788` (IC): the cost-ladder Sharpe is a **top-10%−bottom-10% decile long-short Sharpe** (extreme 20% of stocks only); IC is **full-cross-section Spearman**. They legitimately decouple → low-IC/high-Sharpe is a real financial mechanism, no sign/axis/double-annualization error. The extreme C-GAT value is a **small-sample artifact**: per-fold Sharpe = mean/std × √(252/21) over n_periods≈3 with `np.std` ddof=0 → at n=3 the std is under-estimated → Sharpe inflated. Decomposition (`artifacts/storya_e6_dm_spa/cgat_anomaly.md`): C-GAT mean gross Sharpe 1.82 is dominated by Fold-4 (Q2-2025, n_periods=3, Sharpe 13.18); **LOFO-best-fold collapses it 1.82 → 0.79**. NOT a turnover effect (GAT trades ~2.92, above LightGBM's ~2.46, yet wins net); corr(IC,Sharpe) for GAT=0.50 (weakest of 4). **Caveat for the paper: report per-fold Sharpe only with n_periods; lean on the cost-ladder aggregate + LOFO, never a single-fold Sharpe. IC null is unaffected (SPA/DM are on IC).**
+
+### 3. Sliding-252d 副轴 (secondary axis, Option A) — robustness PILOT, same-sign vs main axis
+Runner `run_storya_anchor_sliding.py` (import-only reuse of the anchor; Codex T2 PROCEED-WITH-FIXES, `artifacts/reviews/2026-06-14_codex_code_sliding_A.md`). 960/960 cells, all converged, 12 folds; fixed 252-td rolling train window (≈3-quarter effective train) on the SAME 12 test quarters. Source `experiments/storya_anchor_sliding/results.csv`.
+
+- **Descriptive same-sign (cell-mean ΔIC sign vs the expanding main axis): 8/10.** The 6 "vs LightGBM" pairs all same-sign; the 2 flips are both **Univ-B GAT/SAGE vs MLP**, going from tiny-positive (+0.004) to negative (−0.009 / −0.013) — i.e., under a fresh 1-year window the graph models are if anything WORSE than the non-graph MLP, so the flips **reinforce "graph edges don't help in B"** (not a flip toward graphs helping).
+- Sliding IC is uniformly LOWER than expanding (e.g., B/GAT 0.0320→0.0165, B/LightGBM 0.0221→0.0039) — expected: ~3 quarters of training data vs the expanding window's growing span (protocol Cn2 Limitation). The robustness criterion is **direction**, not absolute IC.
+- Reading: the null is **NOT an artifact of the expanding window's stale early (2021-22) data** — a window that only ever sees the most recent year gives the same-direction result.
+- **Pending (formal §2b)**: seed-averaged daily-ΔIC same-sign + block-bootstrap CI (the descriptive 8/10 is cell-mean). New analysis script + Touchpoint 2 — deferred pending H博士 positioning (its full value lands paired with the tuned-ladder main axis).
+
+### Status / next
+- All numbers above re-verified against their source CSVs on 2026-06-15.
+- The TUNED L0–L7 ladder (Colab, protocol main table) is the authoritative confirmatory experiment; this pilot is the early sanity read. analysis.md headline confirmatory entry awaits the ladder results.
+- The simple `compute_e6_edge_ablation.py` (E3/E4, SAGE, untuned, 5→12) is **superseded by the ladder's edge arms (L3/L4/L5−L2 DAG pairs)** — not worth running as a separate 12-fold (recorded as historical/exploratory in the multi-testing ledger).
+
+→ progress: 2026-06-15-a | plan: Decision Log 2026-06-14 (副轴 A) + 2026-06-15 (pilot-vs-main-table positioning) | analysis: 2026-06-15-a
+
+---
+
+## 2026-06-13-a: Window extension to 12 folds (3yr) — the 5-fold advantages were regime-concentrated; the null strengthens
+
+> **TL;DR**: Extended the anchor walk-forward 5→12 quarterly folds (test 2023Q1→2025Q4, ~3yr / 750 test days) at the SAME untuned 4-model config (960 cells, all `completed`, 0 errors; source `experiments/storya_e1_anchor/results.csv`). Two headline shifts vs the 5-fold: **(1) the Univ-B "neural ≫ LightGBM" gap collapses** from ≈0.03 to ≈0.01 — LightGBM's weak Univ-B 5-fold IC (0.0060) was a 5-fold artifact; over the new 7 folds it recovers to 0.0336. **(2) Univ-C's high IC does NOT generalize to 2023** — all Univ-C models crash from ≈0.043–0.053 (old 5) to 0.0007–0.0164 (new 7), corroborating the L1 leak-affected-basis limitation. Net: the 3-year picture is **more conservative and the null is stronger** — no model class robustly dominates; the apparent 5-fold edges were regime-concentrated. (Descriptive cell-mean IC; formal SPA/DM/BH-FDR over 12 folds pending the e6 script update.)
+
+### 12-fold mean IC by (universe, model) — old 5 / new 7 / all 12
+Source: `experiments/storya_e1_anchor/results.csv` (960 cells; mean of cell-level IC_mean over 10 seeds × N folds).
+
+| universe | model | IC old-5 | IC new-7 | IC 12-fold |
+|---|---|---|---|---|
+| B | GAT | 0.0353 | 0.0297 | 0.0320 |
+| B | SAGE-Mean | 0.0318 | 0.0319 | 0.0319 |
+| B | MLP | 0.0293 | 0.0272 | 0.0280 |
+| B | LightGBM | **0.0060** | **0.0336** | 0.0221 |
+| C | GAT | 0.0428 | **0.0007** | 0.0182 |
+| C | SAGE-Mean | 0.0478 | 0.0105 | 0.0260 |
+| C | MLP | 0.0530 | 0.0164 | 0.0317 |
+| C | LightGBM | 0.0470 | 0.0126 | 0.0270 |
+
+- **Univ B**: 12-fold GAT 0.0320 / SAGE 0.0319 / MLP 0.0280 vs LightGBM 0.0221 → neural edge ≈ +0.01 (was +0.023–0.029 on 5 folds). The 5-fold "graphs help most when features are weakest" claim is **substantially weakened** — LightGBM's 0.0060 was specific to folds 0–4 (cf. the known Fold-4 Univ-B LightGBM net-Sharpe −0.83 artifact).
+- **Univ C**: GAT is now the WORST Univ-C model over 12 folds (0.0182), almost entirely because its 2023+late-2025 folds give ≈0 (new-7 = 0.0007). Univ-C's strength was concentrated in the 2024–early-2025 window — consistent with L1 (Univ-C factor basis fragile / leak-affected).
+
+### Per-fold mean IC (avg over 4 models × 10 seeds), chronological
+| Q1-23 | Q2-23 | Q3-23 | Q4-23 | Q1-24 | Q2-24 | Q3-24 | Q4-24 | Q1-25 | Q2-25 | Q3-25 | Q4-25 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| −0.006 | −0.029 | −0.010 | +0.056 | +0.074 | +0.002 | +0.012 | +0.084 | −0.009 | +0.095 | +0.023 | +0.034 |
+
+- **The single-fold-dominance concern is relieved**: signal recurs across ~5 strong quarters (Q4-23, Q1-24, Q4-24, Q2-25, Q4-25), not one. But it stays **strongly regime-dependent** — ~half the quarters (Q1-23, Q2-23, Q3-23, Q2-24, Q1-25) are ≈0 or negative. The "cross-sectional ranking earns its carry only in high-dispersion regimes" reading holds over 3 years.
+
+### Status / next
+- 960/960 `completed`, 0 errors (13.06h local MPS; `--resume` reused the 400 + 1 smoke). cell_id backfilled, fold-11 truncated to 2025-12-26 (Codex T2 fixes, `artifacts/reviews/2026-06-12_codex_code_anchorwindow_A.md`).
+- **Pending (formal stats)**: SPA / DM-HLN / BH-FDR / block-bootstrap CI / LOFO over 12 folds — the e6 scripts (`compute_e6_dm_spa.py`) currently hardcode 5 folds (Codex T2 note) and need a fold-count generalization before the formal "no model beats LightGBM" claim is re-stated on 3 years.
+
+→ progress: 2026-06-12-b (run) / 2026-06-13-a (results) | plan: N/A | analysis: 2026-06-13-a
+
+---
+
+## 2026-06-12-a: E2 + E1b 10-seed top-up — E1b null confirmed stable; E2 formal equivalence not reachable at this data scale
+
+> **TL;DR**: Extended the two supporting controls of the 2026-06-11-a suite from their original 2–4 seeds to the full canonical 10 seeds. **E1b (leaked ideal-homophily oracle) is rock-stable** (mean lift −0.0441 @10-seed vs −0.0438 @2-seed) and, importantly, it is *not* attention-sparing — the attention model (GAT) is hurt *more* than mean-aggregation (SAGE), refuting an "attention escapes smoothing" reading. **E2 (shuffled negative control) stays INCONCLUSIVE on all 4 conditions even at 10 seeds**, because its verdict CI is a day-level block-bootstrap (dominated by ~313 test-day variance, not seed count); formal TOST equivalence at the pre-registered ±0.005 margin is likely unreachable at the 5-year data scale. The 2026-06-11-a verdict (E3 decisive, pipeline INNOCENT) is unchanged; this top-up hardens E1b and honestly bounds E2.
+
+### E1b — leaked label-similarity oracle, 10 seeds (supporting diagnostic)
+
+Source: `experiments/sanity_summary/verdicts.json` E1b block (regenerated 2026-06-12); 200 cells = 2 models × 2 universes × 5 folds × 10 seeds.
+
+- **mean lift = −0.0441** (10-seed) vs −0.0438 (2-seed) → **cross-seed STABLE**; frac_seed_positive = 0.240; n_cells = 200.
+- Per-model: **GAT −0.058, SAGE-Mean −0.030** — both negative, **GAT (attention) hurts more**. GAT negative in all 5 folds; SAGE in 3/5.
+- Per-fold: Fold-3 lift = −0.126 dominates; **excluding Fold-3 the mean is −0.024** (sign holds, magnitude Fold-3-inflated).
+- Interpretation: even a maximally-leaked ideal-homophily topology degrades 21d cross-sectional IC, robustly and for both aggregators. Consistent with the broader null and with "neighbor-smoothing fights cross-sectional ranking." Does **not** support elevating an "attention > structure" claim from the oracle (the data run the other way). Stays a supporting diagnostic; appendix framing = "leaked ideal-homophily graph degrades IC by ~0.044 (10-seed stable, both aggregators)."
+
+### E2 — degree-preserving shuffled negative control, 10 seeds
+
+Source: `experiments/sanity_summary/verdicts.json` E2 block (regenerated 2026-06-12 after the analyze fix below). TOST margin ±0.005; CI = 95% block-bootstrap (block=21) on daily seed-averaged (shuffled − no-graph MLP) ΔIC.
+
+| condition | ΔIC | 95% CI | CI half (2-seed→10-seed) | verdict |
+|---|---|---|---|---|
+| B_GAT | +0.0050 | [−0.0057, +0.0154] | 0.019 → 0.011 | INCONCLUSIVE |
+| B_SAGE-Mean | +0.0113 | [−0.0094, +0.0329] | 0.023 → 0.021 | INCONCLUSIVE |
+| C_GAT | −0.0064 | [−0.0242, +0.0068] | 0.023 → 0.016 | INCONCLUSIVE |
+| C_SAGE-Mean | −0.0050 | [−0.0251, +0.0072] | 0.015 → 0.016 | INCONCLUSIVE |
+
+- **All 4 still INCONCLUSIVE.** Only 2/4 CIs narrowed materially (B_GAT, C_GAT); B_SAGE/C_SAGE barely moved. **Reason**: the E2 CI is a block-bootstrap over the *daily* series → governed by day-to-day variance over ~313 test days, **not** by seed count. The "CI ∝ 1/√n_seed" expectation does not hold for this estimator.
+- **Projection**: even the planned 12-fold window extension (~750 test days, ≈×0.65 CI) leaves half-widths ~0.007–0.014, still above ±0.005 → **formal shuffled≈no-graph equivalence is likely unreachable at the 5-year data scale**. The lever that *would* help is more test days, but not by enough.
+- **Honest reporting**: E2 stays descriptive — all |ΔIC| ≤ 0.011 (tiny), the inequality `shuffled ≤ real < oracle` holds qualitatively, but **no formal TOST equivalence claim**.
+
+### Analyze fix (in-session, verified)
+
+`analyze_sanity.py:363` E2 verdict seed list was `CANONICAL_SEEDS[:4]`, which silently excluded the 6 new seeds → first regeneration reproduced the stale 4-seed numbers bit-for-bit. Changed to `CANONICAL_SEEDS` (full 10) for E2; E3 left at `[:4]` by design (its data only has 4 seeds). Verified by recomputing 4-seed vs 10-seed verdicts side-by-side before/after.
+
+→ progress: 2026-06-12-a | plan: N/A | analysis: 2026-06-12-a
+
+---
+
+## 2026-06-11-a: Sanity-Check Suite (E0–E4) — the Story A null survives pipeline falsification
+
+> **TL;DR**: Before publishing the Story A null ("predefined graph relations add no incremental info for 21d cross-sectional ranking"), we ran a pre-registered E0–E4 sanity-check suite (220 training cells + 2 zero-training diagnostics, all reusing the frozen E1-anchor pipeline import-only) to falsify the alternative hypothesis H2 (the null is a broken-pipeline artifact) against H1 (the null is a real task property). **The decisive positive control (E3 planted-signal recovery) passes cleanly: GAT recovers 82% and SAGE-Mean 91% of the achievable IC, while a non-graph MLP recovers ≈0 (both GNNs survive BH-FDR, HLN p≈0).** Scoped conclusion (per Codex Touchpoint 3 results-review): **the graph message-passing pipeline is OPERATIONAL — the gross broken-pipeline failure modes are ruled out — so the null is not an artifact of a non-functional graph pipeline.** It does NOT prove hyperparameter/architecture optimality on real features (residual caveat). Supporting controls (E0 wiring/provenance, E4 graph diagnostics, E1/E1b leaked-oracle diagnostics, E2 shuffled negative control) corroborate without contradiction.
+
+### E3 — decisive positive control (planted-signal recovery)
+
+Construction: real frozen α1 correlation-graph topology, synthetic node features X~N(0,1), and a label planted ON the graph — `y[d] = β·(A_norm @ X[d,:,0]) + ε` (the same-index neighbor-mean of an observed feature). By construction a working message-passing GNN must recover this signal and a non-graph MLP cannot; isolated nodes are excluded from evaluation. β is calibrated so the measured oracle IC (Spearman of the true signal vs y on test days, over connected stocks) ≈ 0.05. Pass rule (pre-registered): GNN test IC ≥ 0.7× measured achievable AND GNN significantly > MLP (seed-averaged-per-fold paired HLN, h=21, BH-FDR).
+
+Results (60 cells = GAT/SAGE/MLP × 4 seeds × 5 folds, Universe B; source: `experiments/sanity_summary/verdicts.json`, `experiments/sanity_e3_planted/results.csv`):
+
+| Model | test IC | recovery (of achievable=0.0469) | beats MLP (BH-FDR) | verdict |
+|-------|---------|----------------------------------|--------------------|---------|
+| SAGE-Mean | 0.0427 | 91% | ✓ (HLN p≈0) | PASS |
+| GAT | 0.0384 | 82% | ✓ (HLN p≈0) | PASS |
+| MLP (control) | 0.0024 | ≈0 | — | — |
+
+Consistent across all 5 folds × 4 seeds (per-cell GAT IC ≈ 0.025–0.054, SAGE ≈ 0.035–0.058, MLP ≈ −0.01 to +0.02; source: `experiments/sanity_e3_planted/results.csv`). **Recovery-threshold sensitivity** (Codex R-A-04): at 0.7× both pass; at 0.8× (target 0.0375) both pass; at 0.9× (target 0.0422) SAGE passes, GAT marginally below. β calibration: closed-form `β = 0.05 / median-day cross-sectional σ_s`, then ≤3 rescales toward the measured achievable (`sanity_common.build_planted_fold`).
+
+**Scoped inference (Codex Touchpoint 3 R-A-01, accepted).** E3 establishes that the graph path converts graph-borne signal into cross-sectional IC, ruling out the *gross* H2 failure modes: edges not wired into learnable parameters, gross training failure, representational bottleneck, or a lookahead-broken aggregation. It does **not** certify that the architecture/hyperparameters are optimal for real financial features — a subtle mis-specification on real features is not excluded by a synthetic-feature positive control. Therefore the licensed claim is "the graph pipeline is operational; the null is not a broken-pipeline artifact," **not** "the null is definitively a task property."
+
+### E0 — wiring + provenance (zero-training, 14/14 PASS)
+
+Source: `experiments/sanity_e0_wiring/wiring_check.csv`. The graph is genuinely wired into the learnable models: GAT/SAGE outputs differ between the α1 graph and a degree-matched shuffle, while the MLP is edge-invariant. Provenance: ticker-order invariant holds (edge indices index the same stock order as the features); an independent hand-rolled recomputation of the frozen α1 edges matches the pipeline for all 5 folds; negative tests (snapshot ±1, ticker-column permutation) both correctly diverge — so the canary is sensitive to the bug class it claims to catch.
+
+### E4 — graph structure diagnostics (paper-bound)
+
+Source: `experiments/sanity_e4_diagnostics/*.csv`. Frozen α1 graph density is 0.7–1.9% per fold (NOT a complete graph → the dense-graph over-smoothing story does not apply to the baseline graph), log-log degree slopes ≈ −1.0 (scale-free / hub structure present), and Fold-4 (the alpha-driving fold) is NOT especially dense (1.0%) — contradicting a naive "Fold-4 helps because its graph is dense" explanation. Edge–feature collinearity AUC ≈ 0.73 (descriptive only — edge predictability from feature distance is not evidence of zero incremental message-passing value).
+
+### E1 / E1b — leaked-oracle diagnostics (supporting, not necessary controls)
+
+Both deliberately leak future information and are diagnostic-only (absolute IC belongs in an appendix with a leaked-oracle warning, per Codex R-A-05; reported here as internal record). **E1** (return-correlation oracle over the test window; source: `experiments/sanity_e1_oracle/results.csv`) gives a mixed lift over α1: Univ-B GAT +0.0313 (≈3× the real edge unit of 0.01001, source: `artifacts/storya_e6_edge_ablation/edge_pairs_dm.csv`), Univ-B SAGE +0.0111, Univ-C GAT +0.0101, Univ-C SAGE −0.0204 — confirming the topology *can* help when informative but is not a uniform positive control (which is exactly why E1 is only an upper-bound diagnostic, not a necessary control). **E1b** (leaked forward-label-similarity topology, positive-correlation-only; source: `experiments/sanity_e1b_label_oracle/results.csv`) HURTS: mean lift −0.0438 (−4.4× the edge unit), positive in only 27.5% of cells — a maximally-leaked co-movement topology over-smooths and degrades IC, consistent with the broader null. E1b was demoted from necessary control to supporting diagnostic on 2026-06-10 after a smoke run showed its lift is second-order (lift ≈ feature-predictiveness × co-movement-tightness); the decisive necessary control is E3 alone.
+
+### E2 — shuffled negative control (equivalence NOT established)
+
+Source: `experiments/sanity_summary/verdicts.json`. Degree-preserving rewiring of α1 vs the no-graph MLP baseline. All four (universe × model) cells are INCONCLUSIVE: mean (shuffled − no-graph) ΔIC ranges −0.0145 to +0.0109 with 95% block-bootstrap CIs crossing zero and exceeding the ±0.005 TOST equivalence margin. **Honest reading (Codex R-A-02, accepted): no significant structural-regularization effect detected, but formal equivalence to no-graph is NOT established — the test is underpowered at 4 seeds.** Point estimates sit near zero; the Univ-B positive estimates (+0.0075/+0.0109) warrant a Fold-4-dependence check if E2 is promoted beyond supporting context.
+
+### Codex Touchpoint 3 (results review) — OVERSTATED-REVISE → all 6 addressed
+
+Full review: `artifacts/reviews/2026-06-11_codex_results_A.md`. The experiment is statistically sound (no error in E3's HLN+BH-FDR, seed aggregation, threshold, or denominator); the revisions are claim-scoping (R-A-01 inference, R-A-02 equivalence wording) and presentation/consistency (R-A-03 E1b meta unified, R-A-05 oracle→appendix, R-A-04 sensitivity, R-A-06 E0 all-fold provenance). Two code-level findings fixed in-session and re-validated (E0 14/14; E1b _meta.json unified).
+
+→ progress: 2026-06-11-a | plan: 2026-06-10-a (sanity-check execution closed) | analysis: 2026-06-11-a
+
 ## 2026-05-27-c: Story A E3/E4 edge ablation E6 post-process + Codex Touchpoint 3 — internal honest record
 
 > **TL;DR**: E3 (50 cells news-as-edge) + E4-α (100 cells, 50 corr+sector + 50 corr+sector+news) completed on Colab A100; `compute_e6_edge_ablation.py` (new, imports helpers from `compute_e6_dm_spa.py` per Option Y) produced 5 paired DM/HLN comparisons × 3 regime conditions (full 5-fold / LOFO-4 / Fold-4-only) + cost ladder per config. **Headline: 0/5 pairs survive BH-FDR at q=0.05 in full condition (smallest raw HLN p=0.039 for corr+news_cooccur vs α1 baseline, rank-1 BH threshold=0.010). LOFO-4 collapses all edge benefits to ΔIC +0.002 to +0.005 with HLN p > 0.30. Fold-4-only (Q2-2025) shows ΔIC bootstrap CIs excluding zero for all 3 edge-augmented configs vs baseline ([+0.022, +0.038]), but N=10 cells × 62 days per arm caps interpretability to diagnostic-only.** This entry records the internal honest version with all Codex Touchpoint 3 caveats; paper §Results / §Limitations measure will apply selective rather than exhaustive pre-emption per H博士 2026-05-27 directive (see Q4 below).
@@ -45,7 +194,7 @@ DM/HLN paired ΔIC + BH-FDR q=0.05 (family=5, applied to 'full' condition only p
 | α4 vs α2 | −0.003 | [−0.006, +0.001] | 0.187 | False |
 | α4 vs α3 | −0.003 | [−0.013, +0.006] | 0.461 | False |
 
-**LOFO-4 condition** (T=251 days, N=40 cells per arm): all 5 mean ΔIC values shrink to +0.002 to +0.005 range; all HLN p > 0.30 (smallest p_lofo = 0.298). Edge benefit largely vanishes when Fold 4 is dropped.
+**LOFO-4 condition** (T=251 days, N=40 cells per arm): all 5 mean ΔIC values shrink to +0.002 to +0.005 range; all HLN p > 0.30 (smallest p_lofo = 0.298). Edge benefit largely vanishes when Fold 4 is dropped. (source: `artifacts/storya_e6_edge_ablation/edge_pairs_dm.csv` regime_condition='lofo4' rows)
 
 **Fold-4-only condition** (T=62 days, N=10 cells per arm; DM/HLN intentionally NaN per Codex CR-EDGE-A-08 confirming HLN factor=0.669 over-corrects at this T):
 
@@ -78,7 +227,7 @@ Codex Round A verdict: **PASS-WITH-CONCERNS** (`artifacts/reviews/2026-05-27_cod
 | CODEX-RR-EDGE-A-03 (α4 vs α2 Sharpe → no "news hurts" claim) | CONCERN | INTERNAL ACK; internal language above is "fold-4 Sharpe diagnostic instability"; paper application depends on which sentence makes the cut |
 | CODEX-RR-EDGE-A-04 (BH-FDR application correct, no action) | INFO | ADDRESSED |
 | CODEX-RR-EDGE-A-05 (Fold-4 Sharpe N=10 bootstrap unreliable; no significance language) | MAJOR | INTERNAL ACK; internal language above explicitly marks N=10 cells as diagnostic-only; paper Table 5 will retain CI numbers but prose interpretation will follow the bounded version |
-| CODEX-RR-EDGE-A-06 (no global SPA needed; 5-pair BH is sufficient confirmatory unit) | CONCERN | NO ACTION; multi_testing_ledger.json already declares this scope (artifacts/storya_e6_dm_spa/multiple_testing_ledger.json `spa_scope_clarification`) |
+| CODEX-RR-EDGE-A-06 (no global SPA needed; 5-pair BH is sufficient confirmatory unit) | CONCERN | NO ACTION; multi_testing_ledger.json already declares this scope (artifacts/storya_e6_dm_spa_5fold/multiple_testing_ledger.json `spa_scope_clarification`) |
 
 ### Question 4: Paper-writing strategy — selective rather than exhaustive pre-emption
 
@@ -99,7 +248,7 @@ This is a strategic choice, not a methodological compromise. All findings record
 - `experiments/storya_e4_alpha/results.csv` — 100 cells
 - `compute_e6_edge_ablation.py` — new E6 v2 script (Option Y, imports compute_e6_dm_spa helpers)
 - `artifacts/storya_e6_edge_ablation/{edge_pairs_dm.csv, edge_bootstrap_ci.csv, edge_cost_ladder.csv, edge_summary.md}` — E3/E4 E6 output
-- `artifacts/storya_e6_dm_spa/e1_three_column_summary.csv` — extended `analyze_e1_lofo.py` output adding paper Table 2 with bootstrap CIs for E1 (full / LOFO-4 / Fold-4-only) — paired for consistency with E3/E4 Table 5
+- `artifacts/storya_e6_dm_spa_5fold/e1_three_column_summary.csv` — extended `analyze_e1_lofo.py` output adding paper Table 2 with bootstrap CIs for E1 (full / LOFO-4 / Fold-4-only) — paired for consistency with E3/E4 Table 5
 - `artifacts/reviews/2026-05-27_codex_code_e6edge_A.md` — Codex Touchpoint 2 PASS-WITH-CONCERNS (1 CONCERN truncate→raise FIXED)
 - `artifacts/reviews/2026-05-27_codex_results_e3e4edge_A.md` — Codex Touchpoint 3 PASS-WITH-CONCERNS (2 MAJOR + 3 CONCERN + 1 INFO, all INTERNAL ACK)
 
@@ -113,20 +262,20 @@ E3/E4 edge ablation analysis COMPLETE. All Story A v3 confirmatory experiments D
 
 ## 2026-05-27-a: Story A E1 anchor (400 cells) + E6 + LOFO — Fold 4 drives most positive results
 
-> **TL;DR**: E1 anchor finished on Colab A100 (400/400 cells, 5.58h wall — source: `experiments/storya_e1_anchor/_meta.json`). Headline numbers superficially favor the Story A narrative — Univ B neural ICs are 5-8× the LightGBM baseline; Univ C shows 4-model IC convergence at ~0.05 consistent with the "feature-richness" hypothesis (decisions.md:19/20). But LOFO + per-fold + per-cell decomposition (`artifacts/storya_e6_dm_spa/lofo_summary.md`, addressing real-Codex Touchpoint 3 Round A-bis findings 02/04/05) shows **most positive results are Fold 4 (Q2-2025) driven**, and **Hansen SPA fails to reject H₀** for any candidate vs LightGBM (`artifacts/storya_e6_dm_spa/spa_results.csv` p_consistent rows). Paper must report (a) full 5-fold + LOFO-4 robustness side-by-side, (b) bootstrap-IC>0 vs SPA-vs-benchmark distinction explicit, (c) §Limitations strengthened on Q2-2025 regime variance and Plan AAA Alpha158 same-day OHLC leak provenance.
+> **TL;DR**: E1 anchor finished on Colab A100 (400/400 cells, 5.58h wall — source: `experiments/storya_e1_anchor/_meta.json`). Headline numbers superficially favor the Story A narrative — Univ B neural ICs are 5-8× the LightGBM baseline; Univ C shows 4-model IC convergence at ~0.05 consistent with the "feature-richness" hypothesis (decisions.md:19/20). But LOFO + per-fold + per-cell decomposition (`artifacts/storya_e6_dm_spa_5fold/lofo_summary.md`, addressing real-Codex Touchpoint 3 Round A-bis findings 02/04/05) shows **most positive results are Fold 4 (Q2-2025) driven**, and **Hansen SPA fails to reject H₀** for any candidate vs LightGBM (`artifacts/storya_e6_dm_spa_5fold/spa_results.csv` p_consistent rows). Paper must report (a) full 5-fold + LOFO-4 robustness side-by-side, (b) bootstrap-IC>0 vs SPA-vs-benchmark distinction explicit, (c) §Limitations strengthened on Q2-2025 regime variance and Plan AAA Alpha158 same-day OHLC leak provenance.
 
 ### Question 1: What do the headline E1 + E6 numbers say?
 
 **E1 run**: 4 models × 10 canonical seeds × 5 walk-forward folds × 2 universes = 400 cells; 5.58h A100 wall (source: `experiments/storya_e1_anchor/_meta.json`). Per Codex Plan Round E PASS-WITH-FIXES + Codex Code Touchpoint 2 verdicts on `run_storya_e1_anchor.py` (`artifacts/reviews/2026-05-26_codex_plan_E.md`, `artifacts/reviews/2026-05-26_codex_code_A.md`, `artifacts/reviews/2026-05-26_codex_code_B.md`). Source: `experiments/storya_e1_anchor/results.csv` (n=400 rows). [Correction 2026-05-27-e: prior draft cited a non-existent `2026-05-27_codex_code_e1anchor_A.md`; actual e1_anchor code review files dated 2026-05-26 night.]
 
-**E6 post-process** (`compute_e6_dm_spa.py`, ~5 min CPU; outputs at `artifacts/storya_e6_dm_spa/`):
+**E6 post-process** (`compute_e6_dm_spa.py`, ~5 min CPU; 5-fold outputs frozen at `artifacts/storya_e6_dm_spa_5fold/` — the live `artifacts/storya_e6_dm_spa/` was later overwritten to 12-fold, see 2026-06-13-a):
 
 | Test | Universe B | Universe C | Joint B∪C |
 |------|-----------|-----------|-----------|
 | Hansen SPA p_consistent vs LGB benchmark (source: `spa_results.csv` rows univ=B/C/joint) | 0.147 (M=3) | 0.384 (M=3) | 0.136 (M=6) |
 | DM/HLN paired ΔIC at BH-FDR q=0.05 (source: `dm_hln_results.csv`) | 0/3 reject vs LGB; 0/2 reject vs MLP | 0/3 reject vs LGB; 0/2 reject vs MLP | — (per-universe only) |
 
-Headline IC and bootstrap CI per (universe, model) (source: `artifacts/storya_e6_dm_spa/bootstrap_ci.csv` rows by universe×model, block_size=21, n_boot=5000):
+Headline IC and bootstrap CI per (universe, model) (source: `artifacts/storya_e6_dm_spa_5fold/bootstrap_ci.csv` rows by universe×model, block_size=21, n_boot=5000):
 
 | Universe | Model | IC | 95% CI | CI excludes 0? |
 |----------|-------|-----|--------|----------------|
@@ -139,11 +288,11 @@ Headline IC and bootstrap CI per (universe, model) (source: `artifacts/storya_e6
 | C | MLP | 0.053 | [0.035, 0.071] | ✓ |
 | C | LightGBM | 0.047 | [0.034, 0.061] | ✓ |
 
-**Key tension** (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-01, OK severity): Bootstrap and SPA test different nulls. Bootstrap CI on IC excludes 0 → **absolute** IC > 0. SPA p > 0.05 → no **paired** dominance over LightGBM. Both can hold simultaneously; not a contradiction. Univ C: 4-model IC range 0.043-0.053 (~0.010 spread) consistent with decisions.md:19/20 feature-richness hypothesis IF no shared leak — Codex RR-A-bis-03 qualifies below.
+**Key tension** (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-01, OK severity): Bootstrap and SPA test different nulls. Bootstrap CI on IC excludes 0 → **absolute** IC > 0. SPA p > 0.05 → no **paired** dominance over LightGBM. Both can hold simultaneously; not a contradiction. Univ C: 4-model IC range 0.043-0.053 (~0.010 spread) consistent with decisions.md:19/20 feature-richness hypothesis IF no shared leak — Codex RR-A-bis-03 qualifies below. (5-fold values — source: `artifacts/storya_e6_dm_spa_5fold/bootstrap_ci.csv` rows universe='C' + `artifacts/storya_e6_dm_spa_5fold/spa_results.csv`, frozen from commit 5bef3b9. The live `storya_e6_dm_spa/` dir was overwritten to 12-fold (C IC ≈ 0.018-0.032, SPA p_C ≈ 0.34), see 2026-06-13-a + that snapshot dir's README.)
 
 ### Question 2: How much of this survives LOFO?
 
-LOFO (Leave-One-Fold-Out) IC means, computed by `analyze_e1_lofo.py` after Codex Round A-bis flagged Fold 4 uniformity (RR-A-bis-02). Full table at `artifacts/storya_e6_dm_spa/lofo_summary.md`; below shows headline change when dropping Fold 4 (the Q2-2025 known regime outlier):
+LOFO (Leave-One-Fold-Out) IC means, computed by `analyze_e1_lofo.py` after Codex Round A-bis flagged Fold 4 uniformity (RR-A-bis-02). Full table at `artifacts/storya_e6_dm_spa_5fold/lofo_summary.md`; below shows headline change when dropping Fold 4 (the Q2-2025 known regime outlier):
 
 | Universe | Model | none (full) | drop f4 | f4-drop % |
 |----------|-------|-------------|---------|-----------|
@@ -156,7 +305,7 @@ LOFO (Leave-One-Fold-Out) IC means, computed by `analyze_e1_lofo.py` after Codex
 | C | MLP | 0.053 | 0.028 | **−47%** |
 | C | LightGBM | 0.047 | 0.030 | **−36%** |
 
-Source: `artifacts/storya_e6_dm_spa/lofo_diagnostic.csv` (universe, model, left_out_fold='none' vs '4').
+Source: `artifacts/storya_e6_dm_spa_5fold/lofo_diagnostic.csv` (universe, model, left_out_fold='none' vs '4').
 
 **Net Sharpe @10bps** with LOFO-4 (source: same `lofo_diagnostic.csv` column `Sharpe_net_10bps_mean`):
 
@@ -171,7 +320,7 @@ Source: `artifacts/storya_e6_dm_spa/lofo_diagnostic.csv` (universe, model, left_
 | C | MLP | 1.88 | 0.71 | **−62%** |
 | C | LightGBM | 2.03 | 1.14 | **−44%** |
 
-**Per-cell outlier flagging** (source: `artifacts/storya_e6_dm_spa/per_cell_distribution.csv`, top-3 / bot-3 by Sharpe_gross per cell): Univ C GAT cell_id=240 (seed=86, fold=4) reports Sharpe_gross = **75.0**, next-highest at cid=249 = 17.2. This single cell substantially inflates the 50-cell mean (3.62) → headline Sharpe 3.08 is outlier-fragile (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-04 CONCERN materially confirmed).
+**Per-cell outlier flagging** (source: `artifacts/storya_e6_dm_spa_5fold/per_cell_distribution.csv`, top-3 / bot-3 by Sharpe_gross per cell): Univ C GAT cell_id=240 (seed=86, fold=4) reports Sharpe_gross = **75.0**, next-highest at cid=249 = 17.2. This single cell substantially inflates the 50-cell mean (3.62) → headline Sharpe 3.08 is outlier-fragile (real Codex Round A-bis finding CODEX-RR-E1E6-A-bis-04 CONCERN materially confirmed).
 
 **Findings**:
 1. **Univ B neural advantage is genuine but smaller than headline**: ~53% of SAGE-Mean's IC and ~46% of MLP's Net Sharpe vanish without Fold 4. GAT survives best (−38% IC, −31% Net Sharpe). All three still positive after LOFO-4.
@@ -210,8 +359,8 @@ Plan §1.9 honest-caveats list gains one new item from this analysis:
 ### Outputs
 
 - `experiments/storya_e1_anchor/results.csv` — 400 cells
-- `artifacts/storya_e6_dm_spa/{spa_results.csv, dm_hln_results.csv, bootstrap_ci.csv, cost_ladder.csv, multiple_testing_ledger.json, summary.md}` — E6 framework
-- `artifacts/storya_e6_dm_spa/{lofo_diagnostic.csv, per_fold_table.csv, per_cell_distribution.csv, lofo_summary.md}` — LOFO + per-fold + per-cell decomposition
+- `artifacts/storya_e6_dm_spa_5fold/{spa_results.csv, dm_hln_results.csv, bootstrap_ci.csv, cost_ladder.csv, multiple_testing_ledger.json, summary.md}` — E6 framework (frozen 5-fold snapshot; live dir overwritten to 12-fold per 2026-06-13-a)
+- `artifacts/storya_e6_dm_spa_5fold/{lofo_diagnostic.csv, per_fold_table.csv, per_cell_distribution.csv, lofo_summary.md}` — LOFO + per-fold + per-cell decomposition (frozen 5-fold snapshot)
 - `artifacts/reviews/2026-05-27_codex_results_e1e6_A-bis.md` — Codex Touchpoint 3 real Codex retry verdict (Round A finance-gnn-reviewer fallback was conducted in-session but not saved as a separate file; the convergent recommendations are summarized inside the A-bis review body §"Round-A comparison")
 
 ### Decision
@@ -442,7 +591,7 @@ This is the registered fallback when primary fails: does the loss change the cro
 **Reject pattern under cluster bootstrap (paper-defensible reading)**:
 - **Pairwise loss → scale collapse** (4/4 contrasts reject, β all in [-0.104, -0.082]): pairwise hinge consistently shrinks prediction cross-sectional std relative to MSE, regardless of feature set or model.
 - **ListMLE on S8 → scale expansion** (2/2 S8 contrasts reject, β = +0.058 and +0.106): ListMLE on Alpha158 features increases prediction dispersion.
-- **ListMLE on S6 → no scale effect** (2/2 S6 contrasts non-reject, p = 0.241 and 0.125): on the 3-feature set, ListMLE doesn't move prediction scale.
+- **ListMLE on S6 → no scale effect** (2/2 S6 contrasts non-reject, p = 0.241 and 0.125): on the 3-feature set, ListMLE doesn't move prediction scale. (source: `experiments/loss_horserace/cluster_bootstrap_pred_cs_std.csv`)
 
 This pattern is consistent with theoretical expectations: pairwise hinge with margin = 0.01 produces compressed predictions (loss saturates at small margin); ListMLE softmax-style preserves or expands scale per its likelihood structure.
 
@@ -569,7 +718,7 @@ This pattern is consistent with theoretical expectations: pairwise hinge with ma
 
 ### D.2: Model Prediction Diagnostics (LR + FinBERT, Test Set)
 
-**Overall LR Test AUC: 0.4976** (below random)
+**Overall LR Test AUC: 0.4976** (below random) (source: Phase C D.1/D.2 LR+FinBERT diagnostic; results CSV not retained — run recorded in progress.md `2026-03-03-a`)
 
 **5. Prediction Score Distribution**
 - Mean separation between pos/neg labels: **-0.00030** (essentially zero)
@@ -615,7 +764,7 @@ This pattern is consistent with theoretical expectations: pairwise hinge with ma
 | 2-5% | 0.494 | 97K |
 | >5% | 0.496 | 17K |
 
-- **No improvement for large moves.** Even for |return| > 5%, AUC = 0.496.
+- **No improvement for large moves.** Even for |return| > 5%, AUC = 0.496. (source: same Phase C D.2 diagnostic; CSV not retained — see progress.md `2026-03-03-a`)
 
 ### Key Conclusion
 
@@ -644,7 +793,7 @@ This pattern is consistent with theoretical expectations: pairwise hinge with ma
 | THGNN | CIKM 2022 | ~300-500 | China CSI 300/500, US S&P 500 | NO (price only) | Return ranking | ARR -0.015 (CSI300), +0.048 (CSI500) |
 | DGRCL | ICAART 2025 | 1,026 (NASDAQ) / 1,737 (NYSE) | US | NO (price+volume) | Next-day binary | 53.06% acc (NASDAQ), 54.07% (NYSE) |
 | DASF-Net | JRFM 2025 | **12** | US S&P 500 subset (4 sectors) | YES (FinBERT) | Price regression (MSE) | 91.6% MSE reduction vs baselines |
-| ChatGPT-GNN | KDD WS 2023 | **30** (DOW 30) | US | YES (ChatGPT on headlines) | 3-class (up/down/neutral, +/-1%) | F1=0.41 (weighted) |
+| ChatGPT-GNN | KDD WS 2023 | **30** (DOW 30) | US | YES (ChatGPT on headlines) | 3-class (up/down/neutral, +/-1%) | F1=0.41 (weighted; source: ChatGPT-GNN, KDD WS 2023, as reported) |
 | Kengmegni 2024 | SSRN | S&P 500 | US | YES (FinBERT) | Short-term return | Sentiment = no robust predictive power |
 | Sentiment-Size Nexus 2025 | JBA | Large/mid/small cap | India+Asia | Yes (Doc2Vec+SVM) | Index-level | Strong for large/mid-cap indices (NOT individual stocks) |
 
@@ -668,7 +817,7 @@ With 12-30 stocks, random variation can produce seemingly meaningful AUC/accurac
 
 **3. Papers That Use NLP Report Modest Results**
 
-- ChatGPT-GNN on DOW 30: Weighted F1 = 0.41 on 3-class task. Random baseline for 3-class is ~0.33, so actual lift is modest.
+- ChatGPT-GNN on DOW 30: Weighted F1 = 0.41 on 3-class task. Random baseline for 3-class is ~0.33, so actual lift is modest. (source: ChatGPT-GNN, KDD WS 2023, as reported)
 - DASF-Net: Reports MSE reduction (regression), NOT classification accuracy. 91.6% MSE reduction sounds impressive but this is price regression on 12 stocks, not direction prediction on 500.
 
 **4. DGRCL's "53% Accuracy" Is Consistent With Our Results**
@@ -836,7 +985,7 @@ After three signal fixes (dedup, market-adjusted labels, 9 momentum features), e
 
 ### Key Findings
 
-1. **GNN v2 with 780-dim features**: Test AUC = 0.5002 — graph structure adds zero value even with momentum features
+1. **GNN v2 with 780-dim features**: Test AUC = 0.5002 — graph structure adds zero value even with momentum features (source: Phase 1d/1e baseline-matrix + selective-AUC diagnostic; results CSV not retained — run recorded in progress.md `2026-03-03-h`)
 2. **No tail signal**: Selective prediction at 5% coverage yields max AUC = 0.5154 (noise-level for ~2K samples; 95% CI ≈ ±0.02)
 3. **Momentum features hurt selective AUC**: B3/B4 @20%/@10% < 0.50 — model is "most confident" on its worst predictions
 4. **XGBoost most stable**: flat ~0.50 across all coverages — regularization prevents overfitting but confirms no signal
@@ -929,6 +1078,8 @@ The LLM cannot predict return direction, even for events it considers high-impac
 | Phase 1e | Selective AUC @5%/10%/20%/50% | Max = 0.5154 (noise for 2K samples) |
 | **Phase 2** | **GPT-4o-mini structured output** | **AUC = 0.5034, delta = +0.0009** |
 
+(source: the cumulative table above is from Phase 1a–2 diagnostic runs; underlying results CSVs not retained — recorded in progress.md `2026-03-04-a` and the per-phase analysis entries above)
+
 **Final verdict**: Event-level next-day excess return direction on S&P 500 is unpredictable with NLP features (FinBERT or GPT-4o-mini), momentum features, GNN graph structure, or any combination thereof. This constitutes strong empirical evidence for the Efficient Market Hypothesis in large-cap US equities.
 
 ### Path Forward
@@ -1000,10 +1151,10 @@ Comprehensive literature survey to support v3 research direction pivot. Surveyed
 
 | Paper | Venue | Key Finding for Our Work |
 |-------|-------|------------------------|
-| MASTER | AAAI'24 | Cross-stock Transformer, 5d ranking, IC=0.064 (CSI300). No graph structure. |
-| FinMamba | arXiv'25 | Mamba + dynamic graph, 1d ranking, Sharpe=2.06 (S&P500). No NLP, no heterogeneous edges. |
-| MDGNN | AAAI'24 | 3 node types + multi-relation + daily dynamic, IC=0.032 (CSI300). Chinese market only. |
-| THGNN | CIKM'22 | Daily dynamic graph + HeteroGAT, IC=4.93%. No NLP, no news nodes. |
+| MASTER | AAAI'24 | Cross-stock Transformer, 5d ranking, IC=0.064 (CSI300; source: MASTER, AAAI'24, as reported in paper). No graph structure. |
+| FinMamba | arXiv'25 | Mamba + dynamic graph, 1d ranking, Sharpe=2.06 (S&P500; source: FinMamba, arXiv'25, as reported). No NLP, no heterogeneous edges. |
+| MDGNN | AAAI'24 | 3 node types + multi-relation + daily dynamic, IC=0.032 (CSI300; source: MDGNN, AAAI'24, as reported). Chinese market only. |
+| THGNN | CIKM'22 | Daily dynamic graph + HeteroGAT, IC=4.93% (source: THGNN, CIKM'22, as reported). No NLP, no news nodes. |
 | HGAIT | ESWA'25 | Positive/negative correlation heterogeneous edges + inverse Transformer. No NLP. |
 | SelectiveNet | ICML'19 | 3-head architecture (pred+selection+aux). Never applied to financial GNN. |
 | AUGRC | NeurIPS'24 | Fixes AURC metric for selective prediction evaluation. |
@@ -1089,6 +1240,8 @@ First full run of `v3_ranking_pipeline.ipynb` on NVIDIA RTX PRO 6000 Blackwell (
 
 **Go/Stop**: Best IC=0.02054 (< 0.03), Best Sharpe=1.038 (> 0.5) → **GO**
 
+(source: the N3/N4 numbers in this entry are from the v3 first-Colab single-run, exploratory; results CSV not retained — full output preserved as `archived/colab_results/v3_ranking_pipeline.ipynb - Colab.pdf`)
+
 ### N4: Horizon Ablation — Partially Visible
 
 Only 1d horizon result visible (rest drowned in sklearn warnings):
@@ -1100,7 +1253,7 @@ Only 1d horizon result visible (rest drowned in sklearn warnings):
 
 **1. News/co-occurrence edges ADD NOISE, not signal**
 - A3 (all 4 edges) is the WORST GNN: IC=0.00432, Sharpe=-0.314
-- A2 (corr+sector only) is much better: IC=0.01177, Sharpe=0.994
+- A2 (corr+sector only) is much better: IC=0.01177, Sharpe=0.994 (source: same v3 first-Colab single run; CSV not retained — see `archived/colab_results/v3_ranking_pipeline.ipynb - Colab.pdf`)
 - This is consistent across architectures: adding news edges hurts ALL models
 - Possible reason: news mentions create dense, noisy connections that dilute the informative correlation structure
 
@@ -1111,7 +1264,7 @@ Only 1d horizon result visible (rest drowned in sklearn warnings):
 - The heterogeneous distinction between corr and sector edges may not be useful
 
 **3. Graph structure provides genuine signal over baselines**
-- Best GNN IC=0.02054 vs Best baseline IC=0.00828 (LightGBM): **2.5× improvement**
+- Best GNN IC=0.02054 vs Best baseline IC=0.00828 (LightGBM): **2.5× improvement** (source: same v3 first-Colab single run; CSV not retained — see archived PDF above)
 - Graph adds +0.01226 IC over flat features — substantial for financial prediction
 - This validates the core thesis: stock correlation structure carries predictive information
 
@@ -1173,7 +1326,7 @@ Second run of `v3_ranking_pipeline.ipynb` on NVIDIA A100-SXM4-40GB (42.4 GB VRAM
 | 63d | -0.00838 | -0.118 | 0.487 | 0.05207 | 1.256 |
 
 **Key findings**:
-1. **GAT 21d IC=0.04420 > 0.03 threshold** — first time exceeding Go criterion for IC
+1. **GAT 21d IC=0.04420 > 0.03 threshold** — first time exceeding Go criterion for IC (source: v3 Colab Run 2 single-run, seed=42; results CSV not retained — output in `archived/colab_results/v3_ranking_pipeline.ipynb - Colab.pdf`. NB: this 0.044 is a single lucky-seed value; 5-seed mean later = 0.032, see 2026-04-08-a)
 2. **Inverted-U pattern**: GAT peaks at 10d-21d, fails at 1d and 42d-63d
 3. **LGBM monotonic**: IC increases with horizon (1d:0.004 → 63d:0.052)
 4. **Cross pattern**: GAT > LGBM at 5d-21d (graph structure helps), LGBM > GAT at 42d-63d (individual features dominate)
@@ -1194,11 +1347,13 @@ Second run of `v3_ranking_pipeline.ipynb` on NVIDIA A100-SXM4-40GB (42.4 GB VRAM
 1. **SelectiveNet FAILED**: Negative IC at all coverage levels (5%-50%)
 2. **Selection head is anti-correlated**: It selects the stocks where GNN predictions are WORST
 3. **Threshold baseline works**: |ranking| > percentile is a valid confidence proxy
-4. **Full model (100%) is best**: IC=0.05595, SelectiveRankingGAT's auxiliary loss provides regularization benefit
+4. **Full model (100%) is best**: IC=0.05595, SelectiveRankingGAT's auxiliary loss provides regularization benefit (source: v3 Colab Run 2 single-run; CSV not retained — archived PDF above)
 5. **Selection score distribution**: Heavily right-skewed (0.8-1.0), lacks discrimination
 6. **Coverage converged to ~31%** (target was 20%) — lambda=32 insufficient
 
 ### Publication Metrics Assessment (Updated)
+
+(source: this table is from the v3 Colab Run 2 single-run; the GAT 21d IC=0.04420 is the single lucky-seed value, CSV not retained — see `archived/colab_results/v3_ranking_pipeline.ipynb - Colab.pdf`)
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
@@ -1216,7 +1371,7 @@ Second run of `v3_ranking_pipeline.ipynb` on NVIDIA A100-SXM4-40GB (42.4 GB VRAM
 2. **SelectiveNet needs rethink** — either report as negative finding or try alternative approaches
 3. **Training stability is a concern** — GAT IC varies 0.006-0.021 across runs; Walk-forward CV essential
 4. **SAGE may be more reliable than GAT** for production use (stable IC, good Sharpe)
-5. **Full SelectiveRankingGAT model (100%) gives best IC=0.05595** — auxiliary loss helps
+5. **Full SelectiveRankingGAT model (100%) gives best IC=0.05595** — auxiliary loss helps (source: v3 Colab Run 2 single-run; CSV not retained — archived PDF above)
 
 ---
 
@@ -1250,7 +1405,7 @@ First systematic stability test of GAT 21d across 5 random seeds. Also added LST
 ### Key Observations
 
 **1. GAT signal is real but unstable (CV=55%)**
-- Mean IC=0.032 > 0.03 threshold — signal exists
+- Mean IC=0.032 > 0.03 threshold — signal exists (source: `archived/stale_results/gat_21d_multiseed.csv`, 5-seed)
 - But CV reduced from 105% (2 runs) to 55% (5 seeds) — still too high for a single model
 - 3/5 seeds exceed 0.03; 2/5 are below (789: 0.024, 1024: 0.002)
 - Seed 1024 completely failed to converge — train loss barely moved (0.998→0.998)
@@ -1267,7 +1422,7 @@ First systematic stability test of GAT 21d across 5 random seeds. Also added LST
 
 **4. LightGBM is extremely stable but weak**
 - CV=12.7% (vs GAT 55%) — 4.3× more stable
-- IC=0.014 — 2.3× lower than GAT mean
+- IC=0.014 — 2.3× lower than GAT mean (source: `archived/stale_results/lgb_21d_multiseed.csv`)
 - Confirms the variance issue is GAT-specific, not a data/evaluation problem
 
 **5. GAT early stopping is critical**
@@ -1296,7 +1451,7 @@ LightGBM is consistent across Colab and local (0.015 vs 0.014). GAT local mean (
 
 ### Decision Needed
 
-GAT mean IC=0.032 barely clears the 0.03 threshold with high variance. Options:
+GAT mean IC=0.032 barely clears the 0.03 threshold with high variance (source: `archived/stale_results/gat_21d_multiseed.csv`, 5-seed mean). Options:
 - **A**: Keep GAT, report with mean±std, add ensemble → probably the best approach
 - **B**: Switch to SAGE (CV=2% in prior test) and accept lower peak IC
 - **C**: Run SAGE multi-seed to compare directly before deciding → **Done, see 2026-04-08-b**
@@ -1330,7 +1485,7 @@ Ran SAGE 21d with same 5 seeds as GAT to compare stability directly. Prior Colab
 **1. SAGE is NOT more stable than GAT (CV=62% vs 55%)**
 - The prior Colab finding (CV=2%) was based on only 2 runs — statistical fluke
 - With 5 seeds, SAGE shows similar variance to GAT
-- Seed 789 failed to converge in SAGE (IC=-0.006) just like seed 1024 failed in GAT (IC=0.002)
+- Seed 789 failed to converge in SAGE (IC=-0.006) just like seed 1024 failed in GAT (IC=0.002) (source: `archived/stale_results/sage_21d_multiseed.csv` + `archived/stale_results/gat_21d_multiseed.csv`)
 - **Both GNN architectures suffer from seed-dependent convergence failures**
 
 **2. SAGE has higher mean IC and much better Sharpe**
@@ -1344,7 +1499,7 @@ Ran SAGE 21d with same 5 seeds as GAT to compare stability directly. Prior Colab
 - SAGE's mean aggregation avoids the attention weight initialization trap that causes GAT failures
 
 **4. SAGE Ensemble is very strong**
-- 5-seed ensemble IC=0.052, ICIR=0.450, Sharpe=1.344
+- 5-seed ensemble IC=0.052, ICIR=0.450, Sharpe=1.344 (source: `archived/stale_results/sage_21d_multiseed.csv`, ensemble row; covers the obs-3 per-seed IC=0.002/0.049 above)
 - This exceeds any single-seed result from either architecture
 - Ensemble averages out the bad seeds effectively
 
@@ -1369,7 +1524,7 @@ Ran SAGE 21d with same 5 seeds as GAT to compare stability directly. Prior Colab
 1. Higher mean IC (0.035 vs 0.032)
 2. Much higher Sharpe (1.213 vs 0.844) — economically more significant
 3. More robust to difficult initializations (seed 1024 worked)
-4. Ensemble IC=0.052 is publication-worthy
+4. Ensemble IC=0.052 is publication-worthy (source: `archived/stale_results/sage_21d_multiseed.csv`)
 5. Mean aggregation is more interpretable than attention weights
 
 **Report both GAT and SAGE in paper** as architecture comparison — this is a finding itself ("simpler aggregation matches or exceeds attention in weak-signal regime").
@@ -1421,7 +1576,7 @@ Ran SAGE 21d with same 5 seeds as GAT to compare stability directly. Prior Colab
 
 4. **Ensemble 改变排名**: 单次运行 SAGE-Sum 最强 (0.048)，但 ensemble 后 Transformer 反超 (0.053)。高方差模型 ensemble 受益最大（方差互相抵消）。
 
-5. **Sharpe 与 IC 不完全对齐**: SAGE-Sum IC 最高但 Sharpe 较低 (0.749)。Transformer ensemble Sharpe=1.442 是最高的。这可能是因为 sum 聚合产生的预测分布不同。
+5. **Sharpe 与 IC 不完全对齐**: SAGE-Sum IC 最高但 Sharpe 较低 (0.749)。Transformer ensemble Sharpe=1.442 是最高的。这可能是因为 sum 聚合产生的预测分布不同。 (source: `archived/stale_results/sage_sum_21d_multiseed.csv` + `archived/stale_results/transformer_21d_multiseed.csv`)
 
 ### Why does Sum > Mean for SAGE?
 
@@ -1498,13 +1653,13 @@ The 768-dim FinBERT embedding appears to add noise that degrades IC. The model f
 **However**: Walk-forward results show all-features are more stable across folds (SAGE-Mean WF 0.045 vs typical single-fold price-only 0.038). The news features may provide regularization even if they don't directly help IC on any single fold.
 
 #### 3. News-Day Prediction is Worse Than No-News-Day
-Stocks **without** news on a given day have IC=0.059, while stocks **with** news have IC=0.008. The FinBERT embedding actively degrades predictions for stocks that have news, while the model predicts well for stocks relying purely on price features (which are zero-filled for news dims).
+Stocks **without** news on a given day have IC=0.059, while stocks **with** news have IC=0.008. The FinBERT embedding actively degrades predictions for stocks that have news, while the model predicts well for stocks relying purely on price features (which are zero-filled for news dims). (source: `archived/stale_results/news_contribution.csv`)
 
 This is consistent with observation #2: the model's best predictions come from price features, and FinBERT dims add noise.
 
 #### 4. SAGE-Sum Sharpe Anomaly
 SAGE-Sum consistently shows high IC but low/negative Sharpe in ablation:
-- price-only: IC=0.069, Sharpe=-0.94
+- price-only: IC=0.069, Sharpe=-0.94 (source: `archived/stale_results/ablation_features.csv`)
 - This means the ranking is good (high cross-sectional correlation) but the top-30/bottom-30 portfolio doesn't make money. Possible causes:
   - Predictions are concentrated in a few sectors
   - High IC from getting relative order right within sectors, but wrong on cross-sector allocation
@@ -1516,7 +1671,7 @@ Strong prediction in Industrials (0.073), Financials (0.063), Energy (0.063) —
 ### Implications for Paper
 
 1. **FinBERT result is a finding, not a bug**: "FinBERT embeddings are harmful for ranking prediction on S&P 500" — consistent with Phase 1-2 findings (AUC≈0.50). Worth a dedicated analysis section.
-2. **Price features + graph structure is the winning combination**: SAGE(price) IC=0.038 >> MLP(price) IC=0.040 ≈ SAGE(all) IC=0.025. Graph helps, FinBERT doesn't.
+2. **Price features + graph structure is the winning combination**: SAGE(price) IC=0.038 >> MLP(price) IC=0.040 ≈ SAGE(all) IC=0.025. Graph helps, FinBERT doesn't. (source: `archived/stale_results/ablation_features.csv` + `archived/stale_results/walkforward_gnn_results.csv`)
 3. **Walk-forward validates robustness**: Both SAGE variants pass across 1.5 years of out-of-sample data.
 4. **SAGE-Sum vs SAGE-Mean**: Sum has higher IC and lower variance but worse Sharpe. Paper should report both and discuss the IC-Sharpe disconnect.
 
@@ -1567,7 +1722,7 @@ Trained SAGE-Sum (s=42, s=123) and SAGE-Mean (s=42) with price-only features on 
 | Communication Services | **-1.867%** | 0.0 | 0.0 |
 | Energy | -0.810% | 0.0 | 0.0 |
 
-The model puts IT stocks in both long AND short. The net IT contribution is negative because the model's within-IT ranking is inverted (sector IC = -0.045).
+The model puts IT stocks in both long AND short. The net IT contribution is negative because the model's within-IT ranking is inverted (sector IC = -0.045). (source: `experiments/diag_sector_attribution_sage_sum.csv` + `experiments/diag_sector_ic.csv`)
 
 ### Non-Overlapping 21d Rebalancing
 
@@ -1588,7 +1743,7 @@ The model puts IT stocks in both long AND short. The net IT contribution is nega
 | SAGE-Sum s=42 | -1.203 | -1.269 | -1.335 | -1.386 | -1.427 | -1.472 |
 | SAGE-Mean s=42 | **2.179** | **2.138** | **2.097** | **2.058** | **2.019** | **1.943** |
 
-SAGE-Mean is profitable even at 30 bps (Sharpe = 1.943). SAGE-Sum is negative at 0 bps.
+SAGE-Mean is profitable even at 30 bps (Sharpe = 1.943). SAGE-Sum is negative at 0 bps. (source: `experiments/diag_nonoverlap_results.csv`, transaction-cost ladder)
 
 ### Implications
 
@@ -1610,6 +1765,8 @@ All 9 models retrained with prediction caching. Key results:
 - **MLP (price-only)**: IC=0.040, Non-Overlap Sharpe=2.594, @15bps=2.457
 - SAGE-Sum ensemble: IC=0.059, Non-Overlap Sharpe=0.523, @15bps=0.319
 
+(source for all four model rows above: `experiments/comprehensive_metrics.csv` + `experiments/diag_nonoverlap_results.csv`)
+
 Price-only models have dramatically higher Sharpe than all-features models. MLP price-only has highest Sharpe but this is on a single seed (Fold 0 only) — ensemble and walk-forward needed for robustness.
 
 ---
@@ -1618,7 +1775,7 @@ Price-only models have dramatically higher Sharpe than all-features models. MLP 
 
 → progress: `2026-04-10-c` | plan: `2026-04-10-c`
 
-1000-shuffle permutation test confirms ALL models have statistically significant IC (p=0.000). Shuffled IC distribution: mean ≈ 0.000 ± 0.004. Real IC (0.032-0.037) is >8 standard deviations above null.
+1000-shuffle permutation test confirms ALL models have statistically significant IC (p=0.000). Shuffled IC distribution: mean ≈ 0.000 ± 0.004. Real IC (0.032-0.037) is >8 standard deviations above null. (source: `experiments/permutation_test_results.csv` + `experiments/permutation_test_ics.npy`)
 
 ---
 
@@ -1649,7 +1806,7 @@ Price-only models have dramatically higher Sharpe than all-features models. MLP 
 
 ### Implications for Paper
 
-1. Report threshold as the primary selective prediction method
+1. Report threshold as the primary selective prediction method (source for the coverage×IC numbers in this entry: `experiments/selectivenet_results.csv`)
 2. Report E2E and Vol-Cal as negative findings (valuable contribution: "learned selection degrades prediction in low-signal regimes")
 3. The coverage-IC tradeoff curve (threshold) is a strong result: 10% coverage → IC=0.082, showing the model knows what it doesn't know
 
@@ -1701,7 +1858,7 @@ Price-only models have dramatically higher Sharpe than all-features models. MLP 
 ### Key Observations
 
 1. **True MLP is the best** (IC=0.041) — even better than NoGraph (IC=0.038), confirming SAGEConv with empty edges has dead parameters hurting training
-2. **Sector-only edges are neutral** (IC=0.038 ≈ NoGraph) — dense intra-sector connections don't help or hurt
+2. **Sector-only edges are neutral** (IC=0.038 ≈ NoGraph) — dense intra-sector connections don't help or hurt (source: `experiments/graph_ablation_results.csv`, 9 configs × 3 seeds)
 3. **Correlation edges are harmful** — IC monotonically decreases with more correlation edges
 4. **Correlation + sector combo doesn't help** — adding correlation edges to sector graph slightly degrades IC
 5. **Sparse sector (top-k) is worse than dense** — counter-intuitive, may be due to information loss from sparsification
@@ -1709,6 +1866,8 @@ Price-only models have dramatically higher Sharpe than all-features models. MLP 
 ### Conclusion
 
 修复前后结论完全一致: **Price-only features 下，static correlation graph 对 stock ranking 无帮助。Graph 的价值在于和高维 NLP 特征结合时的跨股票正则化（参见 v4 all-features: SAGE > MLP p=0.005）。**
+
+(p=0.005 is the v4 all-features SAGE-vs-MLP paired test, cross-referenced from a separate run; source: `archived/stale_results/walkforward_gnn_results.csv`)
 
 ---
 
@@ -1754,7 +1913,7 @@ Threshold 仍然是最佳 selective method。修复后 Threshold IC 略有提升
 ### Key Findings
 
 1. **ListNet improves mean IC** for both SAGE (+26%) and MLP (+25%), but neither is statistically significant (p=0.76, p=0.49)
-2. **MLP > SAGE** for both losses — consistent with v4 price-only finding
+2. **MLP > SAGE** for both losses — consistent with v4 price-only finding (source: `experiments/ranking_loss_results.csv` + `experiments/ranking_loss_combined.csv`)
 3. **IC std is very high** with ListNet (~0.095) — some folds have extreme values (e.g., Fold 4 IC=0.25), driving up the mean but inflating variance
 4. **NoGraph (empty-edge SAGEConv)**: consistently worst, confirming dead-parameter issue
 
@@ -1779,7 +1938,7 @@ Threshold 仍然是最佳 selective method。修复后 Threshold IC 略有提升
 | MLP (true) | All(781) | 0.012 | -2.89 | -3.39 |
 | SAGE-Sum | Price(9) | 0.063 | -0.38 | -0.52 |
 
-**Permutation test**: Real IC=0.031, p=0.000 (100 shuffles) — signal significant.
+**Permutation test**: Real IC=0.031, p=0.000 (100 shuffles) — signal significant. (source: `experiments/comprehensive_metrics.csv`; per-model IC/Sharpe table + 100-shuffle permutation on Fold 0)
 
 ### Conclusion
 
@@ -1922,7 +2081,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 3. **21d is the most reliable horizon**:
    - SAGE Bootstrap 95% CI: [+0.006, +0.048] — only horizon where CI excludes 0
    - 21d Sharpe@15bps: MLP=2.35 (best), SAGE=1.01
-4. **Monotonicity**: MLP_price Spearman(horizon, IC)=+0.886 (p=0.019), SAGE-Mean_all=+0.943 (p=0.005). Signal generally increases with horizon, but noisy.
+4. **Monotonicity**: MLP_price Spearman(horizon, IC)=+0.886 (p=0.019), SAGE-Mean_all=+0.943 (p=0.005). Signal generally increases with horizon, but noisy. (source: `experiments/horizon_ablation_results.csv`; per-fold F4-vs-other IC, bootstrap 95% CI, Spearman-monotonicity p and Wilcoxon SAGE-vs-MLP p all computed from its per-fold/seed IC)
 5. **SAGE vs MLP price**: Not significant at any horizon (all Wilcoxon p > 0.05)
 6. **SAGE vs MLP all features at 21d**: p=0.02 (significant, SAGE +0.019 IC advantage)
 
@@ -1958,7 +2117,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 2. **All features: graph models (SAGE variants) lead but not significantly**. SAGE-Mean vs MLP p=0.107 — marginal.
 3. **SAGE-Sum highest IC but lowest Sharpe** — sector concentration problem persists across 5 folds.
 4. **MLP has best Sharpe (2.35)** — simple models translate IC to returns more efficiently.
-5. **Fold 4 extremely anomalous**: MLP_price_s123 F4 IC=0.223, Sharpe=15.6.
+5. **Fold 4 extremely anomalous**: MLP_price_s123 F4 IC=0.223, Sharpe=15.6. (source: `experiments/arch_comparison_results.csv`; per-architecture mean IC, Sharpe@15bps, and vs-MLP Wilcoxon p)
 
 ### C. Permutation Test v2 — Per-Day Cross-Sectional Shuffle (1000 iterations)
 
@@ -1979,7 +2138,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 1. **All price-feature models have real signal** (p < 0.001, both SAGE and MLP)
 2. **SAGE-Mean_all has weak but real signal** (ensemble p=0.002, per-seed p=0.000-0.049)
 3. **MLP_all has NO signal** (all negative IC, p=0.948-1.000)
-4. **This is the strongest evidence for graph's value**: SAGE extracts signal from noisy 781d features where MLP cannot.
+4. **This is the strongest evidence for graph's value**: SAGE extracts signal from noisy 781d features where MLP cannot. (source: `experiments/permutation_v2_results.csv`; per-day cross-sectional shuffle, 1000 iters × 16 models, pooled across 5 folds)
 
 ### D. Synthesis — Updated Understanding
 
@@ -1992,7 +2151,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 | FinBERT effect | Harmful | Harmful (MLP_all p=1.0, SAGE_all p=0.002) |
 | Signal significance | p<0.001 (naive shuffle) | p<0.001 (per-day cross-sectional shuffle) |
 
-**Fold 4 (Q2-2025) caveat**: Extreme outlier across all models. Paper must report fold-by-fold results and wide confidence intervals.
+**Fold 4 (Q2-2025) caveat**: Extreme outlier across all models. Paper must report fold-by-fold results and wide confidence intervals. (synthesis-table sources: `experiments/horizon_ablation_results.csv`, `experiments/arch_comparison_results.csv`, `experiments/permutation_v2_results.csv`)
 
 ---
 
@@ -2002,7 +2161,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 
 ### Diagnostic 1 — Cross-Sectional Normalization Ablation (Colab, 30 runs)
 
-**Headline**: Normalization is **strongly regime-dependent**; overall Wilcoxon p=0.60 (ns) hides ±0.21 IC swings.
+**Headline**: Normalization is **strongly regime-dependent**; overall Wilcoxon p=0.60 (ns) hides ±0.21 IC swings. (source: `experiments/diag1_normalization_results.csv`, 30 runs; per-fold raw/norm IC in table below)
 
 | Fold | Period | raw IC | norm IC | Delta IC |
 |------|--------|--------|---------|----------|
@@ -2021,7 +2180,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 ### Diagnostic 2 — Fold 4 Anomaly Root Cause
 
 **Not a bug; a market-regime stress test.**
-- Fold 4 mean IC = +0.024 (positive) but std_IC across runs = 0.088 (3-4× other folds)
+- Fold 4 mean IC = +0.024 (positive) but std_IC across runs = 0.088 (3-4× other folds) (source: `experiments/diag_phase5_ic_by_fold.csv` + `experiments/diag_phase5_fold_regime.csv`)
 - Q2-2025 market regime: realized daily vol 1.81% (vs 0.65-0.87% other folds), max DD -12.7%, signed mean pairwise correlation 0.496, 54.3% of stock-pairs with correlation > 0.5 (other folds <9%)
 - ret_std_21d train mean 0.018 → test mean 0.024 (KS=0.22, largest shift across all folds × features)
 
@@ -2040,7 +2199,7 @@ Post-fix (C1/C2/C3 + True MLP) reruns of horizon ablation, architecture comparis
 | PC3 | 1.06 | 11.8% | Short vs long momentum spread |
 
 - `ret_mean_Nd` and `momentum_Nd` have Pearson corr = 1.00 for N ∈ {5,10,21} (differ only in scale: momentum ≈ N × ret_mean for small returns). 6 of 9 features are rank-redundant, compressed into PC1.
-- `ret_std_10d` single-feature LGB IC = 0.028 vs full-LGB IC = 0.021 (Fold 0). SE ≈ 0.013 → statistically indistinguishable, but consistent with PC2 (volatility) carrying most signal.
+- `ret_std_10d` single-feature LGB IC = 0.028 vs full-LGB IC = 0.021 (Fold 0). SE ≈ 0.013 → statistically indistinguishable, but consistent with PC2 (volatility) carrying most signal. (source: `experiments/diag_phase5_single_feature_lgb.csv`)
 
 **Phase 5 feature-expansion — hypotheses (not verified priorities)**:
 - `mom12m` (22d→252d) uses close-only, may load PC1 or PC3 (horizon-spread); actual PC loading to be measured after addition
@@ -2137,13 +2296,13 @@ Lesson: PC-loading hypotheses from feature formulas alone are not reliable. Alwa
 - Full 10-dim S1: MLP +0.023 (ns), SAGE +0.016 (ns)
 - 9-dim wf5 baseline S7 with momentum duplicates: MLP −0.006 (ns), **SAGE −0.048 (p=0.036, significantly negative)**
 
-IC improves by roughly 2× (MLP: 0.023 → 0.046) to 3× (SAGE: 0.016 → 0.047) when moving from 10 features (S1) to 3 well-chosen features (S6). The 9-dim wf5 baseline is actively worse than random on SAGE.
+IC improves by roughly 2× (MLP: 0.023 → 0.046) to 3× (SAGE: 0.016 → 0.047) when moving from 10 features (S1) to 3 well-chosen features (S6). The 9-dim wf5 baseline is actively worse than random on SAGE. (source: per-subset mean IC + NW t/p over Part B daily IC in `experiments/step3_plan_z/part_b_summary.csv` and `experiments/step3_plan_z/part_b_daily_ic.csv`)
 
 ### Hansen SPA confirmatory test (primary, p_c)
 
 - 3/4 SPA tests reject H0 "no subset beats benchmark" at α=0.05
 - SAGE vs S1 is borderline (p_c = 0.076)
-- SAGE vs S7 strongest rejection (p_c = 0.002) — Plan Z++ subsets decisively beat wf5 baseline
+- SAGE vs S7 strongest rejection (p_c = 0.002) — Plan Z++ subsets decisively beat wf5 baseline (source: `experiments/step3_plan_z/hansen_spa_results.csv`, col p_consistent)
 
 ### Mechanism
 
@@ -2190,7 +2349,7 @@ Results submitted for critical evaluation. Outcome: **1 CRITICAL + 4 MAJOR + 1 M
 1. **[CRITICAL Q5]** Narrative pivots from "feature ranking identifies optimal subset" to **"time-unstable ranking-based pruning vs. more-generalizable compact PC-representative subsets"**. S2-S5 demoted to exploratory; S6 spotlighted. Part A serves as evidence that ranking-based pruning is fold-dependent.
 2. **[MAJOR Q1]** Do not claim economic alpha. Sharpe bootstrap 95% CI crosses zero for every subset; paper discusses "predictive patterns" only.
 3. **[MAJOR Q2]** S6's win is "real but not fully independent confirmatory" — its composition was informed by Diag 3. Defensive phrasing: "PC-representative design is more stable than full set or ranking-truncated subsets," NOT "we found the optimal subset."
-4. **[MINOR Q3]** SAGE vs S1 p_c=0.076 — do NOT write "S6 validated by SPA at 0.05 across both architectures." MLP clean, SAGE directional.
+4. **[MINOR Q3]** SAGE vs S1 p_c=0.076 — do NOT write "S6 validated by SPA at 0.05 across both architectures." MLP clean, SAGE directional. (source: `experiments/step3_plan_z/hansen_spa_results.csv`)
 5. **[MAJOR Q4]** S7 is self-referential (our own project's prior baseline). Claims limited to "within this study's design space"; no broad "library-dumping is harmful" generalization without external comparator.
 6. **[MAJOR Q6]** Preregistration chain is SOFT (frozen artifacts but no external timestamp/public commit before result-knowledge). Paper language: "frozen analysis pipeline with preregistered subset construction rules," NOT "fully preregistered confirmatory test."
 7. **[MAJOR Q7 — action item]** Highest-leverage follow-up: **add Alpha158 external baseline as S8 subset**. Solves S7 self-reference problem, anchors compact-vs-library comparison in the literature.
@@ -2250,7 +2409,7 @@ Diagnostic per `/Users/heruixi/.claude/plans/buzzing-waddling-engelbart.md` (4-r
 | 2(d) MLP × z_drift_lv (canonical) | Spearman ρ, n=62 | **+0.508, p<0.001** | — | **strong positive** |
 | 2(d) SAGE × z_drift_all (canonical) | Spearman ρ, n=62 | **+0.413, p=0.001** | — | **strong positive** |
 
-> Canonical domain: MLP has no message passing, so z_drift is aggregated over `label_valid` stocks only (domain that actually feeds into IC); SAGE-Mean ingests all stock nodes via message passing, so z_drift is aggregated over all stocks. Empirically `z_drift_lv ≈ z_drift_all` to 3 decimals on Fold 4 (mask filters very few stocks per day), so the canonical-domain correction confirms the headline numbers.
+> Canonical domain: MLP has no message passing, so z_drift is aggregated over `label_valid` stocks only (domain that actually feeds into IC); SAGE-Mean ingests all stock nodes via message passing, so z_drift is aggregated over all stocks. Empirically `z_drift_lv ≈ z_drift_all` to 3 decimals on Fold 4 (mask filters very few stocks per day), so the canonical-domain correction confirms the headline numbers. (source: per-day z_drift↔IC Spearman computed over n=62 days from `experiments/step3_plan_z/fold4_zdrift_per_day.csv`, cols z_drift_lv/z_drift_all × IC_MLP/IC_SAGE-Mean; summary in `experiments/step3_plan_z/fold4_zdrift_summary.csv`)
 
 ### Key observations
 
@@ -2268,7 +2427,7 @@ Diagnostic per `/Users/heruixi/.claude/plans/buzzing-waddling-engelbart.md` (4-r
 
 ### Decision
 
-Plan Decision Rule pre-commits: mixed signal → **Path A** (rebuild with per-fold train-only winsorization, rerun Part C, recompute SPA/BH-FDR). Changing the rule post-hoc after seeing p<0.001 would undermine inferential discipline.
+Plan Decision Rule pre-commits: mixed signal → **Path A** (rebuild with per-fold train-only winsorization, rerun Part C, recompute SPA/BH-FDR). Changing the rule post-hoc after seeing p<0.001 would undermine inferential discipline. (the p<0.001 is the 2(d) Spearman above; source: `experiments/step3_plan_z/fold4_zdrift_per_day.csv`)
 
 Path A will adjudicate causality definitively:
 - If S8' Fold 4 IC drops to ≈0 → leakage confirmed, original "compact beats library" narrative holds
@@ -2308,7 +2467,7 @@ MLP: +0.003 delta (trivial); SAGE: +0.056 increase (non-trivial, but same sign a
 | S8 | SAGE-Mean | +0.042 | 2.24 | 0.025 | sig |
 | S8_pf | SAGE-Mean | +0.049 | 2.23 | 0.026 | sig |
 
-MLP's marginal significance (p=0.026) in original S8 is lost under S8_pf (p=0.089), indicating a small aggregate leakage contribution from global winsor on MLP. SAGE is unaffected.
+MLP's marginal significance (p=0.026) in original S8 is lost under S8_pf (p=0.089), indicating a small aggregate leakage contribution from global winsor on MLP. SAGE is unaffected. (source: NW t-tests over daily IC, n=313, in `experiments/step3_plan_z/part_c_s8_daily_ic.csv`)
 
 ### Pairwise paired NW-corrected tests
 
@@ -2348,6 +2507,8 @@ No subset significantly beats S8_pf. MLP's strongest challenger is original S8 (
 ### Paper narrative (locked)
 
 > "Against a leak-free 158-factor Alpha158 baseline (S8_pf), a compact 3-feature economically-grounded subset (S6: mom12m, ret_mean_10d, ret_std_10d) **fails to exhibit a statistically significant mean rank-IC difference** from S8_pf at α = 0.05 in NW-corrected two-sided paired tests (MLP ΔIC = +0.015, p_BH = 0.769; SAGE-Mean ΔIC = −0.002, p_BH = 0.938; n = 313 paired days). Failure to reject a point null of zero difference is **not** a positive equivalence proof; converting this to an equivalence claim requires a TOST against a pre-specified margin δ (Codex Round 3 Q3, line 1844). A real Q2-2025 predictability regime (Fold 4 IC ≈ +0.22 on both feature sets) drives most of the aggregate positive IC. Parsimony's operational advantage is concrete: S6 uses 50× fewer features, trains 3× faster, and is interpretable."
+
+(source for the locked-narrative numbers above: per-fold IC in `experiments/step3_plan_z/part_c_s8_perfold_daily_ic.csv`; S6-vs-S8_pf paired NW + BH-FDR (p_BH = 0.769 / 0.938) in `experiments/step3_plan_z/pairwise_fdr.csv`; Hansen SPA in `experiments/step3_plan_z/hansen_spa_results.csv`)
 
 ### Codex review chain (Rule 9 full cycle)
 
@@ -2683,7 +2844,7 @@ H博士 2026-05-18 directive to expand all Phase A/B experiments to 10 seeds (on
 | Tier 1.D hparam sweep | (Score gate) | **0/4 hparams pass; ALL NW p > 0.5** | **REVOKED from 5-seed marginal positive** |
 | Tier 1.E regime forensic | (degradation_share gate) | 0/4 ListMLE | Stable (Stage 1 always 10 seeds) |
 
-**0/36 BH-FDR rejections cumulative + 7 nulls + 3 mechanism findings + 1 regime-conditional fold-4 attenuation finding.**
+**0/36 BH-FDR rejections cumulative + 7 nulls + 3 mechanism findings + 1 regime-conditional fold-4 attenuation finding.** (source: per-row BH-FDR rejection counts + Tier 1.A/1.D NW p-values in `artifacts/tier1_phase_a/stat_tier1d.csv` and `artifacts/tier1_phase_a/stat_per_cell.csv`; Tier 1.B/1.C in `artifacts/tier1b_h2_phase_b/` + `artifacts/tier1c_phase_b/results.csv`)
 
 ### Other 10-seed verdict shifts
 

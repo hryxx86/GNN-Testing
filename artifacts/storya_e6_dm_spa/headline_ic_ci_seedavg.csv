@@ -1,0 +1,9 @@
+universe,model,T,IC_mean,IC_ci_lo,IC_ci_hi,ci_excludes_0
+B,GAT,749,0.0321,0.0002,0.0623,True
+B,SAGE-Mean,749,0.032,0.0036,0.0585,True
+B,MLP,749,0.0283,0.0033,0.0526,True
+B,LightGBM,749,0.0223,-0.0027,0.0461,False
+C,GAT,749,0.0182,-0.0139,0.0507,False
+C,SAGE-Mean,749,0.026,-0.0038,0.0562,False
+C,MLP,749,0.0317,0.002,0.0613,True
+C,LightGBM,749,0.027,-0.0007,0.0546,False

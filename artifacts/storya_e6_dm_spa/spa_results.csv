@@ -1,4 +1,4 @@
-universe,benchmark,candidates,M,T,p_lower,p_consistent,p_upper,reject_h0_at_5pct
-B,LightGBM,GAT|SAGE-Mean|MLP,3,313,0.1474,0.1474,0.1474,False
-C,LightGBM,GAT|SAGE-Mean|MLP,3,313,0.353,0.3843,0.3843,False
-JOINT(B+C),LightGBM_pooled,B.GAT|B.SAGE-Mean|B.MLP|C.GAT|C.SAGE-Mean|C.MLP,6,313,0.1364,0.1364,0.1364,False
+universe,role,benchmark,candidates,M,T,p_lower,p_consistent,p_upper,reject_h0_at_5pct
+B,primary,LightGBM,GAT|SAGE-Mean|MLP,3,749,0.2948,0.2948,0.2948,False
+C,primary,LightGBM,GAT|SAGE-Mean|MLP,3,749,0.2599,0.3377,0.3377,False
+JOINT(B+C),supplementary,LightGBM_pooled,B.GAT|B.SAGE-Mean|B.MLP|C.GAT|C.SAGE-Mean|C.MLP,6,749,0.4489,0.4661,0.4661,False
