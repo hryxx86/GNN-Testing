@@ -89,6 +89,26 @@ WALK_FORWARD_FOLDS = [
      'desc': 'Q1-2025'},
     {'id': 4, 'train_end': '2024-12-31', 'val_end': '2025-03-31', 'test_end': '2025-06-30',
      'desc': 'Q2-2025'},
+    # --- Window extension 2026-06-12 ("补窗口"): 5 → 12 quarterly expanding folds, test 2023Q1→2025Q4.
+    # Same models / hyperparameters / TRAIN_START as folds 0–4 (untuned anchor); ids are NON-chronological
+    # (0–4 keep their published ids; new earlier/later quarters get 5–11) so resume reuses the existing 400
+    # cells unchanged. Chronological order by test_end: 5,6,7,8,9, 0,1,2,3,4, 10,11. Default --folds is still
+    # '0,1,2,3,4' so the anchor's default behaviour is byte-identical; the extension is opt-in via --folds.
+    {'id': 5, 'train_end': '2022-09-30', 'val_end': '2022-12-31', 'test_end': '2023-03-31',
+     'desc': 'Q1-2023'},
+    {'id': 6, 'train_end': '2022-12-31', 'val_end': '2023-03-31', 'test_end': '2023-06-30',
+     'desc': 'Q2-2023'},
+    {'id': 7, 'train_end': '2023-03-31', 'val_end': '2023-06-30', 'test_end': '2023-09-30',
+     'desc': 'Q3-2023'},
+    {'id': 8, 'train_end': '2023-06-30', 'val_end': '2023-09-30', 'test_end': '2023-12-31',
+     'desc': 'Q4-2023'},
+    {'id': 9, 'train_end': '2023-09-30', 'val_end': '2023-12-31', 'test_end': '2024-03-31',
+     'desc': 'Q1-2024'},
+    {'id': 10, 'train_end': '2025-03-31', 'val_end': '2025-06-30', 'test_end': '2025-09-30',
+     'desc': 'Q3-2025'},
+    {'id': 11, 'train_end': '2025-06-30', 'val_end': '2025-09-30', 'test_end': '2025-12-26',
+     'desc': 'Q4-2025'},  # CODEX-A-01: test_end truncated 2025-12-31→2025-12-26 (last date with a
+    #                       valid 21d-fwd label; data ends 2026-01-28). 61 eval days; declared==evaluated.
 ]
 TRAIN_START = '2021-07-01'
 
@@ -195,24 +215,29 @@ def setup_workdir() -> None:
 # ══════════════════════════════════════════════════════════════
 
 def cell_id(universe_idx: int, model_idx: int, fold_idx: int, seed_idx: int) -> int:
-    """Per plan §1.1 v3 + D-01 fix: universe_idx*200 + model_idx*50 + fold_idx*10 + seed_idx.
-    Range [0, 399], injective by radix construction."""
-    return universe_idx * 200 + model_idx * 50 + fold_idx * 10 + seed_idx
+    """Radix id, injective for 2 univ × 4 models × 12 folds × 10 seeds → range [0, 959].
+    Widened 2026-06-12 from the old 5-fold formula (*200/*50/*10) so fold_idx 5–11 cannot
+    collide with the model block (label-only column; resume/files key on the (univ,model,seed,
+    fold) tuple, so existing folds 0–4 cached rows keep their original ids and are not recomputed)."""
+    return universe_idx * 480 + model_idx * 120 + fold_idx * 10 + seed_idx
 
 
 def assert_cell_id_injective() -> None:
-    """Startup assertion per plan §1.1: enumerate all 400 cell ids; confirm no collisions."""
+    """Startup assertion: enumerate all cell ids for the current fold count; confirm no collisions.
+    Generalised 2026-06-12 from the hardcoded 400-cell (5-fold) check to len(WALK_FORWARD_FOLDS)."""
+    n_folds = len(WALK_FORWARD_FOLDS)
+    expected_n = 2 * 4 * n_folds * 10
     seen = set()
     for u in range(2):
         for m in range(4):
-            for f in range(5):
+            for f in range(n_folds):
                 for s in range(10):
                     cid = cell_id(u, m, f, s)
                     assert cid not in seen, f"cell_id collision at u={u},m={m},f={f},s={s}"
                     seen.add(cid)
-    assert max(seen) == 399 and min(seen) == 0 and len(seen) == 400, \
-        f"cell_id range broken: min={min(seen)}, max={max(seen)}, n={len(seen)}"
-    print(f'✓ cell_id formula injective, range [0, 399], n=400 cells')
+    assert min(seen) == 0 and len(seen) == expected_n, \
+        f"cell_id range broken: min={min(seen)}, max={max(seen)}, n={len(seen)} (expected {expected_n})"
+    print(f'✓ cell_id formula injective, n={expected_n} cells, range [0, {max(seen)}]')
 
 
 # ══════════════════════════════════════════════════════════════
@@ -703,6 +728,12 @@ def train_lightgbm(features_np: np.ndarray, labels_np: np.ndarray, label_valid_n
         'num_leaves': LGB_HPARAMS['num_leaves'],
         'learning_rate': LGB_HPARAMS['learning_rate'],
         'min_data_in_leaf': LGB_HPARAMS['min_data_in_leaf'],
+        # v2.2 §4 tuning dims (additive). `.get(key, 0.0)` → when LGB_HPARAMS has no lambda keys
+        # (pilot / concurrent-anchor callers), passes 0.0 == LightGBM's own default == OFF, so the
+        # booster is identical to pre-change behavior (no-op-when-absent). The §4 tuning harness
+        # (run_storya_v21_tune.py) sets these so lambda_l1/l2 are REAL tuned dims, not ghosts.
+        'lambda_l1': LGB_HPARAMS.get('lambda_l1', 0.0),
+        'lambda_l2': LGB_HPARAMS.get('lambda_l2', 0.0),
         'seed': seed,
         'deterministic': True,
         'force_row_wise': True,
