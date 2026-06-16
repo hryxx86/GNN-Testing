@@ -91,7 +91,11 @@ TOP_K_DEFAULT = 5                  # §4 top-5 (H博士 confirmed 2026-06-15: to
 ALL_ARMS = IMPLEMENTED_ARMS + ['L7']  # L7 HATS tunes the shared NN 6-dim space (structure fixed)
 
 OUT_DIR = 'experiments/storya_v21_tune'
-STUDY_DIR = f'{OUT_DIR}/studies'
+# Optuna sqlite study DBs need POSIX file locking → "unable to open database file" on a Google Drive
+# FUSE mount (Colab `experiments/` is a Drive symlink). Env override puts the DBs on local disk; the
+# per-study JSON winners still go to OUT_DIR (Drive, persisted across runtime recycles). Default = the
+# in-tree path, so local Mac runs (experiments/ on real disk) are byte-identical to before.
+STUDY_DIR = os.environ.get('V21_TUNE_STUDY_DIR', f'{OUT_DIR}/studies')
 
 ORIG_NN = dict(anchor.NN_HPARAMS)     # pilot defaults = search-space centers (preserved)
 ORIG_LGB = dict(anchor.LGB_HPARAMS)
