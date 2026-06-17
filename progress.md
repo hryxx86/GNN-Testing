@@ -4,6 +4,148 @@
 
 ---
 
+## 2026-06-17-b: D-RERUN-12F frozen-HP 注入建成（main12 + l7_hats）→ Codex Review Code (Touchpoint 2, Round A) PROCEED-WITH-FIXES，3 条全修验
+
+**实现**：main12 + l7_hats 加 frozen-HP 注入，一套覆盖 tuned 重跑 + FC 臂：
+- main12：`load_frozen_hparams`（拒残缺 HP 集）+ `inject_frozen_hparams`（monkeypatch anchor.NN/LGB_HPARAMS）；CLI `--frozen-hparams`（按 (univ,arm) 注入）/`--fc-fix-arm L2`（FC：所有臂用 L2 HP + 同模型守卫）/`--out-dir`（不覆盖 pilot）；注入点在 `for arm` 顶部。
+- l7_hats：patch `hats.HATS_HPARAMS` 于 universe 循环顶部，保 num_relations/rel_attn_arch。
+- **no-flag 时 pilot 字节不变**（_ORIG_NN/_LGB/_HATS 捕获 pilot 默认）。
+
+**自验 5 项**：no-flag identity；B-L0 λ2=0.4659 落地（离默认 1e-8 → train_lightgbm L735 消费，(a)-change 幽灵维闭环）；per-(univ,arm) 区分（B_L2 hid64 vs C_L2 hid128）；FC C/L3←C_L2 hid128；L7 结构键保留。
+
+**Codex Touchpoint 2**：verdict **PROCEED-WITH-FIXES，0 CRIT / 1 MAJOR / 2 CONCERN**。Codex 确认**注入机制 sound**（monkeypatch 触达全训练路径、循环顺序正确、无 stale binding / wrong-arm-HP）。3 条均输出目录/provenance 隔离问题，全修：
+- **CODEX-A-01（MAJOR→FIXED）**：frozen/FC 可写进 pilot 目录 → resume 误跳/混 pilot cell。改 **fail-closed**：frozen 模式必须用非 pilot `--out-dir`（CLI 实测两 runner 在数据加载前即退）。
+- **CODEX-A-02（CONCERN→FIXED）**：provenance 子集运行覆盖全记录 / L7 不写。改 **merge + md5 校验**（mode/md5 不符即拒；子集 union 不覆盖），L7 也写 provenance。
+- **CODEX-A-03（CONCERN→FIXED）**：gate 用 assert（python -O 失效）→ 改显式 `raise SystemExit`（load_frozen 完整性 + FC 同模型守卫；实测残缺 19/20 抛错）。
+
+全 review：`artifacts/reviews/2026-06-17_codex_code_A.md`。代码 T2 过，**待 H博士 启动重跑时 push 到 main**（Colab 拉取）。
+
+**下一步**：tuned 2160-cell 重跑（`--frozen-hparams artifacts/storya_v21_tune/frozen_hparams.json --out-dir experiments/storya_v21_main12_tuned`）+ L7 tuned + FC 720-cell（`--fc-fix-arm L2 --arms L3,L4,L5 --out-dir .../_fc`）→ Family-1 §2a + Family-2 FC 推断 → Touchpoint 3。
+
+→ progress: 2026-06-17-b | plan: 2026-06-17（FC 两族）| analysis: N/A
+
+---
+
+## 2026-06-17-a: Codex Review — Plan (Touchpoint 1, Round A)：FC 固定容量边-因果臂 → BLOCK-EXECUTION，9 条全接受，plan 修订 v2
+
+- **Target**: `docs/plan_fc_edge_robustness_2026-06-17.md`
+- **Reviewer**: codex
+- **Full review**: `artifacts/reviews/2026-06-17_codex_plan_A.md`
+- **Summary**: **2 CRITICAL + 5 MAJOR + 2 CONCERN**；**Verdict BLOCK-EXECUTION**
+- **Resolutions**: 9/9 ACCEPTED（0 拒绝）。我逐条验证（A-05 与既有 analysis.md 2026-06-15-a R9-A-04 seed-averaging 先例一致）。
+
+**起因**：解读 frozen_hparams 时发现等预算独立调参致各臂容量不同 → 边消融/graph-vs-no-graph 的 ΔIC 与容量纠缠。H博士 决定预登记固定容量稳健臂。我写 v1 plan 发 Codex。
+
+**Codex 抓的硬伤（CRITICAL，我承认是真错）**：v1 把 matched-ΔIC 既称"causal primary"又设"robustness-only 无推断"——自相矛盾（A-01）；且在 tuned ladder 已完成、已看到容量混淆之后切换 primary estimand = forking-paths，除非 FC 执行前锁死（A-02）。
+
+**修订 v2 的核心（两族预登记层级，执行前锁）**：
+- **Family 1 预测/选模（不变）**：tuned ladder + DM-HLN+BH-FDR+SPA M=9，"哪个 tuned 臂打败 tuned LGB"（best-vs-best，容量混淆非缺陷）。
+- **Family 2 因果边归因（新，FC 自带推断）**：冻结**完整 L2 冠军 HP 向量**（A-03，非仅架构）、只变边集；6 个 contrast（L3fc/L4fc/L5fc−L2 × {B,C}，A-06 排除 L6、A-07 排除 L2−L1）；推断=**fold-level seed-平均 ΔIC**（A-05 有效 n≈12 fold 块非 120 cell）+ block bootstrap over 12 fold + BH-FDR/6。estimand 标注"local-to-L2 架构"（A-04）。
+- tuned-ΔIC 降为**描述性补充**，杜绝 post-hoc 选 primary。
+- baseline=**复用冻结 L2 预测**（A-08，非重跑），L2 重跑仅作 repro audit。
+- 720 cell（3×2×12×10）→ `experiments/storya_v21_main12_fc/`。
+- 诚实功效（A-05/Q5）：MDE@80%≈0.008–0.032，边 ΔIC~0.005–0.016 → 多数 contrast 恐"有方向无可靠证据"；FC 价值=可辩护的预登记因果框架 + 防审稿，非保证解决。
+
+**下一步**：v2 plan 待 H博士 审批（= 预登记锁）→ 再进 D-RERUN-12F（main12 HP 注入 + Touchpoint 2 → tuned 重跑 + FC 臂 → §2a/Family-2 推断 → Touchpoint 3）。
+
+→ progress: 2026-06-17-a | plan: 2026-06-17（Decision Log FC 两族）| analysis: N/A
+
+---
+
+## 2026-06-16-b: ✅ §4 等预算调参 COMPLETE（20/20 study）→ frozen_hparams.json 冻结 + git 保全（commit 2fd6e3c）
+
+**调参全部完成**：Mac 8 + T4 12 = **20/20 study**。`python run_v21_tune_launcher.py --merge` → `frozen_hparams.json`（`complete:true, n_studies:20, missing:[]`）。20 个 `{universe}_{arm}` 调参后冠军超参全部冻结，**含 L7 HATS**。
+
+**收集 + 校验**：T4 的 12 个 JSON 写在 Drive 原生路径（子进程 `setup_workdir` chdir 到 Drive 所致），tar+scp 到 Mac 与本地 8 个汇合。20 个 JSON 全校验：可解析、非 smoke、维度正确（LGB/MLP/SAGE 5 维、GAT/HATS 6 维含 gat_heads）、trial 数 25-30（个别 <30 是 trial 返 NaN 未计入，搜索预算照花满）。
+
+**保全**：`experiments/` 是 gitignored 数据目录 → 复制 frozen_hparams + 20 winners（含 top-5 决赛表）+ README 到 `artifacts/storya_v21_tune/`，.gitignore 加白名单（同 e6 snapshot 的 source-of-record 模式），commit `2fd6e3c` push。Colab 可 `git pull` 取用于重跑。
+
+**调参后冠军 val-IC（⚠️ 选模目标 2022H2、对 early-stop 集乐观偏置，NOT 测试结果，不得当 finding）**：source `artifacts/storya_v21_tune/frozen_hparams.json`。B 最高 L0/LightGBM 0.0817、L6/GAT-complete 0.0781、L5s/SAGE 0.0714；C 最高 L0 0.0735、L5s 0.0701。仅作 HP 选择记录。
+
+**Colab recycle 时间线**：T4 在 12 study 全写完 JSON（落 Drive 持久）**之后** runtime 才回收 → 零损失。即便早回收，JSON 在 Drive + dbsync db 备份在 Drive（2026-06-16-a 修复后）也可 `--restore` 续。
+
+**下一步（D-RERUN-12F，下个 session）**：① 改 `run_storya_v21_main12.py` 读 `frozen_hparams.json` 按 arm 注入 HP（+ `run_storya_v21_l7_hats.py` 同理）→ **Touchpoint 2**；② 用冻结 HP 重跑 2160-cell（**新目录** `experiments/storya_v21_main12_tuned/`，不覆盖 pilot）；③ §2a（DM-HLN+BH-FDR+SPA M=9）→ **Touchpoint 3** → analysis.md。
+
+→ progress: 2026-06-16-b | plan: Decision Log D-RERUN-12F（2026-06-12）+ §4 冻结（2026-06-15）| analysis: N/A（调参=HP 选择，非实验结果；confirmatory 结果待 tuned 重跑）
+
+---
+
+## 2026-06-16-a: T4 runtime recycle 丢失全部 12 in-progress study（断点设计疏漏）→ 建 recycle 韧性机制 colab_v21_tune_db_sync.py（commit 62b9edc）；Mac 8/8 完成
+
+**事件**：T4 在首启 ~16h 后触发 Colab runtime 回收（超时/idle）。`/content` 本地盘被清 → optuna sqlite study db（按 6c139cd 的 STUDY_DIR env-override 放在 /content）全没；当时 12 个 study 都还没写完 winner JSON（首波在决赛复评阶段）→ **Drive 上 0/12 JSON，12 个全丢需重跑**。
+
+**根因 = 我的断点设计疏漏**：调参器本有续跑（optuna `load_if_exists` 每 trial 落库），但为绕 Drive-FUSE 开不了 sqlite，我把 db 放本地盘**却没做 db→Drive 备份** → 跨 recycle 等于无断点。CODEX-A-03 提示过该风险，我只记录未真正兜底。
+
+**修复（committed，可复用）**：`scripts/colab_v21_tune_db_sync.py`（commit `62b9edc`）。
+- `--backup` loop（tmux `dbsync`）：每 180s 对每个本地 db 做**一致性快照**（sqlite `.backup` API → 本地 temp → 字节 cp 到 Drive `studies_backup/`；**绝不在 FUSE 上开 sqlite**，可在 launcher 写库时安全运行）。worst-case 丢失 ≤ 1 个 interval 的 trial。
+- `--restore` one-shot（relaunch 前）：Drive→本地 cp，launcher `load_if_exists` 即从上次快照 trial 续。
+- 本地验证：7 trial→backup→清空→restore→续跑见 7 并续到 10 ✓。T4 端到端验证：Drive `studies_backup/` 已落 B_L2/L3/L4/L5.db（各 114KB，21:13）✓。
+
+**recycle 恢复 SOP**（hostname 变 → H博士 给新地址后）：① `git pull`；② `pip install torch_geometric pandas_market_calendars optuna`；③ `python scripts/colab_v21_tune_db_sync.py --restore`；④ tmux 起 `V21_TUNE_STUDY_DIR=/content/v21_tune_studies LD_LIBRARY_PATH=/usr/lib64-nvidia python run_v21_tune_launcher.py --machine t4 --concurrency 4`（load_if_exists 自动续未完成 study；已完成的 Drive JSON 在，可用 `--studies` 只补缺的）；⑤ 重起 `dbsync` 备份 loop。
+
+**当前状态**：Mac **8/8 全完成**（JSON 本地稳存）。T4 21:07 重启 12-study（首波 B_L2/L3/L4/L5 跑中），21:13 起 dbsync 保护中。
+
+→ progress: 2026-06-16-a | plan: Decision Log 2026-06-15（L7-via-HATS）| analysis: N/A
+
+---
+
+## 2026-06-15-g: 双机并行 20-study 调参启动（Mac 8 + T4 12）+ sqlite-on-Drive infra 修复（STUDY_DIR env-override, commit 6c139cd）
+
+**Push for Colab**：T4 经 `colab_bootstrap.sh` 从 GitHub main clone → 新 tuner 文件 + anchor lambda 修复必须先 push。commit `9377055`（仅 3 个 run-critical .py + review 存档，未扫 concurrent churn）→ origin/main。验证 e3/e4 的 M 改动是 12-fold cell_id 公式泛化、不碰 tuner 实际 import 的 build 函数 → 不需推；e1_6_hats(f06f7e3)/main12(ed981b1) 已在 origin。
+
+**sqlite-on-Drive bug（T4 首启全崩）**：12 study 全报 `sqlite3.OperationalError: unable to open database file`。根因=Colab `experiments/` 是 Drive FUSE 软链，**sqlite 需 POSIX 文件锁，FUSE 不支持**（日志/CSV/JSON 写 Drive 没问题，唯 sqlite 不行）。软链 `studies→本地` 方案在 Drive FUSE 上不可靠（`rm -rf` 最终一致 → `ln -s` 撞残留真目录建错位置）。**改用确定性 env-override**：`STUDY_DIR = os.environ.get('V21_TUNE_STUDY_DIR', f'{OUT_DIR}/studies')`（commit `6c139cd`）。T4 用 `V21_TUNE_STUDY_DIR=/content/v21_tune_studies`（sqlite 落本地盘；JSON winner 仍写 Drive=持久）。**纯 IO 位置变更、零调参逻辑改动**（Mac 默认路径字节不变，验证 default==旧路径 / override 生效）→ 非 Rule 9 correctness 触点（自验+记录）。
+
+**启动状态**：T4 tmux `tune` 跑 12 study（`--machine t4 --concurrency 4`，`LD_LIBRARY_PATH=/usr/lib64-nvidia`，B_L2.db/B_L4.db 已落本地 ✓ 证 create_study 通过）；Mac `nohup --machine mac --concurrency 2`（PID 32732，B_L0/B_L1 起训）。SSH 隧道 island-miscellaneous-securities-shorter（trycloudflare 抖动，长命令易掉 → 改最小命令分步启动）。
+
+**下一步**：监控双机 → 收齐 20 个 `{u}_{a}.json`（T4 12 在 Drive、Mac 8 本地）→ 汇一处 `--merge`→`frozen_hparams.json`（fail-closed 需 20/20）→ tuned 2160-cell 重跑（新目录）→ §2a → Touchpoint 3。
+
+→ progress: 2026-06-15-g | plan: Decision Log 2026-06-15（L7-via-HATS）| analysis: N/A
+
+---
+
+## 2026-06-15-f: 调参 harness 自审（pre-review）→ L7 接入 HATS（Plan B）+ TPE 可复现修复 → Codex Touchpoint 2 PROCEED-WITH-FIXES（2 MAJOR 修 + 1 CONCERN 接受）→ smoke + merge 三态全验证
+
+**自审（Touchpoint-2 前，H博士 directive「我先精读 harness 代码」）**：读穿 `run_storya_v21_tune.py`/`run_v21_tune_launcher.py`/anchor lambda diff + 全部上游（train_nn/make_nn_model/train_lightgbm/create_fold_masks/compute_daily_ic/run_arm_cell/train_gnn_per_day_edges/build_fold_edges/ARM_SPEC/HATS）。抓出：
+- **CRITICAL（L7 必崩 + 架构层调不了）**：`ARM_SPEC` 无 `L7` 键，`run_arm_cell` 无 guard → tuner `eval_config('L7')` → `KeyError`；且 L7=HATS（独立 `run_storya_e1_6_hats.py`，main12 无 HATS 路径）→ run_arm_cell 即便补 guard 也只训普通 GAT，无法 apples-to-apples 调 HATS。launcher `T4_ARMS` 含 L7 → B_L7/C_L7 必崩 → merge 18/20。
+- **MAJOR（TPE 不可复现）**：`TPESampler(seed=abs(hash(study_name))%2**31)`，`hash(str)` 受 PYTHONHASHSEED 盐化 → 跨进程漂移（实测 1373588378 vs 2068794103）。
+- **CONCERN**：边臂/L7 未 smoke。
+
+**H博士 决策**：L7 走 **Plan B**——把 tuner 接到 HATS 训练器，本轮调满 20（忠于 §4，主表全 tuned）。决策前我精读 HATS runner 确认接口干净（`train_hats`/`build_three_relation_edges_per_fold`/`HATS_HPARAMS=dict(NN_HPARAMS)+num_relations/rel_attn_arch`）、6 维（含 heads）在 `HATS3RAdapt` 全真消费、无幽灵维。
+
+**代码改动**（`run_storya_v21_tune.py` 为主，launcher 次）：
+1. **TPE 确定性**：→ `int(hashlib.md5(study_name.encode()).hexdigest(),16)%2**31`（跨进程稳定，实测 61033336==61033336）。
+2. **L7 接 HATS**：`apply_hparams(model,overrides,arm)` 增 arm，`arm=='L7'` patch `hats.HATS_HPARAMS`（保留 num_relations/rel_attn_arch、不污染 anchor.NN_HPARAMS）；`build_data_ctx` L7 用 `build_three_relation_edges_per_fold` 建 3-relation 边；`eval_config` L7 调 `train_hats(...,test_days:=val_days,alpha_log=None)`；`run_study` 透传 arm。
+3. **smoke 去风险**：L7/L5/L4（Univ B）`--smoke` 全 rc=0、6 维（含 heads）流过、leak assert `snap≤train_end` 过（L7 mean_val_ic +0.0485 / L5 +0.0625 / L4 +0.0449）。
+
+**Rule 9 Touchpoint 2（Codex）**：verdict **PROCEED-WITH-FIXES，0 CRITICAL / 2 MAJOR / 1 CONCERN**。Codex 复核确认我 pre-review 的 A–F 全 PASS（L7 apples-to-apples、无 2023+ 泄露、monkeypatch 进程级安全、无幽灵维），并多抓 2 MAJOR + 1 CONCERN：
+- **CODEX-A-01（MAJOR→FIXED）**：merge 缺/失败 study 仍写 frozen_hparams.json（仅 WARN）→ 改 **fail-closed**：<20 且无 `--allow-partial` → ERROR+exit 1+不写；`--allow-partial`→`frozen_hparams.PARTIAL.json`（complete:false）；launcher 失败 study → exit 1。
+- **CODEX-A-02（MAJOR→FIXED）**：smoke 与正式共用 db+json → smoke 改用 `{u}_{a}_smoke.db` + `_smoke_{u}_{a}.json`（物理隔离）；merge 排除 `_smoke*` 且跳过 `smoke==True`（双保险）。
+- **CODEX-A-03（CONCERN→ACCEPTED）**：optuna resume 重建 TPE sampler（非恢复状态）→ 文档化：clean 不间断跑全可复现，resume=崩溃恢复路径（失败 study 优先清 db 重跑）。
+
+**验证**：L0 smoke 确认 A-02 隔离（写 `_smoke_B_L0.json`+`B_L0_smoke.db`，生产路径不存在）；merge 三态全验（仅 smoke→skip+exit1；20→complete:true；19→fail-closed exit1；19+allow-partial→PARTIAL）。tune 目录验证后净空供真跑。全 review：`artifacts/reviews/2026-06-15_codex_code_A.md`。
+
+**下一步**：双机并行 20-study 调参（Mac `--machine mac -c 2` 可即跑；T4 需 H博士 SSH hostname）→ `--merge`→frozen_hparams.json→tuned 2160-cell 重跑（新目录）→ §2a → Touchpoint 3。
+
+→ progress: 2026-06-15-f | plan: Decision Log 2026-06-15（L7-via-HATS, Plan B）| analysis: N/A（无新实验结果）
+
+---
+
+## 2026-06-15-e: §4 调参 harness + 并发 launcher 建成（import-only）+ anchor LGB lambda 幽灵维修复（3 验证过）+ L0/L2 smoke 通过
+
+**新文件**（§5 import-only，复用 anchor 数据/快照/C1 + main12 的 run_arm_cell/build_fold_edges/complete-graph → 调参与 confirmatory cell 同路训练）：
+- `run_storya_v21_tune.py`：单 study（`--arm X --universe Y`）。调参窗 train `TRAIN_START..2022-06-30` / val `2022H2`（early-stop + Rank IC 选模，scores on val days）。**泄漏防护**：corr 图=train_end=2022-06 frozen snapshot + 显式 assert `snap_point ≤ train_end`；C1 两 assert 随 import 生效。搜索空间 v2.2（arm-aware：heads 仅 GAT/L7；MLP/SAGE 去 heads；LGB 自有 6 维）。HP 注入=per-trial monkeypatch `anchor.NN_HPARAMS/LGB_HPARAMS`。N=30 单 seed 搜 → top-5 × 3 调参 seed[11,22,33] → 冠军=max 3-seed 均 val Rank IC。持久化完整 study(sqlite)+top-5 全表。启动 assert tune_seeds ∩ canonical == ∅。
+- `run_v21_tune_launcher.py`：**study 级并发**（每 study 一进程、内部顺序→TPE 确定；并发填 GPU）。`--machine mac`=L0/L1/L2s/L5s×{B,C}(8 study) / `--machine t4`=L2/L3/L4/L5/L6/L7×{B,C}(12 study) / `--merge`→frozen_hparams.json。
+
+**anchor 修复（共享 spine，加性）**：`train_lightgbm` 原只传 num_leaves/lr/min_data/n_estimators → **不读 lambda_l1/l2**（v2.2 搜索空间的 lambda 是幽灵维）。改为 `LGB_HPARAMS.get('lambda_l1',0.0)`/`get('lambda_l2',0.0)`（缺键=0.0=lgb 默认=OFF → pilot/并发线零影响）。**3 项 Touchpoint-2 验证全过**：①no-op 回归 `max|Δpred|=0.000e+00`（且 lambda_l2=1.0 移动预测 6.16e-2 证真消费）；②路径一致性（lgb.train 仅在 anchor；main12 L0 + harness 同路）；③全 12 维幽灵审计（NN 6 维消费点 585-586/483-496 确认 weight_decay/num_layers 非幽灵；LGB lambda 是唯一幽灵→已修）。
+
+**smoke（本地）**：L0 B（LGB）winner 含 lambda_l2≈0.09、6s；L2 B（GAT/MPS）全 6 NN 维流过、leak assert 过、575s。产物已清。
+
+**下一步（H博士 将开新对话跑）**：Touchpoint 2（Codex，审 3 个新/改文件，附上 3 验证）→ 双机并行跑调参（Mac `--machine mac -c 2` / T4 `LD_LIBRARY_PATH=… --machine t4 -c 4`）→ `--merge` → frozen_hparams.json → 用调参 HP 重跑 2160 cell（新目录）→ §2a。
+
+→ progress: 2026-06-15-e | plan: Decision Log 2026-06-15（§4 冻结）| analysis: N/A
+
+---
+
 ## 2026-06-15-d: §4 等预算调参搜索空间显式冻结（协议 → v2.2）+ untuned 12-fold 结果统一标 PILOT-CENTER
 
 **根因**：协议 §4 此前只写「搜索空间同 v2-frozen 版」——一个**空指针**，实体范围从未落入桌面/仓库/git/archived 任何文件（本次踩坑）。经 H博士 + Codex 顾问最终确认，**显式冻结**并填入 `docs/protocol_v2_freeze.md` §4（协议升 v2.2）。

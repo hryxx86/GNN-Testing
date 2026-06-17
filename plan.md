@@ -6,6 +6,64 @@
 
 ---
 
+## 2026-06-17-a: D-RERUN-12F 混合执行计划（本地轻臂 + Colab 重臂）⏳ START（新窗口跑）
+
+> 详细可执行步骤 + 命令见 `docs/session_handoff_2026-06-17.md`（manifest + prose）。FC 两族预登记锁定见 `docs/plan_fc_edge_robustness_2026-06-17.md`（Codex T1 v2）。
+
+**前置已就绪**：§4 调参 20/20 → `frozen_hparams.json`（git 保全 `artifacts/storya_v21_tune/`，md5 59ddd0a2）；main12+l7_hats 的 frozen-HP 注入 Codex T2 PROCEED-WITH-FIXES 全修；代码 push `84176ff`（Colab 可拉）。
+
+**混合分工**（沿用调参验证过的轻/重拆分）：
+- **本地 Mac（轻臂，960 cell）**：L0/L1/L2s/L5s × {B,C}。2 路按 universe 并行（各自 out-dir，最后合并）。~13h。
+- **Colab T4（重臂，1200+240+720 cell）**：① tuned 重臂 L2/L3/L4/L5/L6 × {B,C}；② L7 HATS tuned；③ FC 臂 L3fc/L4fc/L5fc（`--fc-fix-arm L2`）。需 SSH hostname + tmux。recycle 韧性=Drive manifest.csv + `--resume`（**重跑不用 sqlite/dbsync**，CSV/npy 写 Drive 即持久）。
+
+**合并 + 分析**：Mac 轻臂 + Colab 重臂 results 合一 `experiments/storya_v21_main12_tuned/`（cell_id 不相交）→ **Family-1 §2a**（DM-HLN+BH-FDR+SPA M=9，best-vs-best）；FC → **Family-2**（fold-level seed-avg ΔIC + block bootstrap + BH-FDR/6，因果边归因）→ **Touchpoint 3** → analysis.md（confirmatory 主表）。
+
+→ progress: 2026-06-17-b（注入+T2）| analysis: PENDING（待 tuned 重跑结果）
+
+---
+
+## 2026-06-12-a: Phase Milestone — 实验协议 v2.1-frozen（双轴 12-fold，旧 5-fold 降 pilot）⏳ START
+
+> 冻结协议全文：`docs/protocol_v2_freeze.md`；Touchpoint 1 disposition：`artifacts/reviews/2026-06-12_codex_plan_T1.md`。
+> 详情见 progress `2026-06-12-a`。
+
+### What's now decided（架构级，Rule 2）
+
+- **实验协议从 5-fold 转向双轴 12-fold**：主轴 = expanding 12-fold（唯一 confirmatory，2023Q1→2025Q4，DM-HLN 20 检验 + BH-FDR q=0.05 + Hansen SPA M=9）；副轴 = sliding-252d 14-fold（robustness/复现，无独立推断，仅 ΔIC 同号 + block-bootstrap CI，报 X/8）。
+- **D-RERUN-12F**（已注册决议 ID）：主表 12-fold 全部在冻结新超参下重跑；**旧 5-fold（含 `experiments/wf5_results.csv` 与 Story A E1–E6）降为 pilot/smoke 对照，不入主表 confirmatory**。
+- Touchpoint 1：1 CRITICAL + 3 MAJOR + 5 CONCERN → 8 ACCEPTED + 1 PARTIAL-REJECT（M3 后半复用驳回）。
+- 算力总账 ≈ 3.5–4.5 A100·天（本地 MPS 后备）。
+
+### 下一步（§10 预检 smoke 清单）— 进度见 progress 2026-06-12-c
+
+- ✅ **#2 Cn4 grep** ≤106d（max window 60d）｜✅ **#6 seed 池**（canonical 一致；flag 调参 3-seed 须新选不相交）
+- ✅ **#7 C1 验收**：新 runner `run_storya_v21_main12.py` 零数据构造（import-only）+ 两条运行时 assert + **E0-canary ALL PASS**
+- ✅ **spine 臂 smoke**（L0/L1/L2/L2s 本地 MPS 干净）+ ✅ **Codex T2 Round A PASS-WITH-CONCERNS**（2 CONCERN 均 FIXED）
+- ✅ **边臂 L3/L4/L5/L5s 建成 + smoke**（per-day 动态边 + 静态 sector，C1 assert b 验证）+ ✅ **Codex T2 Round B PASS-WITH-CONCERNS**（CODEX-B-01 覆盖断言 FIXED）→ **主轴 9 臂全 ladder（除 L7）建成**
+- ⏳ **L6 单价**：完全图 250K 边 MPS 不可测（>18min/cell），先上 A100 实测再定（H博士 2026-06-12 决）
+- ✅ **L7 HATS 建成（结构层）**：新文件 `run_storya_v21_l7_hats.py`（import-only HATS）+ cell_id 重映射(arm 7,[840,2159]) + 注入 canary ALL PASS + §6 contingency 触发器（20% 规则，240 全格分母，单测过）+ **Codex T2 Round C PROCEED-WITH-FIXES（C-01 CRITICAL + C-02 MAJOR 均 FIXED）**。训练 smoke DEFER（本地显卡被并发占用）
+- ✅ **L7 发散判据 H博士 已确认（2026-06-12）**：健康失败判据（无有效 IC / val loss 非有限）locked；§6 Cn5 字面"跑满 epoch 无 val 改善"在 patience 早停下反向/不可实现，故弃
+- ⏳ **Optuna 调参 harness**：20 作业 × N=30，调参 3-seed 须与 canonical 互斥（预检 #6 flag）
+- ⏳ **训练 smoke + Colab 全量**：spine+边臂+L7 代码全 T2 过，待显卡空/SSH hostname
+
+### Decision Log Additions
+
+| Date | Decision | Rationale |
+|---|---|---|
+| 2026-06-12 | 实验协议 v2.1-frozen（双轴 12-fold） | Codex T1 + H博士确认；主轴 12-fold 唯一 confirmatory / 副轴 14-fold sliding robustness（无推断）；全文 `docs/protocol_v2_freeze.md` |
+| 2026-06-12 | **D-RERUN-12F**：主表 12-fold 全新超参重跑，驳回复用旧 anchor 5-fold | H博士「不用管钱，必须调参，选b」；混旧/新超参=秒杀级硬伤，省额 <0.3 A100·天；旧 5-fold 降 pilot/smoke 对照 |
+| 2026-06-12 | M1：副轴降 robustness（同号判据，无 p/FDR/SPA，逃生口封条） | 双 confirmatory family 并列 BH-FDR = 双重捞鱼，整体 FDR>0.05 |
+| 2026-06-12 | M2：MDE := 2.8×SE_block-bootstrap + n_eff，√750 废除 | 21d 标签重叠自相关使 √750 功效虚高；披露不可探测边级增量 +0.006–0.009 |
+| 2026-06-12 | Cn1 L6 claim 收窄 dense learned attention(MASTER/AD-GAT)；Cn5 HATS contingency 20% 机械规则 | L6≠learned-sparse；HATS 不稳风险须开跑前锁 contingency |
+| 2026-06-15 | **§4 搜索空间显式冻结（协议 → v2.2）**：6 维 NN/GAT/L6/L7 + 6 维 LGB，中心=pilot 默认 | 此前仅"同 v2-frozen 版"空指针、实体从未落档；中心=默认使 pilot=N=1 中心点、保 pilot-vs-调参可对比（H博士「不对比随便改完全无法对比」）；3 处偏离见 protocol §11 v2.2 |
+| 2026-06-15 | **untuned 12-fold 结果（v21 ladder pilot + anchor E1–E6 DM/SPA/LOFO 套件）一律标 PILOT-CENTER / pending tuning** | 跑在 pilot 默认超参上、非调参后；不得以"主结果"身份流进 draft，否则调参后两份主表互掐（D-RERUN-12F）|
+| 2026-06-15 | **L7 调参走 Plan B：tuner 接入 HATS 训练器（`run_storya_e1_6_hats.train_hats`），本轮调满 20** | 自审发现原 tuner 对 L7 必 KeyError（ARM_SPEC 无 L7）且 run_arm_cell 只能训普通 GAT≠HATS；§4 显式列 L7 且 L7 是 confirmatory 臂（§6 仅 health 门）→ 留 untuned 会被审稿「NN 全调 / HATS 没调」反咬。HATS 6 维（含 heads）全真消费、无幽灵。Codex T2 PROCEED-WITH-FIXES（2 MAJOR：merge fail-closed + smoke 隔离，均修验）。详见 progress 2026-06-15-f |
+| 2026-06-17 | **新增 FC 固定容量边-因果臂 + 两族预登记层级**（待 H博士 审批 = 预登记锁）| 等预算独立调参致各臂容量不同 → 边消融 ΔIC 与容量纠缠（核验：B 全混淆、C 仅 L3/L6）。Codex T1 BLOCK→修：Family 1 tuned ladder=预测/选模（SPA M=9）；Family 2 FC（冻结完整 L2 HP 向量、只变边、L3fc/L4fc/L5fc−L2×{B,C}=6 contrast、fold-level seed-avg+block bootstrap+BH-FDR/6）=因果边归因 primary；tuned-ΔIC 降描述性。全文 `docs/plan_fc_edge_robustness_2026-06-17.md`，review `artifacts/reviews/2026-06-17_codex_plan_A.md` |
+
+→ progress: `2026-06-12-d` (freeze 落档), `2026-06-12-c` (runner spine+L6+T2), `2026-06-12-e` (边臂+T2-B), `2026-06-12-f` (L7 HATS+T2-C) | analysis: N/A（无新实验结果；旧 5-fold 结论降级仅 progress/plan 注记）
+
+---
+
 ## 2026-05-28-a: Phase 6 paper-figure pipeline COMPLETE ✅
 
 ### What was delivered
@@ -1904,8 +1962,12 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-05-28 | **Rule 9 T2 self-review path adopted as Codex fallback when codex:rescue 调用被中断** | Codex CLI 实际 ready=true (codex-cli 0.125.0 + ChatGPT login active) 但 2 次 codex:rescue 调用被 H博士 interrupt 在 runtime startup 前；H博士 directive "自己 review 吧"。Round A+B+C self-review 严格遵守 .claude/rules/docs.md §6 YAML schema + Rule 9 #5 personal-verification (亲自跑 smoke test 验证每条 fix)。最严重 catch (Round C CLAUDE-C-01): T5 LaTeX 表 `bool(NaN)=True` Python 真值陷阱会让 10 个 lofo4/fold4_only 行错误显示 `\checkmark` BH-FDR rejection，违背 N3 narrative "0/5 pairs survive BH-FDR"；如未 catch 直接 ship 入 paper draft 会严重破坏 credibility。 |
 | 2026-05-28 | **4 new subdirectories with full READMEs (Rule 5 §2 structural-change trigger)** | 新建子目录 `paper_figs/`、`figures/`、`tables/`、`docs/paper_sources/` 各含一份 README。每 figure / table 完整解释：源数据 → 坐标编码 → 关键发现 → narrative pillar → caveat。测试/缓存文件 (`paper_figs/_inspect.py`、`paper_figs/__pycache__/`、`figures/test_rcparams.{pdf,png}`) 保留不删，在 README 中显式说明保留理由 (H博士 2026-05-28 directive "测试缓存文件不删，readme 里面说一下")。 |
 | 2026-06-10 | **Colab SSH = manual cloudflared (`scripts/colab_ssh_tunnel.sh`, `--protocol http2`); `colab_ssh` package dropped** | colab_ssh unmaintained (PyPI 0.3.27 / 2021-10). Live probe of a real tunnel hostname returned HTTP 502 from Cloudflare edge + local `websocket: bad handshake` = tunnel UP but Colab-side sshd dead on :22 (origin down). New script explicitly installs/restarts sshd + opens an http2 quick tunnel (QUIC/UDP default is a separate timeout cause) + parses the hostname itself. Local `~/.ssh/config` unchanged (already proxies `*.trycloudflare.com`; added keepalive). |
+| 2026-06-11 | **Sanity-check verdict structure = E3-only decisive necessary control; E1b demoted to supporting diagnostic** | Smoke (2026-06-10) showed E1b (label-sim oracle) lift is second-order (≈ feature-predictiveness × co-movement-tightness) and can sit below baseline, so a "no-lift ⇒ SICK" gate would false-negative a healthy pipeline (re-committing Codex plan A-03). E3 (planted-signal recovery; label = neighbor-mean of an observed feature on the real α1 topology) is the gold-standard necessary control: GNN must recover, MLP cannot. Full run: E3 PASS (GAT 82% / SAGE 91% / MLP≈0). E1/E1b/E2 = supporting/negative/diagnostic only. |
+| 2026-06-11 | **Sanity-check claim scoped to "pipeline operational" not "null proven a task property" (Codex Touchpoint 3 R-A-01)** | E3 rules out the GROSS broken-pipeline H2 modes (edges-not-wired / gross training failure / bottleneck / lookahead-broken aggregation) but does not certify hyperparameter/architecture optimality on REAL features. Licensed claim: graph pipeline is operational → the null is not an artifact of a non-functional graph pipeline. Paper §Methods/§Limitations carry the residual caveat. Oracle absolute IC → appendix w/ leaked-warning (R-A-05); E2 = "equivalence not established (underpowered)" not "no effect" (R-A-02). |
+| 2026-06-14 | **副轴 (secondary axis) = Option A: sliding-252d on the SIMPLE 4-model anchor, NOT the v2.1 ladder** | H博士 directive "A". Protocol §2b defined the sliding-252d secondary axis for the v2.1 ladder arms (L0/L1/L2/L5/L6) — but that ladder is the set-aside track (tuning + L6 new code + ladder main axis all unrun). Option A applies the §2b robustness concept to the 4-model untuned anchor already run on the main (expanding) 12-fold axis: same 12 test quarters, train window fixed 252 td rolling (train_start = val_end−252td, effective train ≈3 quarters). Role = robustness/replication only (NO independent inference): ΔIC same-sign vs main axis + block-bootstrap CI, report X/N, NO p/SPA/BH-FDR (§2b discipline + escape-hatch seal). Purpose: block "the null is an artifact of the expanding window's stale early data." Runner `run_storya_anchor_sliding.py` (import-only monkeypatch of the anchor); Codex T2 PROCEED-WITH-FIXES, 3 fixed (`artifacts/reviews/2026-06-14_codex_code_sliding_A.md`). NOTE: supersedes the brief same-day "先不跑/document-only" answer — H博士 reconsidered after the two-options explanation and chose to run A. |
+| 2026-06-15 | **Positioning LOCKED: the local 12-fold untuned-anchor track (expanding main axis + sliding 副轴) is a PILOT / robustness cross-check, NOT the protocol confirmatory main table** | Surfaced that the local `run_storya_e1_anchor.py` is the self-labelled "untuned anchor"; protocol §5/§1.1 mandates the TUNED L0–L7 ladder (`run_storya_v21_main12.py`, Colab) as the only confirmatory main table and rejected reusing the untuned anchor (M3). So the local 12-fold formal null (SPA/DM/CI/power) + the sliding 副轴 (8/10 same-sign) are pilot-grade — an early sanity read for the ladder, NOT the paper's headline. Tracks are independent/parallel (no dependency); local pilot need not wait for the ladder, but headline confirmatory numbers DO await the ladder. analysis.md 2026-06-15-a records everything as PILOT. Simple `compute_e6_edge_ablation.py` (E3/E4 SAGE/untuned) superseded by the ladder edge arms (L3/L4/L5−L2) → kept historical/exploratory, not re-run. |
 
 → progress: 2026-05-28-a..f | analysis: N/A
-→ progress: 2026-06-10-b | analysis: N/A
+→ progress: 2026-06-10-a/c, 2026-06-11-a/b | analysis: 2026-06-11-a
 
 *Last updated: 2026-06-10 (Colab SSH fix: `colab_ssh` → `scripts/colab_ssh_tunnel.sh`; root cause = origin-502 / sshd-down, verified by live tunnel probe; CLAUDE.md Rule 7 + ~/.ssh/config keepalive updated.)*
