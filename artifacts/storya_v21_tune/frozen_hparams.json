@@ -1,0 +1,302 @@
+{
+  "source": "run_storya_v21_tune.py per-study outputs",
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "n_studies": 20,
+  "expected": 20,
+  "complete": true,
+  "missing": [],
+  "studies": {
+    "B_L0": {
+      "universe": "B",
+      "arm": "L0",
+      "model": "LightGBM",
+      "winner_params": {
+        "num_leaves": 15,
+        "learning_rate": 0.023109420595473603,
+        "min_data_in_leaf": 50,
+        "lambda_l1": 0.21657771132911402,
+        "lambda_l2": 0.4658948995018036
+      },
+      "winner_mean_val_ic_3seed": 0.08174093812704086,
+      "n_trials": 30
+    },
+    "B_L1": {
+      "universe": "B",
+      "arm": "L1",
+      "model": "MLP",
+      "winner_params": {
+        "lr": 0.000237364451046983,
+        "weight_decay": 2.0968816272373458e-05,
+        "dropout": 0.3,
+        "hidden_channels": 128,
+        "num_layers": 3
+      },
+      "winner_mean_val_ic_3seed": 0.06470694889624913,
+      "n_trials": 30
+    },
+    "B_L2": {
+      "universe": "B",
+      "arm": "L2",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.00016928087244045317,
+        "weight_decay": 0.00010018567862007634,
+        "dropout": 0.3,
+        "hidden_channels": 64,
+        "num_layers": 2,
+        "gat_heads": 2
+      },
+      "winner_mean_val_ic_3seed": 0.05429071436325709,
+      "n_trials": 30
+    },
+    "B_L2s": {
+      "universe": "B",
+      "arm": "L2s",
+      "model": "SAGE-Mean",
+      "winner_params": {
+        "lr": 0.001534830843649672,
+        "weight_decay": 0.0005178616747427454,
+        "dropout": 0.3,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "winner_mean_val_ic_3seed": 0.06519932424028714,
+      "n_trials": 30
+    },
+    "B_L3": {
+      "universe": "B",
+      "arm": "L3",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.00019936283061176748,
+        "weight_decay": 0.00029831628915164796,
+        "dropout": 0.2,
+        "hidden_channels": 32,
+        "num_layers": 2,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.05732481926679611,
+      "n_trials": 30
+    },
+    "B_L4": {
+      "universe": "B",
+      "arm": "L4",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.0001666205889091853,
+        "weight_decay": 0.00028808459422034895,
+        "dropout": 0.1,
+        "hidden_channels": 32,
+        "num_layers": 2,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.058525482192635536,
+      "n_trials": 30
+    },
+    "B_L5": {
+      "universe": "B",
+      "arm": "L5",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.00012178713704832027,
+        "weight_decay": 2.8996110600969445e-05,
+        "dropout": 0.1,
+        "hidden_channels": 32,
+        "num_layers": 2,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.06393148750066757,
+      "n_trials": 30
+    },
+    "B_L5s": {
+      "universe": "B",
+      "arm": "L5s",
+      "model": "SAGE-Mean",
+      "winner_params": {
+        "lr": 0.0065356894496668445,
+        "weight_decay": 3.2268691591214096e-05,
+        "dropout": 0.1,
+        "hidden_channels": 64,
+        "num_layers": 1
+      },
+      "winner_mean_val_ic_3seed": 0.07140885666012764,
+      "n_trials": 30
+    },
+    "B_L6": {
+      "universe": "B",
+      "arm": "L6",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.009849345447995914,
+        "weight_decay": 0.00031271394080428213,
+        "dropout": 0.1,
+        "hidden_channels": 32,
+        "num_layers": 2,
+        "gat_heads": 8
+      },
+      "winner_mean_val_ic_3seed": 0.07812212655941646,
+      "n_trials": 30
+    },
+    "B_L7": {
+      "universe": "B",
+      "arm": "L7",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.002588087928771576,
+        "weight_decay": 0.00034291110995233776,
+        "dropout": 0.3,
+        "hidden_channels": 128,
+        "num_layers": 1,
+        "gat_heads": 2
+      },
+      "winner_mean_val_ic_3seed": 0.06034348780910174,
+      "n_trials": 30
+    },
+    "C_L0": {
+      "universe": "C",
+      "arm": "L0",
+      "model": "LightGBM",
+      "winner_params": {
+        "num_leaves": 15,
+        "learning_rate": 0.027924746980950325,
+        "min_data_in_leaf": 100,
+        "lambda_l1": 1.1945711070427778e-07,
+        "lambda_l2": 0.04279834445098042
+      },
+      "winner_mean_val_ic_3seed": 0.07352573424577713,
+      "n_trials": 30
+    },
+    "C_L1": {
+      "universe": "C",
+      "arm": "L1",
+      "model": "MLP",
+      "winner_params": {
+        "lr": 0.0019531137875202621,
+        "weight_decay": 0.00024029526489767312,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "winner_mean_val_ic_3seed": 0.059699345380067825,
+      "n_trials": 30
+    },
+    "C_L2": {
+      "universe": "C",
+      "arm": "L2",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.0005466739292447284,
+        "weight_decay": 3.401250036609062e-05,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.05502821008364359,
+      "n_trials": 30
+    },
+    "C_L2s": {
+      "universe": "C",
+      "arm": "L2s",
+      "model": "SAGE-Mean",
+      "winner_params": {
+        "lr": 0.0008452764551155885,
+        "weight_decay": 2.4767694525679157e-05,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "winner_mean_val_ic_3seed": 0.0582640195886294,
+      "n_trials": 30
+    },
+    "C_L3": {
+      "universe": "C",
+      "arm": "L3",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.0002119911954248464,
+        "weight_decay": 0.0002188737933612441,
+        "dropout": 0.1,
+        "hidden_channels": 32,
+        "num_layers": 2,
+        "gat_heads": 2
+      },
+      "winner_mean_val_ic_3seed": 0.06670273964603742,
+      "n_trials": 30
+    },
+    "C_L4": {
+      "universe": "C",
+      "arm": "L4",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.004230315063344349,
+        "weight_decay": 0.0003863273011627121,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.05631991599996885,
+      "n_trials": 30
+    },
+    "C_L5": {
+      "universe": "C",
+      "arm": "L5",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.0006314522994120881,
+        "weight_decay": 1.4167306313273264e-05,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.05394202098250389,
+      "n_trials": 30
+    },
+    "C_L5s": {
+      "universe": "C",
+      "arm": "L5s",
+      "model": "SAGE-Mean",
+      "winner_params": {
+        "lr": 0.008329838153330127,
+        "weight_decay": 2.7861764604120167e-05,
+        "dropout": 0.5,
+        "hidden_channels": 32,
+        "num_layers": 3
+      },
+      "winner_mean_val_ic_3seed": 0.07010909294088681,
+      "n_trials": 25
+    },
+    "C_L6": {
+      "universe": "C",
+      "arm": "L6",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.00503365762379363,
+        "weight_decay": 0.00037357650322566034,
+        "dropout": 0.1,
+        "hidden_channels": 64,
+        "num_layers": 1,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.046176655838886894,
+      "n_trials": 29
+    },
+    "C_L7": {
+      "universe": "C",
+      "arm": "L7",
+      "model": "GAT",
+      "winner_params": {
+        "lr": 0.001588522102866503,
+        "weight_decay": 0.000707174360000969,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1,
+        "gat_heads": 4
+      },
+      "winner_mean_val_ic_3seed": 0.056550307820240654,
+      "n_trials": 30
+    }
+  }
+}

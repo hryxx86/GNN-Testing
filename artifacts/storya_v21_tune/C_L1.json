@@ -1,0 +1,115 @@
+{
+  "universe": "C",
+  "arm": "L1",
+  "model": "MLP",
+  "n_trials": 30,
+  "top_k": 5,
+  "tune_seeds": [
+    11,
+    22,
+    33
+  ],
+  "tune_window": {
+    "train_end": "2022-06-30",
+    "val_end": "2022-12-31",
+    "test_end": "2022-12-31"
+  },
+  "winner_params": {
+    "lr": 0.0019531137875202621,
+    "weight_decay": 0.00024029526489767312,
+    "dropout": 0.1,
+    "hidden_channels": 128,
+    "num_layers": 1
+  },
+  "winner_mean_val_ic_3seed": 0.059699345380067825,
+  "top_table": [
+    {
+      "rank": 4,
+      "params": {
+        "lr": 0.0019531137875202621,
+        "weight_decay": 0.00024029526489767312,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.057052042335271835,
+      "tune_seed_ics": [
+        0.057052042335271835,
+        0.05533169209957123,
+        0.06671430170536041
+      ],
+      "mean_val_ic_3seed": 0.059699345380067825
+    },
+    {
+      "rank": 0,
+      "params": {
+        "lr": 0.00750223413658786,
+        "weight_decay": 0.00012582278426894687,
+        "dropout": 0.3,
+        "hidden_channels": 64,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.06000899523496628,
+      "tune_seed_ics": [
+        0.06000899523496628,
+        0.010316815227270126,
+        0.05920875817537308
+      ],
+      "mean_val_ic_3seed": 0.04317818954586983
+    },
+    {
+      "rank": 2,
+      "params": {
+        "lr": 0.003309150739887436,
+        "weight_decay": 0.0002381495961549303,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.05852748826146126,
+      "tune_seed_ics": [
+        0.05852748826146126,
+        0.022880682721734047,
+        0.03437664732336998
+      ],
+      "mean_val_ic_3seed": 0.03859493943552176
+    },
+    {
+      "rank": 1,
+      "params": {
+        "lr": 0.003057320482905476,
+        "weight_decay": 0.00036179095499654687,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.059717126190662384,
+      "tune_seed_ics": [
+        0.059717126190662384,
+        0.024191996082663536,
+        0.02784070000052452
+      ],
+      "mean_val_ic_3seed": 0.03724994075795015
+    },
+    {
+      "rank": 3,
+      "params": {
+        "lr": 0.0032525954476794873,
+        "weight_decay": 0.00024273982639876673,
+        "dropout": 0.1,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.05836958438158035,
+      "tune_seed_ics": [
+        0.05836958438158035,
+        0.02306291274726391,
+        0.02484733797609806
+      ],
+      "mean_val_ic_3seed": 0.03542661170164744
+    }
+  ],
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "wall_time_sec": 2163.4,
+  "smoke": false
+}
