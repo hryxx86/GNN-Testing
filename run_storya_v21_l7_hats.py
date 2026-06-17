@@ -36,6 +36,7 @@ import sys
 import time
 import argparse
 import json
+import hashlib
 import gc
 
 import numpy as np
@@ -45,7 +46,7 @@ import torch.nn.functional as F  # noqa: F401  (HATS module uses F internally; k
 
 # ── import-only reuse (§5): 12-fold + cell_id from main runner; data from anchor; HATS from e1_6 ──
 import run_storya_e1_anchor as anchor
-from run_storya_v21_main12 import WALK_FORWARD_FOLDS_12, cell_id, N_FOLDS, ARM_ORDER
+from run_storya_v21_main12 import WALK_FORWARD_FOLDS_12, cell_id, N_FOLDS, ARM_ORDER, load_frozen_hparams
 from run_storya_e1_anchor import (
     CANONICAL_SEEDS, HORIZON, COST_LEVELS_BPS, COST_CONVENTION,
     load_core_data, build_universe_B, build_universe_C, build_labels,
@@ -53,6 +54,7 @@ from run_storya_e1_anchor import (
     winsorize_train_only, standardize_train_only, compute_daily_ic,
     compute_cost_ladder_sharpe, get_device,
 )
+import run_storya_e1_6_hats as hats
 from run_storya_e1_6_hats import (
     HATS3RAdapt, train_hats, build_three_relation_edges_per_fold, HATS_HPARAMS,
 )
@@ -69,6 +71,10 @@ RESULTS_CSV = f'{OUT_DIR}/results.csv'
 MANIFEST_CSV = f'{OUT_DIR}/manifest.csv'
 PER_DAY_IC_DIR = f'{OUT_DIR}/per_day_ic'
 ALPHA_DIAG_DIR = f'{OUT_DIR}/alpha_diag'
+
+# §4 frozen-HP injection for L7 (D-RERUN-12F): preserved HATS pilot defaults = the no-flag baseline
+# (byte-identical to the untuned L7). Injection patches hats.HATS_HPARAMS per universe (B_L7 / C_L7).
+_ORIG_HATS = dict(hats.HATS_HPARAMS)
 
 # Schema = base (parity with main runner) + 4 HATS α-diagnostic cols + diverged flag.
 L7_RESULTS_COLUMNS = (
@@ -262,7 +268,25 @@ def main():
     p.add_argument('--contingency', action='store_true', help='Evaluate §6 rule on results.csv, exit')
     p.add_argument('--resume', action='store_true', default=True)
     p.add_argument('--no-resume', dest='resume', action='store_false')
+    p.add_argument('--frozen-hparams', type=str, default=None,
+                   help='Path to frozen_hparams.json → inject per-universe L7 HATS tuned HPs '
+                        '(D-RERUN-12F). Absent = HATS pilot defaults (byte-identical untuned L7).')
+    p.add_argument('--out-dir', type=str, default=None,
+                   help='Override output dir (tuned → experiments/storya_v21_l7_hats_tuned/).')
     args = p.parse_args()
+
+    global OUT_DIR, RESULTS_CSV, MANIFEST_CSV, PER_DAY_IC_DIR, ALPHA_DIAG_DIR
+    _pilot_out = OUT_DIR
+    if args.out_dir:
+        OUT_DIR = args.out_dir.rstrip('/')
+        RESULTS_CSV = f'{OUT_DIR}/results.csv'
+        MANIFEST_CSV = f'{OUT_DIR}/manifest.csv'
+        PER_DAY_IC_DIR = f'{OUT_DIR}/per_day_ic'
+        ALPHA_DIAG_DIR = f'{OUT_DIR}/alpha_diag'
+    # CODEX-A-01 (fail closed): frozen L7 must NOT write into the untuned pilot dir (resume cell-id clash).
+    if args.frozen_hparams and OUT_DIR == _pilot_out:
+        raise SystemExit(f'--frozen-hparams requires a NEW --out-dir (not the pilot dir {_pilot_out}); '
+                         f'e.g. --out-dir experiments/storya_v21_l7_hats_tuned')
 
     anchor.setup_workdir()
     for d in [OUT_DIR, PER_DAY_IC_DIR, ALPHA_DIAG_DIR]:
@@ -322,8 +346,33 @@ def main():
         assert np.all(fC[0] == 0.0), "Univ-C T-1 contract broken (row0)"
         features_raw['C'] = fC
 
+    frozen = load_frozen_hparams(args.frozen_hparams) if args.frozen_hparams else None
+    if frozen:
+        # CODEX-A-02: L7 now persists provenance too (merge + md5 validate, like main12).
+        fz_md5 = hashlib.md5(open(args.frozen_hparams, 'rb').read()).hexdigest()
+        prov_path = f'{OUT_DIR}/_frozen_hp_provenance.json'
+        if os.path.exists(prov_path):
+            prov = json.load(open(prov_path))
+            if prov.get('frozen_md5') != fz_md5:
+                raise SystemExit(f'{prov_path} md5={prov.get("frozen_md5","?")[:8]} != this run {fz_md5[:8]}; '
+                                 f'refuse to mix frozen-HP files in one dir')
+        else:
+            prov = {'mode': 'L7 TUNED per-universe', 'frozen_hparams': args.frozen_hparams,
+                    'frozen_md5': fz_md5, 'applied': {}}
+        print(f'Frozen-HP injection [L7 TUNED per-universe] from {args.frozen_hparams} (md5 {fz_md5[:8]}):')
+        for u in universes_run:
+            wp = frozen[f'{u}_L7']['winner_params']
+            prov['applied'][f'{u}_L7'] = {'src': f'{u}_L7', 'params': wp}
+            print(f'  U{u} L7 ← {u}_L7: {wp}')
+        with open(prov_path, 'w') as f:
+            json.dump(prov, f, indent=2)
+    else:
+        print('Frozen-HP injection: OFF (HATS pilot defaults — untuned L7 baseline)')
+
     t0 = time.time()
     for universe in universes_run:
+        if frozen:   # inject this universe's L7 HATS tuned HPs (patch hats.HATS_HPARAMS module global)
+            hats.HATS_HPARAMS = {**_ORIG_HATS, **frozen[f'{universe}_L7']['winner_params']}
         feats_raw = features_raw[universe]
         u_idx = u_idx_map[universe]
         for fold in WALK_FORWARD_FOLDS_12:

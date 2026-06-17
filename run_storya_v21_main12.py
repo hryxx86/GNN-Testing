@@ -58,6 +58,7 @@ import sys
 import time
 import argparse
 import json
+import hashlib
 import gc
 
 import numpy as np
@@ -128,6 +129,37 @@ OUT_DIR = 'experiments/storya_v21_main12'
 RESULTS_CSV = f'{OUT_DIR}/results.csv'
 MANIFEST_CSV = f'{OUT_DIR}/manifest.csv'
 PER_DAY_IC_DIR = f'{OUT_DIR}/per_day_ic'
+
+# ── §4 frozen-HP injection (D-RERUN-12F + FC arm) ──
+# Preserved pilot defaults = the NO-FLAG baseline. With no --frozen-hparams the runner is byte-identical
+# to the untuned pilot (the pilot is the comparison). Injection monkeypatches the anchor module-global
+# HP dicts per (universe, arm), exactly like run_storya_v21_tune.apply_hparams (verified to reach all
+# training paths in the tuning smoke).
+_ORIG_NN = dict(anchor.NN_HPARAMS)
+_ORIG_LGB = dict(anchor.LGB_HPARAMS)
+
+
+def load_frozen_hparams(path):
+    """Load frozen_hparams.json (run_v21_tune_launcher --merge). Refuse a partial HP set.
+    CODEX-A-03: explicit raise (not assert) so the completeness gate survives `python -O`."""
+    d = json.load(open(path))
+    if not (d.get('complete') and d.get('n_studies') == d.get('expected')):
+        raise SystemExit(f"frozen_hparams not complete: {d.get('n_studies')}/{d.get('expected')} "
+                         f"(missing {d.get('missing')}); refuse to rerun on a partial HP set")
+    return d['studies']
+
+
+def inject_frozen_hparams(frozen, universe, src_arm, target_model):
+    """Monkeypatch the anchor module-global HP dict (read at call time by train_nn / make_nn_model /
+    train_lightgbm) with the frozen winner for (universe, src_arm). Starts from the preserved pilot
+    defaults so untouched keys = pilot center. `src_arm` == arm for the TUNED rerun; == the FC fixed
+    arm (e.g. L2) for the FC arm. `target_model` = the ACTUAL arm's model (selects NN vs LGB dict)."""
+    wp = frozen[f'{universe}_{src_arm}']['winner_params']
+    if target_model == 'LightGBM':
+        anchor.LGB_HPARAMS = {**_ORIG_LGB, **wp}
+    else:
+        anchor.NN_HPARAMS = {**_ORIG_NN, **wp}
+    return wp
 
 V21_RESULTS_COLUMNS = (
     ['cell_id', 'universe', 'arm', 'model', 'edge_config', 'seed', 'fold', 'test_period',
@@ -520,7 +552,30 @@ def main():
     parser.add_argument('--canary', action='store_true', help='Run E0-canary only, then exit')
     parser.add_argument('--resume', action='store_true', default=True)
     parser.add_argument('--no-resume', dest='resume', action='store_false')
+    parser.add_argument('--frozen-hparams', type=str, default=None,
+                        help='Path to frozen_hparams.json → inject per-(universe,arm) tuned HPs '
+                             '(D-RERUN-12F). Absent = pilot defaults (byte-identical to the untuned pilot).')
+    parser.add_argument('--fc-fix-arm', type=str, default=None,
+                        help='FC arm: inject the frozen HPs of THIS arm (e.g. L2) for ALL run arms '
+                             '(fixed-capacity edge ablation, Family 2). Requires --frozen-hparams; all '
+                             'run arms must share fc-fix-arm model.')
+    parser.add_argument('--out-dir', type=str, default=None,
+                        help='Override output dir (tuned → experiments/storya_v21_main12_tuned/, '
+                             'FC → .../_fc/). Absent = the pilot dir (do NOT overwrite the pilot).')
     args = parser.parse_args()
+
+    global OUT_DIR, RESULTS_CSV, MANIFEST_CSV, PER_DAY_IC_DIR
+    _pilot_out = OUT_DIR
+    if args.out_dir:
+        OUT_DIR = args.out_dir.rstrip('/')
+        RESULTS_CSV = f'{OUT_DIR}/results.csv'
+        MANIFEST_CSV = f'{OUT_DIR}/manifest.csv'
+        PER_DAY_IC_DIR = f'{OUT_DIR}/per_day_ic'
+    # CODEX-A-01 (fail closed): frozen/FC must NOT write into the untuned pilot dir — resume would skip
+    # pilot-completed cells (same cell_ids) or mix tuned/FC rows into the pilot manifest.
+    if args.frozen_hparams and OUT_DIR == _pilot_out:
+        raise SystemExit(f'--frozen-hparams requires a NEW --out-dir (not the pilot dir {_pilot_out}); '
+                         f'e.g. --out-dir experiments/storya_v21_main12_tuned (or .../_fc for the FC arm)')
 
     anchor.setup_workdir()
     for d in [OUT_DIR, PER_DAY_IC_DIR]:
@@ -572,6 +627,41 @@ def main():
     done_cells = load_manifest_done(MANIFEST_CSV) if args.resume else set()
     print(f'Resume {"ON" if args.resume else "OFF"}: {len(done_cells)} cells already done')
 
+    # ── frozen-HP injection setup (D-RERUN-12F tuned rerun / FC edge arm) ──
+    frozen = load_frozen_hparams(args.frozen_hparams) if args.frozen_hparams else None
+    if args.fc_fix_arm:   # CODEX-A-03: explicit raises (survive python -O)
+        if frozen is None:
+            raise SystemExit('--fc-fix-arm requires --frozen-hparams')
+        fc_model = ARM_SPEC[args.fc_fix_arm]['model']
+        for a in arms_run:
+            if ARM_SPEC[a]['model'] != fc_model:
+                raise SystemExit(f'--fc-fix-arm {args.fc_fix_arm} ({fc_model}) but arm {a} is '
+                                 f'{ARM_SPEC[a]["model"]}; FC requires same-model arms (edge family is all GAT)')
+    if frozen:
+        mode = f'FC fixed-arm={args.fc_fix_arm}' if args.fc_fix_arm else 'TUNED per-arm'
+        fz_md5 = hashlib.md5(open(args.frozen_hparams, 'rb').read()).hexdigest()
+        # CODEX-A-02: MERGE provenance (subset invocations union, never clobber) + validate mode/md5.
+        prov_path = f'{OUT_DIR}/_frozen_hp_provenance.json'
+        if os.path.exists(prov_path):
+            prov = json.load(open(prov_path))
+            if prov.get('mode') != mode or prov.get('frozen_md5') != fz_md5:
+                raise SystemExit(f'{prov_path} exists with mode={prov.get("mode")}/md5={prov.get("frozen_md5","?")[:8]} '
+                                 f'!= this run mode={mode}/md5={fz_md5[:8]}; refuse to mix HP modes/files in one dir')
+        else:
+            prov = {'mode': mode, 'frozen_hparams': args.frozen_hparams, 'frozen_md5': fz_md5,
+                    'fc_fix_arm': args.fc_fix_arm, 'applied': {}}
+        print(f'Frozen-HP injection [{mode}] from {args.frozen_hparams} (md5 {fz_md5[:8]}):')
+        for u in universes_run:
+            for a in arms_run:
+                src = args.fc_fix_arm if args.fc_fix_arm else a
+                wp = frozen[f'{u}_{src}']['winner_params']
+                prov['applied'][f'{u}_{a}'] = {'src': f'{u}_{src}', 'params': wp}
+                print(f'  U{u} {a:>3s} ← {u}_{src}: {wp}')
+        with open(prov_path, 'w') as f:
+            json.dump(prov, f, indent=2)
+    else:
+        print('Frozen-HP injection: OFF (pilot defaults — untuned baseline)')
+
     # build features per universe once (per-fold winsor/scale inside)
     features_raw = {}
     if 'B' in universes_run:
@@ -618,6 +708,9 @@ def main():
 
             for arm in arms_run:
                 spec = ARM_SPEC[arm]
+                if frozen:   # inject (universe,arm) tuned HPs — or the FC fixed arm's HPs — before training
+                    inject_frozen_hparams(frozen, universe,
+                                          args.fc_fix_arm if args.fc_fix_arm else arm, spec['model'])
                 for seed in seeds_run:
                     s_idx = seed_idx_map[seed]
                     cid = cell_id(u_idx, arm, fold['id'], s_idx)
