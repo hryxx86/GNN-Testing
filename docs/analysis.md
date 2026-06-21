@@ -4,6 +4,46 @@
 
 ---
 
+## 2026-06-21-a: D-RERUN-12F CONFIRMATORY — tuned L0–L7 ladder (Family-1 predictive) + FC fixed-capacity edge arm (Family-2 causal). The HEADLINE result; supersedes the 2026-06-15-a PILOT.
+
+> **POSITIONING.** This is the **protocol confirmatory main table** (`docs/protocol_v2_freeze.md` §5/§6): the tuned L0–L7 ladder + FC arm, 2160 main + 240 L7 + 720 FC cells, 0 fail / 0 dup. The 2026-06-15-a entry (untuned anchor) was the PILOT; **this entry is the paper headline.** Two SEPARATE pre-registered confirmatory families (do NOT conflate — Codex T3 finding R-A-05): **Family-1** = predictive / model-selection (does any tuned arm beat tuned LightGBM); **Family-2** = causal edge-attribution at the frozen L2 operating point. Reviewers: Touchpoint 2 `artifacts/reviews/2026-06-20_codex_code_A.md` (PROCEED-WITH-FIXES, both fixed); Touchpoint 3 `artifacts/reviews/2026-06-21_codex_results_A.md` (**PASS-WITH-CONCERNS**, 0 CRIT + 1 MAJOR + 4 CONCERN — all narrative-discipline, computation independently re-verified by Codex). Analyzers: `compute_family1_ladder.py`, `compute_fc_edge_causal.py` (import-reuse `compute_e6_dm_spa.py` helpers).
+
+> **TL;DR.** **No tuned arm reliably beats tuned LightGBM** — Hansen SPA does not reject in either universe (B p_consistent=0.277, C=0.077; source `artifacts/storya_v21_family1/family1_spa.csv`). Local DM-HLN ladder evidence (BH-FDR over the 20-test family): in Univ C the tuned non-graph MLP beats tuned LightGBM (L1−L0=+0.015) while the tuned corr-GAT loses to that MLP (L2−L1=−0.012) and the tuned news-edge arm loses to corr-GAT (L3−L2=−0.012) — i.e. **within this tuned ladder the neural gain comes from MLP, not the graph, and the tuned news edge hurts**; this is LOCAL ladder evidence, NOT a global "graphs hurt" or a causal claim (those belong to Family-2). **Family-2 (causal): 0/6 contrasts survive BH-FDR; 6/6 underpowered** (|matched ΔIC| < MDE@80%) → edge effects are "directionally positive but not family-significant"; fail-to-reject ≠ no effect. **C/L5s** (one SAGE control arm) degenerates to a constant predictor in **27.5%** of C cells — a tuned-config instability finding (handled by EXCLUDE primary; conclusion-invariant under 3 treatments).
+
+### 1. Family-1 — PREDICTIVE / model-selection (the only confirmatory predictive family)
+
+**Hansen SPA (cherry-pick defense; per universe, benchmark L0, M=9 incl L7; source `family1_spa.csv`)**: neither universe rejects H0 "L0 not worse than any of the 9 candidates" at 5% — **Univ B p_consistent=0.2767, Univ C p_consistent=0.0774** (C marginal but does not reject). **The cherry-pick-robust verdict: no tuned arm is confirmed to beat tuned LightGBM.**
+
+**DM-HLN pairwise + BH-FDR over the 20-test family (source `family1_dm_hln.csv`)** — read as LOCAL tuned-ladder rung evidence (Codex T3 R-A-01):
+- **Univ C** (51-feat): L1−L0=**+0.0148** (tuned MLP > tuned LGB, HLN p=0.011, BH-reject); L2−L1=**−0.0119** (tuned corr-GAT < tuned MLP, p=6.9e-6, reject); L3−L2=**−0.0123** (tuned news-edge < corr-GAT, p=0.0086, reject); L4−L2=+0.0163, L6−L2=+0.0174, L7−L2=+0.0102, L5−L3=+0.0275 (sector / complete-graph / HATS arms recover above corr-GAT).
+- **Univ B** (10-feat): mostly null; L2−L1=−0.0133 (GAT<MLP, reject) and L3−L2=−0.0149 (news hurts, reject); all "vs LightGBM" non-significant.
+- **Bounded reading (R-A-01)**: *within this tuned ladder*, corr-GAT underperforms the tuned MLP and the tuned news-edge arm underperforms corr-GAT. Do NOT generalize to "all graph structures hurt" (C L4/L5/L6 recover above L2) or to causal edge harm (that is Family-2's job, and Family-2 finds tiny/non-significant edge effects).
+- **Robustness caveat (R-A-02)**: the headline uses the pre-registered HLN-t p (auto NW lag); a lag=21 column (`HLN_p_t_lag21`) is reported — marginal pairs should NOT be called "robust" without checking it. The SPA non-rejection is the multiplicity-honest summary; the pairwise rejections are local rung signals, NOT global SPA success (R-A-05).
+
+**Block-bootstrap IC CIs per arm** (`family1_ic_ci.csv`, seed-averaged T=749, n_boot=5000) + **MDE per pairwise** (`family1_mde.csv`, MDE=2.8×SE_block; `T_days` and `n_eff_blocks=T_days/21` reported separately per Codex CODEX-A-02). **LOFO** 12-fold leave-one-out (`family1_lofo.csv`). **L7/HATS healthy** → kept in the family (M=9): diverge_frac=0, collapse_frac=0 (Cn5 contingency not triggered).
+
+### 2. Family-2 — CAUSAL edge-attribution (separate confirmatory family; the clean edge read)
+
+Fixed-capacity FC arm: L3fc/L4fc/L5fc run at the **frozen tuned L2 HP vector**, varying ONLY the edge set → matched-ΔIC isolates the local pure-edge effect at the L2 operating point (NOT global edge superiority). Inference = paired fold-level seed-averaged ΔIC (n≈12 fold blocks), block bootstrap over the 12 folds, **BH-FDR over the 6 contrasts** (source `artifacts/storya_v21_family2_fc/family2_fc_causal.csv`):
+- **0/6 contrasts survive BH-FDR q=0.05.** The BH-FDR decision is the family-level confirmatory call; the per-row block-bootstrap CIs are **unadjusted descriptive intervals** (Codex T3 R-A-03 — a CI-excludes-0 row is NOT "significant" once the 6-contrast multiplicity is applied).
+- **6/6 underpowered**: |matched ΔIC| < MDE@80% for every contrast → "directionally positive but not family-significant"; this is the locked honest-power result, **fail-to-reject ≠ no effect**.
+- matched-ΔIC (source `family2_fc_causal.csv`): B-L3/L4/L5 = +0.0015/+0.0055/+0.0042; C-L3=+0.0011, C-L4=+0.0137, C-L5=+0.0141. **B sign reversal** (matched-ΔIC positive vs tuned-ΔIC negative) is useful evidence that the **capacity confound** masked a small positive edge effect at fixed capacity. C-L4/L5 matched and tuned ΔIC are same-sign positive.
+
+### 3. C/L5s constant-collapse — a tuned-config STABILITY finding (not a fill-method footnote)
+
+**Verified mechanism** (read 25 empty-`.npy` cells' results.csv diagnostics): `converged_flag=1`, `epochs_run` 19–45, `best_val_loss≈0.998` (the no-signal plateau = predicting the cross-sectional mean), identical L/S Sharpe across seeds within a fold → the arm **converged to a CONSTANT prediction** (zero ranking ability; cross-sectional Spearman IC **undefined**, 0/0) — NOT a training crash, NOT a measured IC=0. Scope (source `family1_stability.csv`): C/L5s 120 cells = **25 fully-collapsed + 8 partial-collapse + 87 normal = 27.5% collapse rate**; **isolated to C/L5s** (every other arm × universe + B/L5s = 0 degenerate).
+- **Finding framing**: the equal-budget tuned-champion config for C/L5s (dropout 0.5 / 3 layers / lr 8.3e-3) degenerates to a constant predictor in 27.5% of test fold-seeds. Mechanism = SAGE-mean aggregation + thin data + high dropout smooths the signal away → connects to the "smoothing hurts ranking" evidence chain. **C/L5s is NEVER re-tuned** (equal-budget symmetry; re-tuning a losing arm = cherry-pick, forbidden).
+- **Treatment (H博士 2026-06-21 LOCKED)**: primary = **EXCLUDE** (undefined IC = missing; zero-fill would fabricate 0s for undefined values and cannot be cleanly implemented for partial cells without per-day date labels). C/L5s IC is therefore "IC **conditional on a defined ranking**". Robustness (source `family1_cl5s_robustness.csv`): 3 treatments {exclude 0.00182, zerofill 0.00087, zeroskill_cell 0.00021} all give C/L5s mean IC ≈ 0 and the C-universe SPA p_consistent stable at 0.077–0.080 → **the treatment choice changes no conclusion**. Residual limitation (R-A-04): partial-collapse cells have positional (non-date-aligned) tails; do NOT lean on C/L5s's daily IC path for any mechanism claim.
+- **Isolation**: L5s is NOT in any pre-registered DM pair (the 20-test family has no L5s−L5); only L2s appears (L2s−L2, and L2s is healthy). So C/L5s enters ONLY the SPA M=9 candidate set and touches no pairwise test and no Family-2 contrast.
+
+### 4. Integrity gates re-verified this round
+- **Ghost-dimension audit (full)**: all 12 tuned dims consumed — 6 NN (`run_storya_e1_anchor.py:483-586`) + 6 LGB (`:728-747`, incl. the `lambda_l1/l2` `.get` closure) + 6 HATS (`run_storya_e1_6_hats.py:328-335`). No injected HP is silently defaulted → the confirmatory runs genuinely used the §4 tuned hyperparameters.
+- **§4 tuning val-IC is a SELECTION metric** (2022H2, optimistic), NEVER entered as a result anywhere here.
+
+→ progress: 2026-06-21-a | plan: 2026-06-17 (FC 两族) | analysis: 2026-06-21-a
+
+---
+
 ## 2026-06-15-a: 12-fold formal null + sliding 副轴 on the UNTUNED anchor — this is a PILOT / robustness cross-check, NOT the protocol confirmatory main table
 
 > **POSITIONING (read first).** Everything below is computed on the **untuned 4-model anchor** (GAT / SAGE-Mean / MLP / LightGBM; `run_storya_e1_anchor.py`, self-labelled "untuned anchor"). Per the frozen protocol (`docs/protocol_v2_freeze.md` §5 / §1.1 freeze note: "主表 12 fold 全部在冻结新超参下重跑，旧 anchor 仅作 pilot/smoke；M3 复用旧 anchor 驳回"), **the confirmatory main table is the TUNED L0–L7 ladder** (`run_storya_v21_main12.py`, running on Colab). So these results are a **PILOT / robustness preview**, not the paper's headline confirmatory result. They give an early sanity read for the ladder; the headline numbers (and the confirmatory SPA/DM/BH-FDR family) come from the tuned ladder.

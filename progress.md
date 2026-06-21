@@ -4,6 +4,94 @@
 
 ---
 
+## 2026-06-21-a: Track C 分析器 Touchpoint 2 PASS + C/L5s 退化裁决 + confirmatory 跑完（Touchpoint 3 进行中）
+
+**两个分析器**（新写，import 复用 compute_e6 helper）：`compute_family1_ladder.py`（Family-1 §2a：20 对 DM-HLN + BH-FDR + SPA M=9 + L7 contingency + MDE + LOFO）、`compute_fc_edge_causal.py`（Family-2 FC：6 contrasts fold-level seed-avg ΔIC + block bootstrap + BH-FDR/6）。
+
+**Touchpoint 2（Code Review）— 两审收敛到 1 真 bug + 1 cosmetic**：
+- **Fallback 透明记录（Rule 9）**：首次误判 Codex 无响应（实为 `gpt-5.5 + xhigh` 极慢 + 我探测方式有误：macOS 无 GNU `timeout`、companion 沙箱 pgrep 看不到、artifact 仅完成时落盘）→ 提前用了 finance-gnn-reviewer fallback。H博士 要求查 Codex → 实测 `codex exec` 6s 返回 CODEX_OK，确认可用只是慢 → 改用可控后台 `codex exec` 完整跑完。**两审均独立命中同一处**，Codex 用数据探针下调了 finance-gnn 其余 finding。Codex review 存 `artifacts/reviews/2026-06-20_codex_code_A.md`（PROCEED-WITH-FIXES，1 MAJOR + 1 CONCERN）。
+- **CODEX-A-01 / FINGNN-A-01（已修）**：`collect_arm_matrix` 把退化 cell 的空 per_day_ic 当 NaN 排除，docstring 却谎称 "kept as 0"。
+- **CODEX-A-02（已修，cosmetic）**：`family1_mde.csv` 的 `n_eff_approx` 用日长度但 SE 来自 block=21 bootstrap → 拆为 `T_days` + `n_eff_blocks`。
+- Codex 澄清的非问题（不改）：Family-2 t-test p vs bootstrap CI = n=12 小样本预期；BH full-20 符合协议字面；ragged 天数只在 C/L5s；L7 contingency 实现正确。
+
+**C/L5s 退化机制裁决（H博士 2026-06-21 LOCKED）**：亲查 25 个空数组诊断——`converged_flag=1`、`epochs_run` 19-45、`best_val_loss≈0.998`（无信号平台）、同 fold 跨 seed Sharpe 完全相同 → **收敛到常数预测（IC 数学无定义），不是训练崩溃，也不是真测到的 0**。全貌：C/L5s 120 cells = 25 完全塌缩 + 8 部分塌缩 + 87 正常 = **27.5% 塌缩率**；隔离性证实**只在 C/L5s**（其它 8 臂 × 2 univ + B/L5s 全 0）。
+- **裁决**：primary = **EXCLUDE**（无定义=缺失，不捏造 0；zero-fill 对部分塌缩 cell 无逐日标签无法干净实现）。zero-fill + zero-skill 版作 robustness 附录（`family1_cl5s_robustness.csv`：三处理 C/L5s IC 均≈0、C SPA p 稳定 0.077-0.080 → 不翻盘）。27.5% 作**稳定性 finding** 写入（`family1_stability.csv`）：等预算 tuned 冠军配置（dropout0.5/3层）在 test 期 27.5% 退化为常数，机制=SAGE-mean+薄数据+高 dropout 平滑掉信号，接"平滑伤排序"证据链。**明确不重调 C/L5s**（等预算对称性，重调=cherry-pick）。
+- **L5s 隔离确认**：L5s **不在任何预登记 DM 对子**（10 对里无 L5s−L5）；L2s 在 L2s−L2 但 L2s 健康 → C/L5s 退化只进 SPA M=9 候选，零波及 pairwise + Family-2。
+
+**两个硬 GATE 复核（H博士 点名）**：(1) **幽灵维全审计**——12 主维（6 NN @anchor:483-586 + 6 LGB @anchor:728-747）+ 6 HATS 维（@e1_6_hats:328-335）**全有消费点，零幽灵**，confirmatory 确用 tuned HP。(2) n_eff 标签已修（见上）。
+
+**Confirmatory 结果（full n_boot=5000；待 Touchpoint 3 审完才入 analysis.md）**：
+- **Family-1 SPA**：B p_consistent=0.277、C p_consistent=0.077（source: artifacts/storya_v21_family1/family1_spa.csv）→ 两 universe 都不拒绝"L0 不差于任何候选"。
+- **Family-1 DM 对子**：C 里 L1−L0=+0.015(MLP>LGB)、L2−L1=−0.012(GAT<MLP)、L3−L2=−0.012(news 伤)、L4/L6 正（source: family1_dm_hln.csv）→ 神经增益来自 MLP 非图。
+- **Family-2 FC**：**0/6 survive BH-FDR；6/6 underpowered**（|matched ΔIC|<MDE@80%）；B 上 matched-ΔIC 与 tuned-ΔIC 异号（capacity confound）（source: family2_fc_causal.csv）。
+- **L7 健康保留 M=9**（diverge=0、collapse=0）。
+
+**Touchpoint 3**：Codex results review 后台运行中（`/tmp/codex_t3_review.log`）→ 审完写 `docs/analysis.md`。
+
+→ progress: 2026-06-21-a | plan: 2026-06-17（FC 两族，分析完成）| analysis: PENDING（Touchpoint 3 后写）
+
+---
+
+## 2026-06-20-a: D-RERUN-12F 数据生成 100% COMPLETE（2160 主表 + FC 720 + L7 240，全 0 fail）— 历经 3 次 recycle + 同机并行加速
+
+**全部完成 + 校验通过**（source: Drive `experiments/` results.csv + manifest.csv，python concat 校验）：
+- **HEAVY 1200** = tuned_t4(960) + C56(200, C-L5/L6) + C4(40, C-L4) → **unique key 1200, 0 dup**, 10 个 (universe×arm) 各 120 cells（12 fold × 10 seed）。
+- **2160 主表** = macB(480) + macC(480) + heavy(1200)，全 0 failed。
+- **FC 720**（L3/L4/L5 fc-fix-L2，Family-2 causal）0 fail；**L7 240**（HATS）0 fail。
+
+**鲁棒性纪实**：
+- **3 次 Colab runtime recycle**（hostname: conceptual-champion → knight-buffalo → garden-worship → bibliography-studios）。每次 re-bootstrap + re-pip pyg 2.8.0 + `--resume` 读 Drive manifest 续跑，**每次零丢失/零重复**（manifest unique-key 校验）。第 2 次恢复用 py-spy 确诊"深 fold resume 先重建所有 fold 的 union 边（CPU `np.unique`）→ ~10min GPU 空转非卡死"。
+- **GPU 满载并行加速**（H博士 "没用满算力" → 实测单 job 仅 GPU 47% / CPU 1/8 核）：把剩余 C 拆成 2-3 个**同 T4 并发 job**（CUDA 同质、按 arm 分区、各自 out-dir + Drive 路径 seed skip-list），GPU 47%→**100%**，吞吐 ~15/h → ~60-76/h（~4-5x）。
+- **一次自查纠正的失误**（透明记录）：首次拆分误判"B 还有剩余"（实际 t4heavy 已跑完全部 600 B）+ seed 种到**本地路径**而非 Drive（runner `setup_workdir()` chdir 到 Drive 的坑）→ t4b 一度重做 B。**当场 kill + 删浪费产物 + 确认 B 在 tuned_t4 完好**，重新按正确方式部署。无数据污染。
+
+**merge 目标**（heavy 跨 3 目录 key-disjoint 已验证）：`{macB, macC, tuned_t4, C56, C4}` → 2160 主表 ; `storya_v21_main12_fc` → FC 720 ; `storya_v21_l7_hats_tuned` → L7 240。
+
+**下一步 Track C**：scp Drive → Mac → merge → **Family-1 §2a**（DM-HLN + BH-FDR + SPA M=9）+ **Family-2 FC** 因果推断（fold-level seed-avg ΔIC, n≈12 + block bootstrap + BH-FDR/6）→ **Touchpoint 3** → `docs/analysis.md`。C_L5s ~21% 退化（2026-06-18-a）如实纳入。
+
+→ progress: 2026-06-20-a | plan: 2026-06-17（FC 两族，数据完成）| analysis: N/A（Track C/Touchpoint 3 待）
+
+---
+
+## 2026-06-18-a: D-RERUN-12F Track A（本地 light arms）COMPLETE 960/960 + C_L5s 退化发现 + Colab runtime recycle（待新 hostname）
+
+**Track A 完成**：macB 480/480（wall 15.35h）+ macC 480/480（wall 16.11h），**0 fails**，两进程正常退出 DONE banner。每小时 cron 监控（job 4be7fc8f，:07）全程 0 traceback。
+
+**Merge-ready 校验**（`/opt/.../gnn/bin/python` concat 两 results.csv）：combined 960 行、**cell_id 全 disjoint**（960 unique）、8 个 (universe,arm) 各 120 cells（L0/L1/L2s/L5s × B/C，12 fold × 10 seed）。等 t4heavy(1200) 凑 2160 主表。
+
+**⚠️ 发现 — tuned C_L5s 配置系统性退化（report-not-fix）**：
+- 退化 cell（IC_mean 恒 0、零方差预测）共 **25/960，全部 C_L5s/SAGE-Mean**（25/120 ≈ 21%，散布 fold 0-11）；B_L5s **0 退化**。
+- C_L5s 全臂均值 IC=**0.0002**（被零方差 cell 拖到~0）；其余 7 臂均值 IC 0.0194–0.0369 正常（source: experiments/storya_v21_main12_tuned_mac{B,C}/results.csv, groupby universe,arm IC_mean.mean）。
+- 根因：tuned C_L5s winner 配置 `dr=0.5 + num_layers=3 + lr=8.3e-3`（§4 调参按 val-IC=0.070 选中，C_L5s 仅 25 trials）在 51 维 C universe 测试集 ~21% scale-collapse。属 Tier 1.C σ-guard 类已知退化机制；injection 正确（provenance C_L5s 注入参数与 frozen_hparams 一致）、manifest fail:0。
+- **处理 LOCKED**：(1) 绝不重调参（frozen 预注册 + never-adjust-to-pass）；(2) 如实纳入 Family-1，报"tuned C_L5s ~21% 退化、低稳定性"（类比 L1 LOW-STABILITY caveat）；(3) Track C merge 时单列 L5s/C 退化率写 analysis，Touchpoint 3 交 Codex 评。
+
+**🔴→✅ Colab runtime recycle + 断点恢复（iter 17 断, ~7h 后恢复）**：`conceptual-champion-why-load.trycloudflare.com` DNS `no such host` → 隧道断。recycle 前 Drive 进度 heavy 312/1200、fc 304/720、l7 240/240✅（比 iter 16 读数还多跑一点）。H博士 提供新 hostname `knight-buffalo-hawk-hwy.trycloudflare.com`（新 T4，UUID 不同 = 确属新 runtime；pyg 需重装）→ re-pip torch_geometric 2.8.0 + 重启 t4heavy/t4fc tmux（l7 已完成不重启）。**端到端断点恢复验证通过**：t4heavy `Resume ON: 312 cells already done`、t4fc `Resume ON: 304 cells already done`；manifest 312/304 行均 unique cell_id（无重复）、0 fails → 已完成 cell 未被重跑。一次真实 recycle 的零丢失/零重复恢复，证实 §4-tuning 后建的 recycle 韧性机制（progress 2026-06-16-a）在 rerun 场景同样有效。
+
+→ progress: 2026-06-18-a | plan: 2026-06-17（FC 两族，执行中）| analysis: N/A（结果未出，Track C/Touchpoint 3 待）
+
+---
+
+## 2026-06-17-c: D-RERUN-12F confirmatory tuned rerun 启动（本地 + Colab 双轨）+ 启动健康全验
+
+H博士 决策"本地 + Colab 一起上"。代码已在 main（`1df2f23`），frozen_hparams md5 `59ddd0a2` 三处一致（本地 repo / Mac 各 out-dir provenance / Colab repo）。
+
+**Track A — 本地 Mac（light arms，双进程）**：
+- `run_storya_v21_main12.py --universe B|C --arms L0,L1,L2s,L5s --frozen-hparams ... --out-dir experiments/storya_v21_main12_tuned_mac{B,C}`，nohup 后台（PID 10953/10954），device=mps。
+- 验证：两进程 injection table 正确（UB L0 λ2=0.46589；UC T-1 shift contract re-confirmed, row0 zeroed），`_frozen_hp_provenance.json` md5=`59ddd0a2`、mode "TUNED per-arm"、fc_fix_arm=null；manifest 随时间增长（启动数分钟内 macB 16 / macC 18 cells，source: 各 out-dir/manifest.csv）。日志 `/tmp/rerun_mac{B,C}.log`。
+
+**Track B — Colab T4（heavy + L7 + FC，3 tmux）**：SSH `conceptual-champion-why-load.trycloudflare.com`，repo reset 到 `1df2f23`，pip 装 pyg 2.8.0 + pandas_market_calendars，GPU=Tesla T4 (cuda True)。
+- `t4heavy`：main12 `--arms L2,L3,L4,L5,L6`（tuned）→ `experiments/storya_v21_main12_tuned_t4`。
+- `t4l7`：`run_storya_v21_l7_hats.py`（HATS tuned）→ `experiments/storya_v21_l7_hats_tuned`（含 `alpha_diag/` health 诊断，§6 contingency）。
+- `t4fc`：main12 `--arms L3,L4,L5 --fc-fix-arm L2`（Family-2 causal）→ `experiments/storya_v21_main12_fc`。验证 provenance mode="FC fixed-arm=L2"、applied 全部 B/C×L3/L4/L5 ← L2（容量固定，只变 edges）✓。
+- 启动健康：3 tmux 全活，各 run.log injection table 正确、产出 cell 带合理 IC（无 traceback），GPU 100% util / 1783 MiB（3 路并发内存充裕）。manifest/results/per_day_ic/provenance 全部正确写入 Drive，md5=`59ddd0a2`（source: `/content/drive/MyDrive/GNN测试/experiments/<dir>/`）。
+
+**Colab 路径要点（与文档假设不同，已确认无害）**：本次 Colab `experiments/` 是**本地真实目录**（非 symlink），但 runner `setup_workdir()` chdir 到 Drive root → results/manifest/npy/provenance 写**Drive**（持久化 ✓，recycle-safe），仅 `tee` 的 run.log 落本地 SSD（recycle 丢失，cosmetic）。**Track C merge 必须从 Drive 拉**（plan §C 已如此规定）。
+
+**下一步**：监控（Track A ~13h / Track B ~1-2天，recycle 后 re-bootstrap + 重启同 tmux，`--resume` 读 Drive manifest）→ merge {macB,macC,t4heavy}=2160-cell tuned 主表 + L7(240) 候选臂 → Family-1 §2a (DM-HLN+BH-FDR+SPA M=9) + Family-2 FC 因果推断（fold-level seed-avg ΔIC, effective n≈12 + block bootstrap + BH-FDR/6）→ Touchpoint 3 → `docs/analysis.md`。FC 分析器实现方式（复用 compute_e6_dm_spa.py vs 新写）H博士 暂缓，merge 时再定（若新代码 → Touchpoint 2）。
+
+→ progress: 2026-06-17-c | plan: 2026-06-17（FC 两族，执行启动）| analysis: N/A（结果未出，Touchpoint 3 待）
+
+---
+
 ## 2026-06-17-b: D-RERUN-12F frozen-HP 注入建成（main12 + l7_hats）→ Codex Review Code (Touchpoint 2, Round A) PROCEED-WITH-FIXES，3 条全修验
 
 **实现**：main12 + l7_hats 加 frozen-HP 注入，一套覆盖 tuned 重跑 + FC 臂：
