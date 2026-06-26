@@ -1,0 +1,49 @@
+{
+  "module": "cost-口径 (gross/net) crosswalk",
+  "role": "DESCRIPTIVE economic-sensitivity layer; IC is the SOLE confirmatory metric. NO third BH-FDR confirmatory family on Sharpe (avoids over-claim + multiplicity).",
+  "why": "confirmatory headline is IC-only (gross rank metric); Codex T3 did not cover cost; H博士 2026-06-21: cost口径 BLOCKING — every claim needs gross/net dual口径.",
+  "cost_convention": "L1_one_way: net_ret = gross_ret − turnover_L1 × bps/10000 (run-time stored)",
+  "headline_bps": 10,
+  "ladder_bps_reported": [
+    0,
+    10,
+    30
+  ],
+  "cost_levels_available": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    30
+  ],
+  "pairwise_family": {
+    "n_pairs_per_universe": 10,
+    "universes": 2,
+    "pairs": [
+      "L1-L0",
+      "L2-L1",
+      "L6-L2",
+      "L7-L2",
+      "L2s-L2",
+      "L3-L2",
+      "L4-L2",
+      "L5-L2",
+      "L5-L4",
+      "L5-L3"
+    ],
+    "inference_unit": "fold-level seed-averaged ΔSharpe (n≈12 fold blocks)",
+    "ci": "stationary block bootstrap over fold blocks (block=1), n_boot=5000",
+    "robustness": "leave-one-fold-out sign stability + drop-Q2-2025 (fold 9)",
+    "multiplicity": "NONE — descriptive layer (no BH-FDR; IC family carries the confirmatory call)"
+  },
+  "gross_source": "artifacts/storya_v21_family1/family1_dm_hln.csv (mean_delta_IC + BH_FDR_reject_family COPIED verbatim, never re-derived)",
+  "degenerate_treatment": "EXCLUDE 33 degenerate cells (C/L5s constant-predictor; matches Family-1 25 full + 8 partial)",
+  "old_numbers_policy": "old E1/E6/pilot Sharpe values are NEVER read or quoted here (H博士: no mixing into confirmatory narrative)",
+  "cost_sensitive_flag": "gross-IC sign != net-Sharpe@10bps sign → the claim does not hold across口径",
+  "cost_sensitive_pairs": [
+    "B L5-L4 (+news on top of sector)",
+    "C L3-L2 (+news edge vs corr-GAT)",
+    "C L5-L4 (+news on top of sector)"
+  ]
+}

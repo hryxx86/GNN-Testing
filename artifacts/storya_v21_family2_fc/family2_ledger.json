@@ -1,0 +1,23 @@
+{
+  "family": "Family-2 (FC fixed-capacity edge causal attribution)",
+  "role": "CAUSAL PRIMARY for edge attribution (matched-\u0394IC); tuned-\u0394IC is DESCRIPTIVE only",
+  "estimand": "local pure-edge effect at the frozen L2 operating point (local-to-L2, NOT global)",
+  "contrasts": [
+    "L3fc-L2 \u00d7 B",
+    "L4fc-L2 \u00d7 B",
+    "L5fc-L2 \u00d7 B",
+    "L3fc-L2 \u00d7 C",
+    "L4fc-L2 \u00d7 C",
+    "L5fc-L2 \u00d7 C"
+  ],
+  "n_contrasts": 6,
+  "inference": {
+    "unit": "paired fold-level seed-averaged \u0394IC",
+    "n_eff": "approx 12 fold blocks (NOT 120 cells)",
+    "ci": "stationary block bootstrap over fold blocks (block=1 fold), n_boot=5000",
+    "multiplicity": "BH-FDR q=0.05 over the 6 contrasts"
+  },
+  "baseline": "FROZEN tuned-ladder L2 per-day predictions, REUSED (edge set varies, HP fixed at L2)",
+  "honest_power_note": "n_eff\u224812 \u2192 MDE@80%\u22480.008-0.032 vs edge \u0394IC~0.005-0.016; several contrasts likely directional-but-not-reliable \u2014 expected, not a failure.",
+  "no_post_hoc_switch": "matched-\u0394IC is the locked causal primary; tuned-\u0394IC never post-hoc-promoted."
+}

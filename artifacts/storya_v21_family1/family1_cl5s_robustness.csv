@@ -1,0 +1,4 @@
+treatment,cl5s_C_mean_IC,C_SPA_p_consistent,is_primary
+exclude,0.00182,0.0774,True
+zerofill,0.00087,0.0795,False
+zeroskill_cell,0.00021,,False

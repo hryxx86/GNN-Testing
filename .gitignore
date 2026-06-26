@@ -46,6 +46,16 @@ artifacts/**
 !artifacts/storya_v21_tune/*.json
 !artifacts/storya_v21_tune/*.md
 !artifacts/storya_e6_edge_ablation/*.md
+# D-RERUN-12F confirmatory — Family-1 / Family-2 / cost small text artifacts (source-of-record for storya_paper_draft_v2.md)
+!artifacts/storya_v21_family1/*.csv
+!artifacts/storya_v21_family1/*.json
+!artifacts/storya_v21_family1/*.md
+!artifacts/storya_v21_family2_fc/*.csv
+!artifacts/storya_v21_family2_fc/*.json
+!artifacts/storya_v21_family2_fc/*.md
+!artifacts/storya_v21_cost/*.csv
+!artifacts/storya_v21_cost/*.json
+!artifacts/storya_v21_cost/*.md
 
 # Claude Code — whitelist shareable team infrastructure, ignore everything else by default.
 # Previously (pre-2026-04-23) blanket-ignored `.claude/`, which broke Rule 9 infra shipping.

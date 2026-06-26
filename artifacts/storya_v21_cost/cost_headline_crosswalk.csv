@@ -1,0 +1,21 @@
+universe,pair,claim,gross_delta_IC,gross_BH_FDR_reject,net_dSharpe_10bps,net_ci_lo,net_ci_hi,net_ci_excludes_0,net_sign_stable_lofo,gross_sign,net_sign,cost_sensitive
+B,L1-L0,MLP (non-graph NN) vs tuned LightGBM,0.01428,False,0.4321,-0.141,0.9741,False,True,1,1,False
+B,L2-L1,corr-GAT (add graph) vs MLP,-0.01327,True,-0.1411,-0.5307,0.2902,False,True,-1,-1,False
+B,L6-L2,complete-graph attention vs corr-GAT,0.00517,False,0.0821,-0.7769,0.8991,False,False,1,1,False
+B,L7-L2,HATS relation-attention vs corr-GAT,-0.00914,False,-0.3464,-1.394,0.5009,False,False,-1,-1,False
+B,L2s-L2,SAGE-Mean vs corr-GAT (aggregation swap),0.00785,False,0.0917,-0.6829,0.8962,False,False,1,1,False
+B,L3-L2,+news edge vs corr-GAT,-0.01493,True,-0.3457,-1.3687,0.6308,False,True,-1,-1,False
+B,L4-L2,+sector edge vs corr-GAT,-0.00813,False,-0.1006,-1.2435,0.9448,False,False,-1,-1,False
+B,L5-L2,+sector+news vs corr-GAT,-0.01004,False,-0.0433,-1.0896,0.9232,False,False,-1,-1,False
+B,L5-L4,+news on top of sector,-0.0019,False,0.0573,-0.2336,0.3275,False,False,-1,1,True
+B,L5-L3,+sector on top of news,0.00489,False,0.3024,-0.2204,0.901,False,True,1,1,False
+C,L1-L0,MLP (non-graph NN) vs tuned LightGBM,0.01477,True,1.1733,0.356,2.0793,True,True,1,1,False
+C,L2-L1,corr-GAT (add graph) vs MLP,-0.01193,True,-0.7208,-1.4207,-0.1017,True,True,-1,-1,False
+C,L6-L2,complete-graph attention vs corr-GAT,0.01736,True,0.4984,-0.7708,1.7774,False,True,1,1,False
+C,L7-L2,HATS relation-attention vs corr-GAT,0.01015,True,0.1447,-1.4047,1.4013,False,False,1,1,False
+C,L2s-L2,SAGE-Mean vs corr-GAT (aggregation swap),0.00891,True,0.0653,-0.6276,0.741,False,False,1,1,False
+C,L3-L2,+news edge vs corr-GAT,-0.01231,True,0.0821,-0.7713,0.8868,False,False,-1,1,True
+C,L4-L2,+sector edge vs corr-GAT,0.01625,True,0.809,-0.3601,2.0802,False,True,1,1,False
+C,L5-L2,+sector+news vs corr-GAT,0.01516,True,0.9607,-0.1866,2.095,False,True,1,1,False
+C,L5-L4,+news on top of sector,-0.0011,False,0.1517,-0.4162,0.7114,False,False,-1,1,True
+C,L5-L3,+sector on top of news,0.02747,True,0.8786,0.118,1.6509,True,True,1,1,False

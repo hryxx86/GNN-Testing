@@ -4,6 +4,96 @@
 
 ---
 
+## 2026-06-24-b: 论文完成层 — ST1 setup 表 + T8 related-work 矩阵（5 篇新文献验证）+ references PILOT 清理 + Codex Round D
+
+接 2026-06-24-a（confirmatory 草稿 v2）。H博士「继续补」→ 补全论文完成层：
+
+- **ST1 data-setup 表**（草稿 §S1，全 sourced）：ST1a 12-fold 日历（满额测试天数 [62,62,63,63,61,63,64,64,60,62,64,61] 和=**T=749**，source `experiments/storya_v21_main12_tuned/results.csv`）+ ST1b HP 网格（神经 6 维 + LGB 6 维，source `docs/protocol_v2_freeze.md` §4）+ ST1c universe(~502)/10 seeds/cell 预算(3120)。
+- **§2 T8 related-work 矩阵**：`literature-review` skill + WebSearch **验证 5 篇新文献**（不捏造），加入 `storya_references.md` [17]–[21]：AD-GAT（Cheng & Li, AAAI 2021, unmasked attn）/ TRA（Lin et al., KDD 2021, arXiv 2106.12950）/ MASTER（Li et al., AAAI 2024, arXiv 2312.15235）/ FinMamba（Chen et al., arXiv 2502.06707, 剪枝动态图）/ R-GCN（Schlichtkrull, ESWC 2018）。矩阵 = 7 prior work + 本研究（列：图/关系·测试设计·多种子·SPA-FDR·成本阶梯）；诚实框架（✗=未报告非不可能、novelty=「to our knowledge」）。§4.3 L6「dense attention 族 MASTER[19]/AD-GAT[17]」+ L7「R-GCN[21] per-relation 先驱」+ §7 L6「learned-sparse FinMamba[20]」补内联引用。
+- **references PILOT 清理**：SPA 0.147/0.384→**0.2767/0.0774**、T=313→**749**、「10/5 pairs」→**20-test/6-contrast**、指针 storya_paper_draft.md→**_v2**。
+- **Rule 9 Codex Round D**（`artifacts/reviews/2026-06-24_codex_results_D.md`，**PASS-WITH-CONCERNS**）：ST1a/b/c 数字 + T8 框架**全 PASS**；1 CONCERN **CODEX-D-01**——「3120 cells 0-dup after merge」措辞**块内**成立但 FC 臂与主表共用 cell_id 命名空间（亲验：FC 原始 store 不在本地、主表本地 2160 unique 确认，结构论点成立）→ 修 ST1c + §4.4 为「三 store 各自内部 0-dup、按家族分开消费、不并入单一 key 空间」。
+- provenance：draft + references 双双 0 未引用。草稿 391 行。
+
+**剩余**：LaTeX/ACM SIGCONF 转换（提交前机械步）；可选 Stockformer / Pinheiro-Wedge 补引（视页数预算）。
+
+→ progress: 2026-06-24-b | plan: 2026-06-24-a（补全层推进）| analysis: 2026-06-21-a（无新分析）
+
+---
+
+## 2026-06-24-a: Confirmatory 论文草稿 v2 全文重构 + Codex T3 三轮 PASS + 2 张 exploratory 图重建 + nature-polishing
+
+**背景**：旧 `storya_paper_draft.md`（619 行）整篇建立在已被取代的 PILOT 上（5-fold E1-anchor 4 模型、SPA 0.147/0.384、α1–α4 边消融、单族框架），引用的 28 图 11 表已不存在。H博士 定调：**全文重构·新文件 + 探索性内容选择性保留**。
+
+**新草稿** `docs/storya_paper_draft_v2.md`（scientific-writing skill，IMRAD 全 prose）：Abstract→§8 全部建立在 6 张 confirmatory 图 + tuned L0–L7 梯子 + 两族（Family-1 预测 SPA/DM-HLN；Family-2 因果 matched-edge）+ net-cost crosswalk。每数字带 CSV provenance；6 张数据图 caption 带 ML-stats 块（seeds=10/folds=12/metric/CI/baseline=L0）；5 张 sourced 内联表。核心数字（source 见草稿与 analysis.md 2026-06-21-a）：SPA B=0.2767/C=0.0774 皆不拒绝（`family1_spa.csv`）；C L1−L0=+0.0148 BH-reject、L2−L1=−0.0119、L3−L2=−0.0123（`family1_dm_hln.csv`，局部梯级非全局）；Family-2 0/6 BH + 6/6 欠功效（`family2_fc_causal.csv`）；cost crosswalk C L1−L0 net +1.17、L2−L1 net −0.72、L3−L2 net +0.08 cost-sensitive（`cost_headline_crosswalk.csv`）。
+
+**Rule 9 Touchpoint 3（Codex 三轮，均亲验未盲信）**：
+- **Round A**（`artifacts/reviews/2026-06-24_codex_results_A.md`，PROCEED-WITH-FIXES，0 CRIT + 2 MAJOR + 1 CONCERN）：所有数字独立核对全对；三条叙事纪律——A-01 SPA C=0.077 未配 underpowered/MDE 限定（MDE C L1-L0=0.0220>观测0.0148）；A-02「news hurts/graph adds nothing/neural beats trees」裸用全局化；A-03 §5.6 三处理 SPA p 笔误（zeroskill 实为 nan）。全部接受并修。
+- **Round B**（`..._B.md`，PROCEED-WITH-FIXES）：A-01/A-03 FIXED；A-02 §6 残留 STILL-OPEN；新 **B-01(MAJOR)** §5.5 误称「Univ-C matched 与 tuned 同号」（C/news 实为 matched+0.0011 vs tuned−0.0123 反号）。均修。
+- **Round C**（`..._C.md`，**PASS**）：A-02 + B-01 确认 FIXED，无新发现 → 草稿 Codex 核验通过。
+
+**2 张 exploratory 图（选择性保留，sans 风格）**：`paper_figs/fig_loss_inversion.py`→`figures/loss_listmle_inversion.*`（ListMLE 翻转：per-cell mean IC listmle=−0.0458 vs mse=+0.0113，source `experiments/loss_horserace/results.csv`）；`paper_figs/fig_plan_aaa_t1.py`→`figures/plan_aaa_t1_stability.*`（Plan-AAA T-1：5/15 存活 ROC30+5/KMID+6/KUP+1/CNTP20+3/CORR60，source `artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv`）。均嵌入 §5.7（图 7/8）+ 明标 exploratory。
+
+**nature-polishing**：保守润色 Abstract + §6 框架段（去破折号/拆长句），数字与 Codex 锁定的 local-rung/fail-to-reject 限定词全保留；§6 已核验的 graph/news 段不动。
+
+**归档**：旧 `storya_paper_draft.md`（未跟踪）→ `archived/docs/2026-06-24_storya_paper_draft_PILOT.md`。`verify_docs_provenance.py` 全程 0 未引用数字。**待办**：§2 T8 related-work 矩阵（literature-review skill 扩到 ~19 篇）、ST1 setup 表、LaTeX/ACM 转换、storya_references.md 中残留 PILOT 数字（p=0.147/T=313）清理。
+
+→ progress: 2026-06-24-a | plan: 2026-06-24-a | analysis: 2026-06-21-a（结果已 T3 通过，本次为草稿层重构，无新实验/分析）
+
+---
+
+## 2026-06-23-b: 6 张 confirmatory 论文图重建完成 + 三方 QA
+
+**按 §Results 顺序建图**（全部 sans-Arial 全局样式、矢量 PDF+PNG、`--font serif` 备选）：
+- §5.1 `headline_ic_ladder`（`fig_headline_ic.py`）：每臂 IC forest（L0–L7×2池）+ LightGBM 基准线，fill=IC CI 排除 0。
+- §5.2 `F9_spa_dm_confirmatory`（`fig_f9_confirmatory.py`）：SPA（B0.277/C0.077 皆不拒绝）+ 20 对 DM/HLN BH-FDR 森林。
+- §5.3 `regime_perfold_ic`（`fig_regime.py`）：逐季 IC 热图（臂×12 季）+ 逐季均值柱——体制集中（24Q4/25Q2 强，约半数≈0/负）。
+- §5.4 `cost_gross_net`（`fig_cost.py`）：成本阶梯（LGB 扣成本转负）+ gross/net 一致性散点（唯一翻号=C news）。
+- §5.5 `family2_edge_causal`（`fig_family2.py`）：FC 因果森林 matched vs tuned + ±MDE 区（0/6 BH，6/6 欠功效，B 翻号=容量混淆）。
+- §Methods `pipeline_confirmatory`（`fig_pipeline.py`，scientific-schematics→matplotlib，graphviz 未装）：5 阶段流程 + 梯子 zoom + GNN 消息传递示意。
+
+**三方 QA**（H博士 要求：信息量/直观度/美观度/格式无重叠/本科生配 caption 可读）：
+- **Codex 代码+数据正确性审查**（fresh thread）：6 图 3 PASS（F9/regime/family2）+ 3 fix——(F1)headline L0 一直画红钻易误读为"显著"→改中性深色；(F3)cost 标题"only news 翻号"不精确（cost_sensitive 列对 3 行 True，但仅 C L3-L2 是 BH 显著 claim）→标题限定"among BH-significant claims"；(F6)pipeline"graph edges added"暗示 L2 非图→改"no graph / corr graph / +extra edge types"三段括号。均亲验后修。
+- **nature-figure QA 清单**：字号下限（热图注 4.8→5.2、GNN 标签 4.6→5.2+）已提；编码双通道/无彩虹图/可追溯源/矢量可编辑/单结论横幅 全过；**ML-stats 块（seeds10/folds12/metric/CI/baseline）须进 LaTeX caption**（写 §Results 时补）。
+- **我亲眼看图**：每张渲染后查看，内联修掉多处重叠（F9 拆上下子图、cost 图例移空象限、family2 图例移底部、universe 标签改 y 轴标题）。
+
+旧图脚本已弃用（旧渲染上轮已删）。figures/README 索引更新为 6 图 + QA 状态。**下一步**：用这 6 图重写论文 §Results/§Discussion（带 ML-stats caption）。
+
+→ progress: 2026-06-23-b | plan: 2026-05-27 (paper figs 架构) + 2026-06-23 (字体/重建决策) | analysis: N/A
+
+**背景**：H博士 判定 2026-05-28 那批图（27 figs + 10 tables）质量差、且建立在 PILOT 旧数据上（untuned anchor / 5 折 / `storya_e1_anchor`+`storya_e6_dm_spa`），已被 confirmatory 取代。决定：**改用 skill 重画**——数据图走 `nature-figure`（结论先行 + 自检循环），流程图/GNN 示意走 `scientific-schematics`。
+
+**F9 样板（首张，§5.2 Family-1 统计防御）**：`paper_figs/fig_f9_confirmatory.py` → `figures/F9_spa_dm_confirmatory.{pdf,png}`。读 confirmatory `artifacts/storya_v21_family1/{family1_spa,family1_dm_hln,family1_mde}.csv`。左 Hansen SPA（B=0.277 / C=0.077，皆不拒绝；0.05 以下染红"拒绝区"），右 DM/HLN 20 对 BH-FDR 森林（拆成 Univ C / B 两个共享 x 轴子图）。修掉旧 F9 五处毛病：p 值贴错轴→改 ΔIC+CI、显著性用红实/灰空双编码、结论顶部横幅喊出、去掉图内"F9—"题号、C=0.077 禁写"接近显著"。nature-figure 自检循环当场逮到并修掉 3 处文字重叠（标题撞注释、股票池标签压刻度、结论框压数值）。
+
+**清空旧图（H博士 选"清空全部旧图，只留新 F9"）**：删 `figures/` 59 个旧渲染文件 + `tables/` 24 个（10 .tex + 13 caption .txt + ST*）。**保留**：新 `F9_spa_dm_confirmatory.*`、两个 README、`paper_figs/*.py` 全部脚本。⚠️ `figures/`+`tables/` **未被 git 跟踪**，删除不可 git 恢复，但任一图可由脚本对相应数据重跑再生。figures/README + tables/README 已改写为"已清空、重建中"状态。
+
+**待办**：按新标准重建 §5.1（headline）、§5.3（LOFO/12折）、§5.4（cost gross/net）、§5.5（Family-2 森林）+ 流程图/GNN 示意；先验工作图（horizon/loss/plan-AAA/step3）视论文结构决定去留。字体悬而未决：当前衬线 Times（贴 ACM 正文），H博士 可要无衬线对比版。
+
+→ progress: 2026-06-23-a | plan: 2026-05-27 (paper figs 架构) | analysis: N/A
+
+---
+
+## 2026-06-21-b: Cost-口径 (gross/net) crosswalk — confirmatory headline 逐句标 gross/net（BLOCKING 项完成）
+
+**动机**：confirmatory headline 全是 IC（gross 排序口径），官方 T3 review 未覆盖交易成本——是顾问 temp doc 第 4 点、官方 review 唯一漏掉的真缺口。H博士 2026-06-21 定为 **BLOCKING**：论文批评别人不算成本，自己每个 claim 必须过 net 关。
+
+**关键好消息（无需重跑）**：每个 confirmatory cell 已存 `Sharpe_gross` + `Sharpe_net_{0,5,10,15,20,30}bps` + `mean_turnover_L1`（运行时由 `run_storya_e1_anchor.compute_cost_ladder_sharpe` 写入，L1-one-way：net=gross−turnover×bps/10000）→ 纯分析器任务。
+
+**新分析器** `compute_cost_confirmatory.py`（import 复用 compute_e6 `stationary_bootstrap_ci`）：定位为 **DESCRIPTIVE 经济敏感性层，IC 仍是唯一 confirmatory 指标**（不另开 Sharpe BH-FDR 家族，避免过度声称 + 多重比较）。产出 `artifacts/storya_v21_cost/`：per-arm net 阶梯、20 对 fold-level ΔSharpe（+LOFO 符号稳定性）、6 个 FC contrast net、headline gross/net crosswalk（gross ΔIC + BH **逐字复制自 family1_dm_hln.csv**，0 不符）、per-fold ΔSharpe 明细。EXCLUDE 33 个 C/L5s 退化 cell（与 Family-1 一致，动态对照 family1_stability.csv）。旧 E1/E6/pilot Sharpe **绝不混入**。
+
+**核心发现**（net@10bps；source `artifacts/storya_v21_cost/`）：
+- **C-MLP>LGB（L1−L0）net 后 HOLDS**：net ΔSharpe=+1.17，CI [+0.36,+2.08] 排除 0，LOFO 稳定（cost_pairwise_dsharpe.csv）。LGB 自身 net Sharpe 转负(−0.22) vs MLP 强正(+0.95)（cost_ladder_by_arm.csv）→ 经济分离比 IC 的 +0.0148 更明显；但 ΔSharpe 随成本**轻微下降**(1.24→1.17→1.02)。C/MLP per-arm 重尾(mean0.95/median0.18/max|S|=31.7)→ 排名靠 fold-level 配对 ΔSharpe，非 per-arm 均值。
+- **"图不帮忙"（C L2−L1）net 后 HOLDS**：−0.72，CI [−1.42,−0.10] 排除 0。
+- **⚠️ COST-SENSITIVE：「news 伤」(C L3−L2) net 不复现**：gross IC −0.0123(BH-sig) 但 net ΔSharpe@10bps=+0.08，CI [−0.77,+0.89] **跨 0**、LOFO 不稳；12 折 ΔSharpe **6 正/6 负**(−2.79..+2.59，cost_pairwise_folddeltas.csv)。诚实解读（主信号=net CI）：IC 口径的伤**不传导**到 net，net 差异本身**与 0 无异**——**不是** news 经济有用的证据。唯一口径不传导的 BH 显著 claim。
+- "recover above L2" 臂(C L5−L3/L4/L6) net 正；FC 6 contrast net CI 全跨 0（与 Family-2 0/6+欠功效一致）。
+
+**Rule 9 双触发点**（均亲验，未盲信）：
+- **T2 代码** `artifacts/reviews/2026-06-21_codex_code_cost_A.md`（**PASS-WITH-CONCERNS**）：Codex 报 BLOCK-EXECUTION 3 条 → 实查后 **CODEX-A-01(CRIT) REJECTED**（Codex 臆造"majority vote"意图；实数据证 C L3-L2 是 6/6 符号分裂 near-zero，`all()` 严格判据才诚实，多数票会与 CI 矛盾）；**A-02/A-03 FIXED**（crosswalk 缺失硬失败 + EXCLUDE 计数对照 family1_stability）。
+- **T3 结果** `artifacts/reviews/2026-06-21_codex_results_cost_A.md`（**PASS-WITH-CONCERNS**，0 CRIT）：**A-07(MAJOR) FIXED**（"6 正/6 负"原仅在临时探针、无 artifact 溯源 → 补 cost_pairwise_folddeltas.csv）；**A-02(CONCERN) ACCEPTED**（"strengthens"→"holds"，披露 ΔSharpe 随成本下降 + 重尾）。无 non-superiority→equivalence 类错误。
+
+→ progress: 2026-06-21-b | plan: 2026-06-21 (cost口径 Decision Log) | analysis: 2026-06-21-a §5
+
+---
+
 ## 2026-06-21-a: Track C 分析器 Touchpoint 2 PASS + C/L5s 退化裁决 + confirmatory 跑完（Touchpoint 3 进行中）
 
 **两个分析器**（新写，import 复用 compute_e6 helper）：`compute_family1_ladder.py`（Family-1 §2a：20 对 DM-HLN + BH-FDR + SPA M=9 + L7 contingency + MDE + LOFO）、`compute_fc_edge_causal.py`（Family-2 FC：6 contrasts fold-level seed-avg ΔIC + block bootstrap + BH-FDR/6）。

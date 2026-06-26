@@ -1,0 +1,63 @@
+{
+  "family": "Family-1 (predictive / model-selection; tuned 12-fold ladder)",
+  "role": "CONFIRMATORY (the only confirmatory family; protocol \u00a76)",
+  "dm_hln_pairwise_family": {
+    "n_pairs_per_universe": 10,
+    "universes": 2,
+    "n_tests_total": 20,
+    "ladder_pairs": [
+      "L1-L0",
+      "L2-L1",
+      "L6-L2",
+      "L7-L2",
+      "L2s-L2"
+    ],
+    "edge_dag_pairs": [
+      "L3-L2",
+      "L4-L2",
+      "L5-L2",
+      "L5-L4",
+      "L5-L3"
+    ],
+    "bh_fdr_q": 0.05,
+    "bh_scope": "full 20-test family (headline); per-universe also reported"
+  },
+  "spa": {
+    "per_universe": true,
+    "benchmark": "L0",
+    "M": 9,
+    "candidates_full": [
+      "L1",
+      "L2",
+      "L2s",
+      "L3",
+      "L4",
+      "L5",
+      "L5s",
+      "L6",
+      "L7"
+    ]
+  },
+  "l7_contingency": {
+    "demote": false,
+    "diverge_frac": 0.0,
+    "collapse_frac": 0.0,
+    "reason": "healthy (kept in family + SPA, M=9)",
+    "n_cells": 240
+  },
+  "degenerate_cell_treatment": {
+    "primary": "EXCLUDE (undefined IC = missing; constant-prediction collapse, NOT measured 0)",
+    "rationale": "H\u535a\u58eb 2026-06-21 LOCKED: zero-fill fabricates 0s for undefined values + cannot be cleanly implemented for partial cells without per-day date labels; exclude is the only non-fabricating, implementable treatment.",
+    "robustness_appendix": "family1_cl5s_robustness.csv {exclude, zerofill, zeroskill_cell} all \u22480",
+    "stability_finding": "family1_stability.csv \u2014 reported as a tuned-config instability, not hidden",
+    "no_retune": "C/L5s NOT re-tuned (equal-budget symmetry; re-tuning a losing arm = cherry-pick)"
+  },
+  "block_bootstrap": {
+    "n_boot": 5000,
+    "block_size_days": 21
+  },
+  "mde_rule": "MDE = 2.8 x SE_block-bootstrap(mean delta-IC) (protocol \u00a76)",
+  "horizon_days": 21,
+  "seed_avg_note": "Seeds averaged per (arm, universe, date, fold) BEFORE SPA/DM (D-04).",
+  "tuning_val_ic_note": "The \u00a74 tuning val-IC is a SELECTION metric, NEVER entered as a result."
+}

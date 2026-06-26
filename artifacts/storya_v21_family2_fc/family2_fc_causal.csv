@@ -1,0 +1,7 @@
+universe,fc_arm,contrast,edge_added,n_fold_blocks,matched_delta_IC,ci_lo,ci_hi,ci_excludes_0,SE_fold,MDE_80pct,underpowered_vs_effect,tuned_delta_IC,same_sign_matched_vs_tuned,t_p_two_sided,BH_FDR_reject,bh_fdr_q
+B,L3,L3fc-L2,news,12,0.00153,-0.00347,0.00649,False,0.00263,0.00737,True,-0.01493,False,0.57246,False,0.05
+B,L4,L4fc-L2,sector,12,0.00549,-0.00623,0.01754,False,0.00635,0.01778,True,-0.00813,False,0.40574,False,0.05
+B,L5,L5fc-L2,sector+news,12,0.00417,-0.00698,0.01631,False,0.00623,0.01747,True,-0.01004,False,0.51708,False,0.05
+C,L3,L3fc-L2,news,12,0.00114,-0.00407,0.00621,False,0.0027,0.00756,True,-0.01231,False,0.681,False,0.05
+C,L4,L4fc-L2,sector,12,0.01369,0.00048,0.0274,True,0.00714,0.02,True,0.01625,True,0.08152,False,0.05
+C,L5,L5fc-L2,sector+news,12,0.01412,0.00102,0.02841,True,0.00722,0.02022,True,0.01516,True,0.07638,False,0.05
