@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-06-25-a: LaTeX/ACM SIGCONF 提交版 — paper/main.tex + references.bib（confirmatory 草稿 v2 转换）
+
+接 2026-06-24-b。论文完成层最后一步：markdown confirmatory 草稿 → ACM SIGCONF (acmart) 提交源。
+
+- **新建 `paper/` 子目录**：`main.tex`（`\documentclass[sigconf,nonacm]{acmart}`，Abstract→§Reproducibility + Appendix ST1，**8 图 + 8 表 + 21 `\cite`**）+ `references.bib`（21 条 BibTeX [1]–[21]，`ACM-Reference-Format`）+ `README.md`（编译说明 + 校验状态）。
+- **提交版去脚手架**：删 provenance 括注 / editor 清单 / 红线框；plain-English 框压缩为简短行；「口径」→英文（convention / net basis）。
+- **本机无 TeX**（无 pdflatex/acmart）→ 走 **Overleaf**（内置 acmart）；图用 `\graphicspath{{../figures/}}` 引 8 张 `figures/*.pdf` 矢量母版。
+- **校验（关键，因不可本地编译）**：(1) **程序化交叉核验** main.tex 表格数字 vs 源 CSV——IC 表 / DM 20 对表 / Family-2 / SPA 0.2767·0.0774 **全部 0 失配**（`artifacts/storya_v21_family1`、`family2_fc`）；(2) **静态 LaTeX 审查**——裸 `%`/`&`/`_` 仅出现在注释 + CCSXML（acmart 特殊处理）、`\ref`↔`\label` 全配对、8 图 `\includegraphics` 命中、表格列数逐表一致。
+- **待办**：填 author/affiliation/会议元数据；首次 Overleaf 编译后核页数(8–10pp)/浮动/参考格式；可选 Stockformer 补引。
+
+→ progress: 2026-06-25-a | plan: 2026-06-24-a（LaTeX 完成）| analysis: 2026-06-21-a（无新分析）
+
+---
+
 ## 2026-06-24-b: 论文完成层 — ST1 setup 表 + T8 related-work 矩阵（5 篇新文献验证）+ references PILOT 清理 + Codex Round D
 
 接 2026-06-24-a（confirmatory 草稿 v2）。H博士「继续补」→ 补全论文完成层：

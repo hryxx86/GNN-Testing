@@ -12,12 +12,14 @@
 
 **已补（2026-06-24-b）**：✅ §2 **T8 related-work 矩阵**（7 prior work + 本研究；新验证 5 篇 [17]–[21] 入 `storya_references.md`）；✅ **ST1 data-setup 表**（§S1：fold 日历/HP 网格/cell 预算）；✅ **`storya_references.md` PILOT 清理**（SPA/T/pairs 全更新、指针→v2）。Codex Round D PASS-WITH-CONCERNS（CODEX-D-01 cell_id 命名空间措辞已修）。
 
+**已补（2026-06-25-a）**：✅ **LaTeX/ACM SIGCONF 转换** — `paper/main.tex`（acmart sigconf，8 图+8 表+21 cite）+ `paper/references.bib`（21 条）；数字交叉核验 0 失配 + 静态审查通过；本机无 TeX → Overleaf 编译。
+
 **剩余（论文补全层，非新实验）**：
-1. **LaTeX/ACM SIGCONF 转换** — `venue-templates` skill，markdown→.tex（最后机械步，提交前做）+ `citation-management` 生成 [1]–[21] BibTeX。
+1. **Overleaf 首编 + 提交细节** — 填 author/affiliation/会议元数据；编译后核页数(8–10pp)/浮动位置/ACM-Reference-Format；按页数决定是否精简 §5.7 或把 ST1 移补充材料。
 2. 可选补引（视页数）：Stockformer（多篇同名需先核实）、Pinheiro-Wedge 2022（self-supervised，对 future-work）。
 3. （已确认）L7/HATS 已在 confirmatory 内（M=9、contingency 未触发）→ 旧「HATS 未跑」L5 caveat 过时，v2 已更正。
 
-→ progress: 2026-06-24-a, 2026-06-24-b | analysis: 2026-06-21-a
+→ progress: 2026-06-24-a, 2026-06-24-b, 2026-06-25-a | analysis: 2026-06-21-a
 
 ---
 
