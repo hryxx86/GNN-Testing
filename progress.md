@@ -4,6 +4,88 @@
 
 ---
 
+## 2026-06-30-a: PaperJury ultracode REVIEW（compact 8pp）+ scope-2 修复 + Tier-1 结论加强
+
+→ progress: 2026-06-30-a | plan: 2026-06-30-a | analysis: 2026-06-30-a
+
+**目标**：评估 codex 压到 8 页的 `paper/main_jf_codex_compact.tex`（与 9pp `main.tex` 不同文件；Round1/2 审的是后者）。
+
+**引擎**：paperjury REVIEW（`review-panel.workflow.js`，ultracode：maxRounds 4 / dryStop 2 / adversarial-verify）。4 persona（GNN/quant-finance/stats/compression-integrity）。**194 agent、4 轮跑满、49 issue（19 major/30 minor）、9 条被 skeptic 反驳、13 条多 reviewer 印证**。完整记录 `artifacts/reviews/2026-06-30_paperjury_compact-review_round1.md` + `paper/.paper-review/LEDGER.json`。
+
+**压缩完整性判决 = SAFE**：compact↔main float/章节结构完全一致（9→8pp 纯 prose 收紧，0 删图表）；95 个数据数字零漂移（仅多 `\arraystretch{0.88}`/`\abovecaptionskip` 排版宏）→ 传递性继承 Round1/2 的 CSV 验证；tectonic exit 0、8pp、23 cite+全 \ref 解析；匿名/desk-reject PASS。**0 CRITICAL、0 fabrication。**
+
+**scope-2 修复（8 处，编译验证 8pp）**：I-13 摘要悬空连接词；I-12 "two central" vs 三行+定义；I-03 成本 τ 矛盾（CSV 实证逐 arm turnover：C/L0=2.253<C/L1=2.895，source: `artifacts/storya_v21_cost/cost_ladder_by_arm.csv`）；I-05 披露 NW-1994 自动带宽 L=6（source: `compute_e6_dm_spa.py:82`）；I-09 power SE≠test SE；I-16 net-Sharpe 配对呈现；I-25/31 定义 CS=cost-sensitive；I-32 edge-DAG→edge-set。
+
+**I-50（核实 I-05 时新发现）**：保守 HAC lag=21 下 headline C L1-L0 HLN p 0.011→0.063、C L3-L2 0.0086→0.070（掉出 0.05），C L2-L1/L5-L3 仍强显著（source: `artifacts/storya_v21_family1/family1_dm_hln.csv` HLN_p_t_lag21 列）→ **H博士 决策 B**（自动带宽为标准默认，不报不改）。
+
+**Tier-1 结论加强（4 处叙事重构，全用现成数据，验证 8pp）**：头条由易碎 MLP>LightGBM 换成防弹 **L2-L1<0（图拖累 MLP）**——两宇宙 BH 显著（B=-0.0133/C=-0.0119, p=6.9e-6）、干净价量 B 也成立（证毕泄露非因）、C 过 MDE、LOFO 0/12 翻号（source: `artifacts/storya_v21_family1/family1_lofo.csv`）。关闭 I-04/08/10/18/50。
+
+**Gate**：gate-blocking major **19 → 8**（剩 I-01/02/07/11/14/15/17/19 = reviewer-anticipation 既有项，H博士 暂缓）。
+
+**文件合并（H博士 选项 A）**：把含全部 12 处改动的 compact 8pp 内容覆盖为 `paper/main.tex`（旧 9pp 进 git 历史 + scratchpad 备份），删除中间变体 `main_jf_codex.tex`、长名字 `main_jf_codex_compact.tex` 及全部 `*.aux/.bbl/.blg/.log/.out/.pdf` 编译垃圾；`paper/` 现仅余 `main.tex`(8pp) + `references.bib` + `main.pdf`(刷新) + `README.md` + `.paper-review/`。tectonic 重编译 exit 0、**8 页**、全 ref 解析。`paper/README.md` 同步更新（4图5表23引用 / 无附录 / 本地可编译，结构性变更 per Rule 5）。**main.tex 现为唯一正式投稿源。**
+
+## 2026-06-29-a: ICAIF 8pp 页预算裁剪（减浮动体不减科学）— 11pp → 9pp
+
+确认 **ICAIF'26 = 8 页硬上限**（[官方 CFP](https://icaif2026.org/call-for-papers.html)：图+表+引用全包含、不收附录/补充材料、超页 desk-reject；README 老写的"8-10pp"乐观了）。H博士 认可"减冗余展示不减科学"的裁剪：
+
+- 删 §5.7 两张探索图（ListMLE 反转 + Plan-AAA T-1）——结论留正文
+- 删附录 ST1 两表——关键信息（T=749/12季/6维网格/10 seeds）内化进 §Reproducibility 的 repo 指针（ICAIF 不收附录）
+- 删 §5.3 regime 热图——episodic 发现留正文 + Limitation L2
+- 删 §2 related-work 矩阵——gap punchline（prior 全 single-split/single-seed/无 multiplicity/无 cost）留 §1/§2 prose
+- 删 §1 pipeline 流程图——概览示意图非结果
+
+浮动体 **16 → 9**（现 4 图：fig:headline/spa/cost/family2 + 5 表：tab:ladder/ic/dm/cost/family2）。无悬空 \ref、brace Δ=0、本地 tectonic 端到端编译 0 错 → **`paper/main.pdf` 9pp**。每删一个图/表对应发现都保留在正文，未动任何科学结论或红线 caveat。
+
+**还差 1 页到 8**：卡在两对"同数据双视图"取舍——headline-IC（fig:headline 森林图 vs tab:ic 表）+ cost（fig:cost 双panel vs tab:cost 表）各留哪个。推荐删 fig:cost 保 fig:headline + 两表都留。等 H博士 定（A/B/C）。详见 `docs/session_handoff_2026-06-29.md`。
+
+→ progress: 2026-06-29-a | plan: 2026-06-26 (Decision Log) | analysis: 2026-06-26-a
+
+---
+
+## 2026-06-27-a: PaperJury Round-1 收尾追加（3 项）+ 端到端编译 + 发现修复第 5 个潜伏 LaTeX bug → Round-1 CLOSED
+
+H博士 Round-1 收尾追加指令集（2 项不放心的小坑 + 1 项判断 + 流程确认），全部完成，REVIEW-ROUND-1.md 标 **CLOSED**。
+
+**追加1 — M10 16.3% 成分错配单独上墙（不被 <20% 一刀切盖过）**：`analyze_m10_universe_gap.py` 增成色分析——剔除名 54 cap-change（指数小边缘）+ 28 M&A + 5 其他（0 微盘）；look-ahead 76 名 min $6.6B、median $31.8B、**0 个 <$5B**（source `artifacts/audits/m10_universe_gap.{csv,md}`）。判定：16.3% 错配=指数尺寸**边界大盘**，无小盘/低流动污染→"液态大盘"框架在该样本成立。L8 重写成 **(i) survivorship gap + (ii) composition mismatch 两段独立叙述**（成分错配=边界偏向采样、非对比抵消），缺口口径与错配分开、不并入"<20% 故披露"。
+
+**追加2 — 措辞一致性 grep sweep（provenance verifier 查不到的一层）**：扫 `M=9|0.077|0.0018|beats|MLP>LGB|suggestive|near-miss|M=8` 跨 paper/docs/artifacts。提交版+当前态文档**零红线违规**（near-significant 命中全是纪律句或无关 Plan-AAA 探索文本）。SPA口径统一：M=9×4 / M=8×0 / C/L5s 0.0018 处处标 conditional。M4 降级：suggestive×6（abstract/headline/§spa/§causal/L1）。2 处修：(a) §5.2 补漏掉的 M4 suggestive 指针；(b) analysis.md "C marginal"→"fail-to-reject, not a near-miss"。
+
+**流程3 — 端到端编译（不只 brace=0）**：装 tectonic 0.16.9（Overleaf 等价引擎），真 `paper/main.tex`+`figures/*.pdf`+`references.bib` → **11 页 PDF、0 错误**。4 个 caption 修复确认生效。**额外揪出修复第 5 个预存潜伏 bug**：`sheppard_arch` 空 year → ACM-Reference-Format `[n.\,d.]` 无日期路径在参考文献破坏数学模式（`main.bbl:288 Missing $ inserted`），编译前即 halt、无 PDF。补 `year={2024}`（软件访问年）→ clean。正是"平衡过≠编译过"的实例（brace 检查抓不到）。
+
+收口判据三项全过 → Round-1 CLOSED。
+
+**PaperJury Round-2（确认闭合 + 捕新问题）**：重跑 3-panel 协议（统计/GNN/量化金融 finance-gnn-reviewer，manuscript-only）于编辑后的 main.tex（`artifacts/reviews/2026-06-27_paperjury_round2.md`）。结果**全 PASS-WITH-CONCERNS、0 CRITICAL、1 MAJOR**；Round-1 全 24 条确认闭合（M7 PARTIAL→CLOSED）；四红线全守；三 panel 独立复核全部 load-bearing 数字 vs 源 CSV **零错误引入**。本轮修 5 条（1 MAJOR qf-01 = L8 流动性 benignity 不得盖过 SVB/Signature/First Republic 距离名缺口；4 CONCERN：gnn-02 capacity-matched→operating-point-matched、qf-02 Wikipedia 源 caveat、stat-03 BH 用 HLN_p_t、stat-01 §1 前向引用闭合 M7）。deferred 5 条可选加固（增页数、无 correctness 影响）。修后 brace Δ=0、端到端编译 0 错。**Round-1 + Round-2 双 CLOSED**。
+
+残留（非评审项）：11pp vs 8-10pp 页预算需作者裁剪；author/ICAIF metadata 待填；5 条可选加固 CONCERN 留作者取舍。
+
+→ progress: 2026-06-27-a | plan: 2026-06-26 (Decision Log) | analysis: 2026-06-26-a (M10 §成色补充)
+
+---
+
+## 2026-06-26-a: PaperJury Round-1 处置 — 15 MAJOR + 9 minor 全部 applied/disclosed/QUEUE + M10 实测缺口 + Rule9 TP2/TP3
+
+H博士 签字修复 PaperJury Round-1 全部审稿意见（`paper/.paper-review/REVIEW-ROUND-1.md` 含逐条 disposition 表）。按"严重等级梯队"修，非按编号。
+
+**3 处现实修正（Explore + 数据对账，改变了原处置假设）**：M2（√12 年化）经 `run_storya_e1_anchor.py:809,853` 核实**口径本来就对**（21天不重叠序列）；M12（turnover_L1=Σ|Δw| 单边 L1_one_way）`:838,863,886` 定义清晰；confirmatory-net **已用 tuned 成本层算好**（`compute_cost_confirmatory.py:404` 读 main12_tuned，逐条对上论文 Table tab:cost：C L1−L0=1.1733↔+1.17 等），旧 E6 cost_ladder 数字完全不同 → 论文没用旧的。这三条从"必须实修/可能翻盘"降级为"已核实→只澄清文本"。
+
+**阶段0（存在性 anchor）**：
+- **M10 survivorship**：新建 `analyze_m10_universe_gap.py`，WebFetch Wikipedia S&P500 变更表实测缺口 → 名义 14.8% / survivorship stock-days 8.2% / look-ahead 8.1% / 两侧成分错配 16.3%（source: `artifacts/audits/m10_universe_gap.{csv,md}`）。<20% 硬升级线 → **走披露不重建**。main.tex Methods §3.1 改条件估计量 + Limitation L8。Rule9 TP2(`2026-06-26_codex_code_A.md`, 2 FIXED) + TP3(`2026-06-26_codex_results_A.md`, 2 FIXED + 3 披露规格)，均 PROCEED 无阻塞。
+- **M4 选择泄露**：走 (a) 披露，强制把 Universe-C 正向（MLP>LGB、FC 正 edge）降级 suggestive，null/negative 不降级（选择泄露只强化信号）。Abstract/§headline/§exploratory/Limitation L1 脱方稿。leak-free 重跑入 QUEUE。
+
+**阶段1（口径/检验，全不翻盘）**：M2/M12/conf-net（已核实→澄清）、M3（M=9 exclude-pointwise，tab:ic 标条件均值）、M7（种子平均披露，freeze 禁改方法）、M8（池化 BH PRDS + 逐池 BH 在**所有** contrast 一致，verified `family1_dm_hln.csv`）、M9（MDE 2.8=z₀.₉₇₅+z₀.₈₀ + HLN/HAC 非双计）、M11（标签 T→T+21 + 1天执行滞后；修"log"→简单 market-excess return）。
+
+**阶段2（caveat）**：M1（0/6 → uninformative-by-power + bootstrap 细节 5000reps/fold-block）、M5（L6/L7 reframe + relation-starvation）、M6（fixed capacity→operating point + 欠拟合 caveat）、M13（"names"→"suggests" 机制）、M14（等预算≠搜索充分性）、M15（abstract beats→outranks locally）。
+
+**阶段3（9 minor）**：m16（SPA bracket，禁 near-miss）、m17（三个有效样本量）、m18（SPA/DM 两族不联合）、m19（阈值消融→L9 future work）、m20（StockMixer+MDGNN 真 BibTeX，WebSearch/WebFetch 核实；"first to combine"软化）、m21（news 源=EODHD）、m22（level Sharpe 补 CI）、m23（流动性+做空 caveat）、m24（Family-2 仅 IC）。
+
+**验证**：brace Δ=0 / cite / ref / env / dollar 全平衡；SPA bracket、cost level CI、Family-2 matched ΔIC 全部 cross-check 通过。**额外发现并修复 4 个预存 LaTeX bug**：fig:headline/spa/regime/cost 的 `\caption{}` 都漏闭合 `}`（只闭 `\emph`），commit `eac6063` 同样 Δ4 → 非本次引入，会破坏首次 Overleaf 编译，已修。
+
+QUEUE（非阻塞）：M4 leak-free 重跑、M13 L2 over-smoothing 证伪、M14 trials sweep、m19 阈值消融、M10 PIT 重建（未触发）。
+
+→ progress: 2026-06-26-a | plan: 2026-06-26 (Decision Log) | analysis: 2026-06-26-a
+
+---
+
 ## 2026-06-25-a: LaTeX/ACM SIGCONF 提交版 — paper/main.tex + references.bib（confirmatory 草稿 v2 转换）
 
 接 2026-06-24-b。论文完成层最后一步：markdown confirmatory 草稿 → ACM SIGCONF (acmart) 提交源。

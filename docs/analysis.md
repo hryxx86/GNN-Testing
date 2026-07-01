@@ -4,6 +4,47 @@
 
 ---
 
+## 2026-06-30-a: Compact-paper compression-integrity verdict + LOFO/MDE robustness（结论加强）
+
+→ progress: 2026-06-30-a | plan: 2026-06-30-a | analysis: 2026-06-30-a
+
+**Context.** PaperJury ultracode review of `paper/main_jf_codex_compact.tex` (codex 9pp→8pp compression). Two analysis findings emerged.
+
+**Finding 1 — the compression is numerically safe.** A token-level diff of all numeric values between `main.tex` (9pp) and the compact 8pp source shows **zero data-number drift**: 95 shared numeric tokens, and the only two tokens unique to the compact file are LaTeX layout macros (`\arraystretch{0.88}`, `\abovecaptionskip{2.5pt}`), not data. Float and section inventory are identical (4 figures + 5 tables, same labels). Since Round-1/2 verified `main.tex`'s numbers against source CSVs with 0 errors, the compact numbers inherit that verification transitively. Tectonic compiles to exactly 8 pages, clean.
+
+**Finding 2 — the paper's most robust conclusion was under-emphasized; surfacing existing artifacts strengthens it.** The load-bearing finding is **L2−L1 < 0** (adding a correlation-GAT to the MLP's features *reduces* IC), and existing artifacts show it is far more robust than the previously-headlined MLP>LightGBM positive:
+
+- BH-significant in **both** universes — Universe-B ΔIC = −0.0133, Universe-C ΔIC = −0.0119 (HLN p = 6.9×10⁻⁶) (source: `artifacts/storya_v21_family1/family1_dm_hln.csv`, rows C/B arm_A=L2,arm_B=L1). Significant in the **clean price-volume Universe-B** ⇒ Alpha158 selection leakage (L1) cannot be its cause.
+- Exceeds its 80% MDE in Universe-C: |−0.0119| > 0.0089 (source: `family1_mde.csv`, pair L2-L1, MDE_2p8xSE). By contrast the MLP>LightGBM contrast C L1-L0 = +0.0148 < its MDE 0.0220 → underpowered.
+- Sign-robust to regime: leave-one-quarter-out gives **0/12 sign-flips** in both universes for all four BH-rejected ladder contrasts (L1-L0, L2-L1, L3-L2, L5-L3) (source: `family1_lofo.csv`, sign_flips_when_dropped). Confirms the result is NOT driven by the dominant 2024Q4/2025Q2 regimes.
+
+**Caveat (unchanged).** L2−L1 is a tuned-ladder (deployment) contrast and is capacity-confounded (MLP vs GAT differ in architecture + effective capacity; equal 30-trial budget). The capacity-matched causal test (Family-2) remains null/underpowered (0/6 BH). So the strengthened claim is "the tuned correlation-GAT arm robustly underperforms the tuned MLP," NOT "graph edges causally hurt."
+
+**Robustness wrinkle (recorded, not acted on per H博士 decision B).** Under a conservative HAC lag=21 (vs the NW-1994 auto bandwidth L=6), C L1-L0 weakens to HLN p=0.063 and C L3-L2 to 0.070, while C L2-L1 (9.8×10⁻⁴) and C L5-L3 (8.5×10⁻⁵) stay strongly significant (source: `family1_dm_hln.csv`, HLN_p_t_lag21). This is exactly why leading with L2−L1<0 (bandwidth-robust) rather than C L1-L0 (bandwidth-fragile) is the right framing.
+
+## 2026-06-26-a: M10 survivorship / point-in-time membership gap — empirical Wikipedia-reconstructed audit
+
+**Motivation.** PaperJury finding M10 flagged that the paper's universe is a fixed end-window snapshot, not point-in-time (PIT) S&P 500 membership. We measured the gap against the true 2021-01-29→2026-01-28 membership to decide disclose-vs-rebuild.
+
+**Method.** Fixed universe = price∩sector intersection = 501 tickers (source: `data/reference/sp500_5y_prices.csv` 502 cols ∩ `sp500_sectors.csv` 503 rows; matches `run_storya_e1_anchor.py:310` valid_tickers). PIT membership reconstructed from the Wikipedia "List of S&P 500 companies" changes table (`analyze_m10_universe_gap.py`, cached `artifacts/audits/wikipedia_sp500_changes_cache.html`).
+
+**Findings** (source: `artifacts/audits/m10_universe_gap.{csv,md}`):
+- 87 distinct tickers removed from the index during the window, all 87 absent from our snapshot (0 re-added/carried).
+- **Names gap = 87 / 588 = 14.8%** (PIT superset = snapshot ∪ removed-in-window = 588).
+- **Survivorship stock-days gap = 51,841 / 629,580 = 8.2%** (Wikipedia-reconstructed PIT membership trading-days denominator).
+- **Look-ahead inclusion = 51,016 stock-days = 8.1%** (snapshot names carried before their add date).
+- **Two-sided composition mismatch = 16.3%** (survivorship + look-ahead).
+- Gap names are non-uniform attrition: 2023 regional-bank failures (SIVB, SBNY, FRC — negative tail) + M&A targets (ATVI, TWTR, XLNX, MXIM, PXD).
+- **Composition character (追加 2026-06-27)**: the 16.3% mismatch is *boundary-large-caps, not small-cap/illiquid contamination*. Survivorship side = 54/87 cap-change (index small edge) + 28 M&A + 5 other (0 micro-cap, source `m10_universe_gap.csv`). Look-ahead side = 76 mid-window additions, smallest market cap $6.6B, median $31.8B, **0 below $5B** (source `data/reference/sp500_market_caps.csv`). So the "liquid large-cap S&P 500" framing holds on the mismatched sample; the residual is a boundary biased-sampling effect (not contrast-cancelled), disclosed as a separate part (ii) of paper Limitation L8.
+
+**Verdict.** Names gap 14.8% < 20% hard-escalation threshold → **disclose, no PIT rebuild**. Stock-days exposure gap (8.2%) is single-digit. Because all paper claims are within-universe paired contrasts on the identical snapshot, mechanical cross-arm imbalance is reduced, but this is a conditional estimand (NOT a PIT S&P 500 estimand): non-uniform attrition means the bias does not provably cancel in contrasts. Disclosed in `paper/main.tex` Methods §3.1 + Limitation L8.
+
+**Rule 9.** Code review (TP2): `artifacts/reviews/2026-06-26_codex_code_A.md` (2 FIXED — PIT denominator + half-open removal interval, raised the gap from 7.6%→8.2% honestly). Results review (TP3): `artifacts/reviews/2026-06-26_codex_results_A.md` (2 FIXED + 3 disclosure specs, PROCEED-WITH-FIXES, all folded into the L8 wording).
+
+→ progress: 2026-06-26-a | plan: 2026-06-26 (Decision Log) | analysis: 2026-06-26-a
+
+---
+
 ## 2026-06-21-a: D-RERUN-12F CONFIRMATORY — tuned L0–L7 ladder (Family-1 predictive) + FC fixed-capacity edge arm (Family-2 causal). The HEADLINE result; supersedes the 2026-06-15-a PILOT.
 
 > **POSITIONING.** This is the **protocol confirmatory main table** (`docs/protocol_v2_freeze.md` §5/§6): the tuned L0–L7 ladder + FC arm, 2160 main + 240 L7 + 720 FC cells, 0 fail / 0 dup. The 2026-06-15-a entry (untuned anchor) was the PILOT; **this entry is the paper headline.** Two SEPARATE pre-registered confirmatory families (do NOT conflate — Codex T3 finding R-A-05): **Family-1** = predictive / model-selection (does any tuned arm beat tuned LightGBM); **Family-2** = causal edge-attribution at the frozen L2 operating point. Reviewers: Touchpoint 2 `artifacts/reviews/2026-06-20_codex_code_A.md` (PROCEED-WITH-FIXES, both fixed); Touchpoint 3 `artifacts/reviews/2026-06-21_codex_results_A.md` (**PASS-WITH-CONCERNS**, 0 CRIT + 1 MAJOR + 4 CONCERN — all narrative-discipline, computation independently re-verified by Codex). Analyzers: `compute_family1_ladder.py`, `compute_fc_edge_causal.py` (import-reuse `compute_e6_dm_spa.py` helpers).
@@ -12,7 +53,7 @@
 
 ### 1. Family-1 — PREDICTIVE / model-selection (the only confirmatory predictive family)
 
-**Hansen SPA (cherry-pick defense; per universe, benchmark L0, M=9 incl L7; source `family1_spa.csv`)**: neither universe rejects H0 "L0 not worse than any of the 9 candidates" at 5% — **Univ B p_consistent=0.2767, Univ C p_consistent=0.0774** (C marginal but does not reject). **The cherry-pick-robust verdict: no tuned arm is confirmed to beat tuned LightGBM.**
+**Hansen SPA (cherry-pick defense; per universe, benchmark L0, M=9 incl L7; source `family1_spa.csv`)**: neither universe rejects H0 "L0 not worse than any of the 9 candidates" at 5% — **Univ B p_consistent=0.2767, Univ C p_consistent=0.0774** (C is the smaller p-value but does not reject at 5%; a fail-to-reject, not a near-miss — even p_lower=0.055 ≥ 5%). **The cherry-pick-robust verdict: no tuned arm is confirmed to beat tuned LightGBM.**
 
 **DM-HLN pairwise + BH-FDR over the 20-test family (source `family1_dm_hln.csv`)** — read as LOCAL tuned-ladder rung evidence (Codex T3 R-A-01):
 - **Univ C** (51-feat): L1−L0=**+0.0148** (tuned MLP > tuned LGB, HLN p=0.011, BH-reject); L2−L1=**−0.0119** (tuned corr-GAT < tuned MLP, p=6.9e-6, reject); L3−L2=**−0.0123** (tuned news-edge < corr-GAT, p=0.0086, reject); L4−L2=+0.0163, L6−L2=+0.0174, L7−L2=+0.0102, L5−L3=+0.0275 (sector / complete-graph / HATS arms recover above corr-GAT).

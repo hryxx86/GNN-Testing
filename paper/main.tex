@@ -11,10 +11,34 @@
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{microtype}
+\settopmatter{printacmref=false, printccs=false}
 \graphicspath{{../figures/}{figures/}}
 
-%% --- ICAIF 2026 metadata (fill camera-ready values) ---
-\acmConference[ICAIF '26]{ACM International Conference on AI in Finance}{November 2026}{Singapore}
+% Compact float and display spacing for the review-length version.
+\setlength{\textfloatsep}{6pt plus 1pt minus 2pt}
+\setlength{\floatsep}{5pt plus 1pt minus 2pt}
+\setlength{\intextsep}{5pt plus 1pt minus 2pt}
+\setlength{\abovecaptionskip}{2.5pt}
+\setlength{\belowcaptionskip}{0pt}
+\setlength{\dbltextfloatsep}{6pt plus 1pt minus 2pt}
+\setlength{\dblfloatsep}{5pt plus 1pt minus 2pt}
+\emergencystretch=2em
+\newcommand{\compacttable}{\scriptsize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{0.88}}
+\makeatletter
+\g@addto@macro\normalsize{%
+  \setlength\abovedisplayskip{4pt plus 1pt minus 2pt}%
+  \setlength\belowdisplayskip{4pt plus 1pt minus 2pt}%
+  \setlength\abovedisplayshortskip{2pt plus 1pt minus 1pt}%
+  \setlength\belowdisplayshortskip{2pt plus 1pt minus 1pt}%
+}
+\makeatother
+
+%% --- Preprint metadata (arXiv version). For ICAIF double-blind submission:
+%%     (1) add `anonymous` to \documentclass (line 9), and
+%%     (2) restore the commented ICAIF \acmConference line below (delete the Preprint one).
+% \acmConference[ICAIF '26]{ACM International Conference on AI in Finance}{November 2026}{Singapore}
+\acmConference[Preprint]{Preprint. Under review at ICAIF 2026.}{}{}
 \acmYear{2026}
 \copyrightyear{2026}
 \setcopyright{none}
@@ -22,20 +46,36 @@
 \begin{document}
 
 \title{When Do Graph Neural Networks Help in Cross-Sectional Stock Ranking?}
-\subtitle{A Multi-Seed, Multi-Universe, Cost-Aware Study of the US S\&P~500}
+\subtitle{A Multi-Seed, Multi-Universe, Cost-Aware Study of the U.S. S\&P~500}
 
-%% TODO: fill author / affiliation for camera-ready.
-\author{Anonymous Author(s)}
+%% Author block — NON-ANONYMOUS (arXiv preprint version).
+%% For the ICAIF double-blind SUBMISSION, add `anonymous` to \documentclass
+%% options above (line 9): \documentclass[sigconf,nonacm,anonymous]{acmart}
+%% acmart then auto-hides this block; no need to delete the real names.
+\author{Tracy He}
 \affiliation{%
-  \institution{Affiliation}
-  \city{City}
-  \country{Country}}
-\email{author@example.edu}
+  \institution{University of Southern California, Viterbi School of Engineering}
+  \department{Financial Engineering}
+  \city{Los Angeles}
+  \country{USA}}
+\email{tracyhe@usc.edu}
 
-\renewcommand{\shortauthors}{Anonymous}
+\author{Jinchi Lv}
+\affiliation{%
+  \institution{University of Southern California, Marshall School of Business}
+  \department{Data Sciences and Operations}
+  \city{Los Angeles}
+  \country{USA}}
+\email{jinchilv@marshall.usc.edu}
+
+\renewcommand{\shortauthors}{He and Lv}
 
 \begin{abstract}
-Graph neural networks (GNNs) are widely reported to improve cross-sectional stock ranking by encoding inter-stock relations as graph edges, yet these gains are almost always quoted as single-seed, single-split numbers without multiple-comparison defence. We ask a narrower and more reproducible question, namely \emph{when}, if ever, a graph helps, and answer it under a deliberately strict protocol. We evaluate a tuned model ladder, running from a gradient-boosted-tree baseline up to a heterogeneous relational GNN (rungs L0--L7), over twelve expanding quarterly walk-forward folds and ten random seeds on the US S\&P~500, with two pre-registered confirmatory families. The first family asks whether \emph{any} tuned model beats a tuned LightGBM benchmark. Hansen's Superior Predictive Ability test fails to reject this null in both feature universes ($p=0.277$ and $p=0.077$); because that comparison is itself underpowered, this is a fail-to-reject rather than a claim of equality. Local Diebold--Mariano ladder rungs show that the neural lift that does exist comes from a non-graph multilayer perceptron rather than from the graph: in the richer universe the tuned MLP beats LightGBM (local $\Delta$IC${}=+0.015$), whereas adding a correlation-graph attention network loses to that MLP ($\Delta$IC${}=-0.012$). The second family isolates the \emph{causal} effect of each edge type at a frozen network capacity; none of six edge contrasts survives Benjamini--Hochberg control, and all six are underpowered. A net-of-cost crosswalk confirms that the two load-bearing Universe-C rungs survive a 10\,bps cost, while the one IC rung that does not carry to net economics, the tuned news-edge arm underperforming the correlation-GAT, is a near-zero, fold-fragile difference that the capacity-matched causal test does not echo. We frame these as conditional findings and failure modes, and contribute a reusable evaluation scaffold for GNN-finance work.
+Graph neural networks (GNNs) are often reported to improve cross-sectional stock ranking by encoding relations among stocks as graph edges. Many reported gains, however, come from single-seed, single-split evaluations and do not adjust for multiple testing. We ask a narrower question: when, if at all, does the graph help? We evaluate a tuned ladder from LightGBM to a heterogeneous relational GNN (L0--L7) over twelve expanding quarterly walk-forward folds and ten seeds on the U.S. S\&P~500.
+
+We pre-register two confirmatory families. The predictive family asks whether any tuned model beats tuned LightGBM. Hansen's SPA test does not reject in either feature universe ($p=0.277$ and $p=0.077$), and the benchmark comparisons are underpowered, so the result is a non-rejection rather than evidence of equality. Local DM contrasts place the observable signal in the non-graph MLP and, most robustly, \emph{against} the graph: adding a correlation-GAT to the MLP reduces IC ($\Delta$IC${}=-0.012$), and this penalty is BH-significant in \emph{both} feature universes and never changes sign when any single quarter is dropped. The MLP's gain over LightGBM ($\Delta$IC${}=+0.015$) is significant only in the leak-selected universe and falls below its detectable-effect threshold, so we read it as suggestive (Limitation~L1).
+
+The causal family freezes the tuned correlation-GAT operating point and varies only the edge set. None of six edge contrasts survives Benjamini--Hochberg control, and all six are underpowered. A transaction-cost crosswalk reinforces the same caution: the two load-bearing Universe-C ladder contrasts (MLP$-$LightGBM and correlation-GAT$-$MLP) survive 10\,bps, whereas the tuned news-edge IC underperformance is near zero in net Sharpe, fragile across folds, and absent in the fixed-operating-point causal test. We therefore treat the evidence as conditional findings and failure modes, not as architecture rankings.
 \end{abstract}
 
 \begin{CCSXML}
@@ -55,81 +95,91 @@ Graph neural networks (GNNs) are widely reported to improve cross-sectional stoc
 
 \section{Introduction}\label{sec:intro}
 
-\emph{Cross-sectional stock ranking} is the task of predicting, every trading day, the \emph{relative} order of next-period returns across a fixed universe of stocks, here the constituents of the US S\&P~500. A model that orders the top decile correctly yields a tradeable dollar-neutral long-short portfolio; a model that ranks no better than chance loses to transaction costs. The standard quality metric is the \emph{Information Coefficient} (IC), the cross-sectional Spearman rank correlation between predicted scores and realised forward returns, averaged over test days.
+\emph{Cross-sectional stock ranking} asks whether a model can predict, each trading day, the relative ordering of next-period returns across a fixed stock universe. In our setting, that universe is the U.S. S\&P~500. The economic object is a dollar-neutral long-short portfolio: correctly ranking the top and bottom deciles creates a tradable signal, whereas rankings close to chance are absorbed by transaction costs. We measure ranking quality with the \emph{Information Coefficient} (IC), the daily cross-sectional Spearman rank correlation between predicted scores and realized forward returns.
 
-Recent GNN papers, most prominently Feng et al.~\cite{feng2019temporal} on temporal relational ranking, Kim et al.~\cite{kim2019hats} on HATS, and Sawhney et al.~\cite{sawhney2021sthansr} on STHAN-SR, report sizeable IC gains by encoding inter-stock relations (sector membership, Wikidata ontologies, news co-mentions) as graph edges and applying message passing. These headline gains are almost always quoted as \emph{single-seed} and \emph{single-split} numbers. Three concerns motivate a closer and more disciplined look.
+Recent GNN papers on stock ranking, including Feng et al.~\cite{feng2019temporal}, Kim et al.~\cite{kim2019hats}, and Sawhney et al.~\cite{sawhney2021sthansr}, report sizable IC gains from message passing over inter-stock relations such as sector membership, Wikidata links, and news co-mentions. Much of this evidence comes from one seed and one split. That design leaves three concerns.
 
-First, \textbf{single-seed inflation and cross-seed dispersion} are large in this regime. Even after tuning and seed-averaging, the per-arm 95\% bootstrap CIs here are as wide as the IC point estimates themselves: the Universe-C correlation-GAT pooled IC of $0.0224$ carries a 95\% CI of $[-0.0080,+0.0559]$, so a single-seed, single-split number can land almost anywhere in that band. Re-tuning hyperparameters does not remove this dispersion; only multi-seed evaluation surfaces it. Second, \textbf{regime concentration}: cross-sectional ranking profit is episodic, and a single high-dispersion quarter can dominate an annual number, so a positive pooled IC can be the artefact of one good quarter unless per-fold behaviour is disclosed. Third, \textbf{capacity confounding}: when each model rung is independently tuned under an equal compute budget, an edge ablation that compares differently-sized networks confounds ``did the edge help'' with ``did the bigger network help'', so a clean causal read of an edge requires holding capacity fixed.
+The first is seed dispersion. Even after tuning and seed averaging, per-arm 95\% bootstrap confidence intervals are often as wide as the IC point estimates. The Universe-C correlation-GAT, for example, has pooled IC $0.0224$, with a 95\% interval from $-0.0080$ to $+0.0559$. Retuning does not remove this dispersion; multi-seed evaluation reveals it. Our confirmatory tests use the seed-mean signal as the estimand (\S\ref{sec:families}), so this dispersion is a deployment precision caveat rather than part of family-wise inference.
 
-We address all three with a single tuned ladder and two \emph{separate} pre-registered confirmatory families. The \textbf{predictive family} (Family-1) asks the model-selection question, does any tuned arm beat a tuned LightGBM, using Hansen's Superior Predictive Ability (SPA) test~\cite{hansen2005spa} over nine candidates, with Diebold--Mariano / Harvey--Leybourne--Newbold (DM/HLN) pairwise tests~\cite{diebold1995comparing,harvey1997testing} under Benjamini--Hochberg (BH) false-discovery-rate control~\cite{benjamini1995controlling} as local evidence. The \textbf{causal family} (Family-2) freezes the full hyperparameter vector of the correlation-graph operating point and varies \emph{only} the edge set, so the matched $\Delta$IC isolates the pure edge effect at fixed capacity. Figure~\ref{fig:pipeline} summarises the pipeline.
+The second concern is regime concentration: one high-dispersion quarter can dominate an annual estimate. The third is capacity confounding. A tuned edge ablation comparing differently sized networks mixes whether the edge helped with whether the larger network helped. A causal reading requires holding the operating point fixed.
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{pipeline_confirmatory}
-  \caption{End-to-end confirmatory pipeline. Raw daily OHLCV for the S\&P~500 $\rightarrow$ per-day cross-sectional feature matrix (Universe~B, 10 hand-crafted dimensions; or Universe~C, 51 Alpha158 columns) $\rightarrow$ graph snapshot (rolling-correlation edges, optionally augmented with GICS-sector or point-in-time news co-occurrence edges) $\rightarrow$ one rung of the tuned L0--L7 ladder $\rightarrow$ cross-sectional ranking $\rightarrow$ top-decile equal-weight dollar-neutral long-short portfolio rebalanced every 21 trading days $\rightarrow$ evaluation by pooled IC, the two confirmatory families, and a descriptive gross/net cost crosswalk.}
-  \label{fig:pipeline}
-\end{figure*}
+We address these concerns with one tuned model ladder and two pre-registered confirmatory families. The first family is predictive. It asks whether any tuned arm improves on tuned LightGBM, using Hansen's Superior Predictive Ability (SPA) test~\cite{hansen2005spa} over nine candidates. We use Diebold--Mariano / Harvey--Leybourne--Newbold (DM/HLN) pairwise tests~\cite{diebold1995comparing,harvey1997testing}, with Benjamini--Hochberg (BH) false-discovery-rate control~\cite{benjamini1995controlling}, as local evidence along the ladder. The second family is causal. It freezes the full hyperparameter vector of the correlation-graph operating point and changes only the edge set. The resulting matched $\Delta$IC estimates the edge effect at L2's tuned operating point; it is not an estimate of the best attainable performance of each edge set after retuning (\S\ref{sec:families}).
 
-\paragraph{Two feature universes.} Both universes use the \emph{same set of stocks} and differ only in the features each stock carries. \textbf{Universe~B} is a 10-dimensional minimalist hand-crafted set built from price and volume alone (windowed return means and standard deviations at 5/10/21 days, 12-month momentum, an extreme-return statistic, dollar volume, and a 5-day rolling correlation); the ``B'' stands for \emph{baseline}. \textbf{Universe~C} is a 51-dimensional subset of Qlib's Alpha158 factor library~\cite{yang2020qlib} (top-15 factor groups by the project's earlier ranking); the ``C'' stands for \emph{composite}. All values are taken strictly at $T-1$. We compare two universes of very different richness to test whether GNN advantage depends on how strong the node features already are.
+\paragraph{Two feature universes.} The two universes contain the same stocks and differ only in node features. \textbf{Universe~B} is a 10-dimensional price-volume baseline. \textbf{Universe~C} is a 51-dimensional subset of Qlib's Alpha158 library~\cite{yang2020qlib}, selected from the project's earlier top-15 factor groups. All feature values are measured at $T-1$. The comparison asks whether graph structure is more useful when node features are sparse or already rich.
 
-\paragraph{Headline findings.} No tuned arm is confirmed to beat tuned LightGBM: Hansen SPA does not reject in either universe (Universe~B $p_{\text{consistent}}=0.277$, Universe~C $p_{\text{consistent}}=0.077$), and the vs-LightGBM comparison is underpowered (observed gaps below the 80\% minimum detectable effect), so this is a fail-to-reject, not evidence of equality. The neural lift that exists is carried by the non-graph MLP rather than the graph: in Universe~C the tuned MLP beats tuned LightGBM (L1$-$L0 $\Delta$IC${}=+0.0148$, HLN $p=0.011$, BH-reject) while adding a correlation-graph attention layer loses to that MLP (L2$-$L1 $\Delta$IC${}=-0.0119$, $p=6.9\times10^{-6}$, BH-reject); both are \emph{local} ladder rungs, not global SPA wins. The causal edge family finds \textbf{0/6} contrasts surviving BH-FDR and \textbf{6/6} underpowered. Under a net-of-cost convention, the two load-bearing Universe-C rungs hold at 10\,bps, while the one IC rung that flips convention (the tuned news-edge arm underperforming corr-GAT on ranking) is a near-zero, fold-fragile net difference, flagged cost-sensitive and not echoed by the capacity-matched causal test. We frame these as \emph{conditional findings} and \emph{failure modes}, not architecture-supremacy claims.
+\paragraph{Headline findings.} No tuned arm is confirmed to outperform tuned LightGBM. Hansen's SPA test does not reject in either universe (Universe~B $p_{\text{consistent}}=0.277$, Universe~C $p_{\text{consistent}}=0.077$), and the benchmark comparisons are underpowered because the observed gaps fall below the 80\% minimum detectable effect. The result is therefore a non-rejection, not evidence that the models are equal.
+
+The local ladder shows where any neural lift comes from, and its most robust signal is negative for the graph. Adding a correlation-GAT to the MLP's features \emph{reduces} IC (L2$-$L1): this contrast is BH-significant in \emph{both} universes (Universe~B $\Delta$IC${}=-0.0133$; Universe~C $-0.0119$, $p=6.9\times10^{-6}$), exceeds its 80\% minimum detectable effect in Universe~C, and does not change sign when any single test quarter is dropped (0/12 folds in both universes). Because it also holds in the clean price-volume Universe~B, selection leakage cannot explain it. The positive direction is weaker: the tuned MLP beats LightGBM only in the leak-selected Universe~C (L1$-$L0 $\Delta$IC${}=+0.0148$, HLN $p=0.011$, BH-reject; the magnitude-matched Universe-B contrast does not survive BH) and sits below its detectable-effect threshold, so we read it as suggestive (Limitation~L1). These are local contrasts, not global SPA wins. The causal edge family finds \textbf{0/6} BH-FDR rejections, with \textbf{6/6} contrasts underpowered. At 10\,bps, the two central Universe-C contrasts survive transaction costs, whereas the tuned news-edge underperformance does not carry to net Sharpe and is not reproduced by the fixed-operating-point causal test. The evidence is therefore a set of conditional findings and failure modes, not an architecture ranking.
 
 \section{Related Work}\label{sec:related}
 
-\paragraph{GNN baselines for stock ranking.} Feng et al.~\cite{feng2019temporal} frame stock prediction as learning-to-rank over industry and Wikidata relation graphs with a temporal graph-convolution, reporting IC and return on a single split. Kim et al.~\cite{kim2019hats} introduce HATS, a hierarchical graph-attention network over 75 Wikidata relation types; it is the blueprint for our HATS-3R-adapt rung (L7), which restricts the relations to correlation, GICS sector, and news co-occurrence and switches the head to 21-day cross-sectional ranking. Cheng and Li~\cite{cheng2021adgat} (AD-GAT) infer dynamic firm relations through an unmasked attention mechanism, and Li et al.~\cite{li2024master} (MASTER) alternate intra- and inter-stock attention; both represent the \emph{dense learned-attention} family that our L6 rung stands in for. Sawhney et al.~\cite{sawhney2021sthansr} re-frame selection as ranking over a spatiotemporal hypergraph, and Lin et al.~\cite{lin2021tra} (TRA) route samples to pattern-specific predictors. The common thread is rich relational structure evaluated under single-seed, single-split conditions.
+\paragraph{GNN baselines for stock ranking.} Several recent papers use graph structure to model cross-sectional stock predictability. Feng et al.~\cite{feng2019temporal} learn to rank over industry and Wikidata relation graphs. Kim et al.~\cite{kim2019hats} introduce HATS, a hierarchical graph-attention network over 75 Wikidata relation types. HATS motivates our L7 rung, but L7 is only a HATS-\emph{style} adaptation: it uses three relation types (correlation, GICS sector, and news co-occurrence) and a 21-day ranking head, so L7$-$L2 is subject to relation starvation.
 
-\paragraph{Methodology-leaning quantitative finance.} Hou, Xue and Zhang~\cite{hou2020replicating} replicate 452 cross-sectional anomalies under a uniform protocol and find 65\% fail multiple-comparison-corrected replication; we adopt that discipline. L\'opez de Prado~\cite{lopezdeprado2018advances} codifies block bootstrap and purge-and-embargo cross-validation, which we use throughout. Hansen~\cite{hansen2005spa} supplies the SPA test, with Politis and Romano~\cite{politis1994stationary} providing its stationary bootstrap and Newey and West~\cite{newey1987simple} the HAC standard errors.
+Other architectures relax the graph more aggressively. Cheng and Li~\cite{cheng2021adgat} infer dynamic firm relations through unmasked attention, and Li et al.~\cite{li2024master} alternate intra- and inter-stock attention. Our L6 rung is a controlled proxy for this dense-attention family, but it does not reimplement AD-GAT's dynamic-relation inference or MASTER's market-gated attention. Related work also includes spatiotemporal hypergraphs~\cite{sawhney2021sthansr}, pattern-specific routing~\cite{lin2021tra}, MLP-only token mixing~\cite{fan2024stockmixer}, and multi-relational dynamic graphs~\cite{qian2024mdgnn}. The common feature, in the reported protocols, is richer relational structure without the combination of multi-seed walk-forward evaluation, multiple-comparison control, and cost-aware benchmarking used here.
 
-\paragraph{Position relative to prior work.} To our knowledge this is the first study to combine, on the S\&P~500, all of: 10 seeds $\times$ 12-fold expanding walk-forward $\times$ a tuned model ladder $\times$ two separate pre-registered confirmatory families (predictive SPA/DM-HLN \emph{and} capacity-matched causal edge attribution) $\times$ a gross/net cost ladder $\times$ point-in-time news handling $\times$ explicit disclosure of a tuned-config stability failure. Table~\ref{tab:related} makes the gap explicit; the entries reflect each work's \emph{reported} evaluation protocol, and ``$\times$'' marks a property the paper does not report, not a claim that the property is impossible.
+\paragraph{Methodology-oriented empirical finance.} Our design also follows a methodological line in empirical asset pricing that treats multiple testing, dependence, and sample splitting as first-order concerns. Hou, Xue, and Zhang~\cite{hou2020replicating} replicate 452 cross-sectional anomalies under a common protocol and find that 65\% fail after multiple-comparison adjustment. We adopt that discipline in evaluating predictive claims. L\'opez de Prado~\cite{lopezdeprado2018advances} formalizes purge-and-embargo validation and block-bootstrap methods for financial machine learning, both of which shape our walk-forward design. Hansen~\cite{hansen2005spa} motivates the SPA test; Politis and Romano~\cite{politis1994stationary} provide the stationary bootstrap, and Newey and West~\cite{newey1987simple} provide the HAC standard errors.
 
-\begin{table*}[t]
-  \centering
-  \caption{Related-work evaluation matrix. Entries reflect each work's reported protocol; $\times$ = not reported (not a claim of impossibility).}
-  \label{tab:related}
-  \begin{tabular}{@{}llllccc@{}}
-    \toprule
-    Work & Venue/Year & Graph / relation & Test design & Multi-seed & SPA/DM-FDR & Cost ladder \\
-    \midrule
-    Feng et al.~\cite{feng2019temporal}      & TOIS 2019  & industry + Wikidata          & single split & $\times$ & $\times$ & $\times$ \\
-    Kim et al.~\cite{kim2019hats}            & 2019       & 75 Wikidata relations        & single split & $\times$ & $\times$ & $\times$ \\
-    Cheng \& Li~\cite{cheng2021adgat}        & AAAI 2021  & unmasked learned attention   & single split & $\times$ & $\times$ & $\times$ \\
-    Sawhney et al.~\cite{sawhney2021sthansr} & AAAI 2021  & spatiotemporal hypergraph    & single split & few      & $\times$ & $\times$ \\
-    Lin et al.~\cite{lin2021tra}             & KDD 2021   & temporal routing (no graph)  & single split & $\times$ & $\times$ & $\times$ \\
-    Li et al.~\cite{li2024master}            & AAAI 2024  & market-guided attention      & single split & $\times$ & $\times$ & $\times$ \\
-    Chen et al.~\cite{finmamba2025}          & 2025       & dynamic pruned graph + Mamba & single split & $\times$ & $\times$ & profit only \\
-    \textbf{This work}                       & ---        & tuned corr/sector/news ladder + FC edge arm & 12-fold WF & \textbf{10} & \textbf{SPA+DM+FDR} & \textbf{0--30\,bps} \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
+\paragraph{Position relative to prior work.} To the best of our knowledge, this is the first S\&P~500 stock-ranking study to combine ten seeds, a 12-fold expanding walk-forward design, a tuned ladder, two pre-registered confirmatory families, gross and net portfolio evaluation, point-in-time news handling, and disclosure of a tuned-configuration stability failure. Closely related GNN-ranking papers typically report a single split and seed. They also do not combine multiple-comparison control with a gross/net cost ladder. We treat those as reporting differences, not as evidence that earlier methods could not be evaluated under this protocol.
 
 \section{Methodology}\label{sec:method}
 
 \subsection{Walk-forward cross-validation}
-We use a 12-fold \emph{expanding-window walk-forward}: for fold $k$ the training set is all data up to a quarter boundary, the validation set is the next quarter, and the test set is the quarter after that. The twelve test quarters span 2023\,Q1 through 2025\,Q4, giving $T=749$ pooled test days. Because the label is a 21-day forward return, we drop the final 21 trading days of each training set (a \emph{purge embargo}) to eliminate label overlap~\cite{lopezdeprado2018advances}. A secondary sliding-252-day axis is reported as robustness only and carries no independent inference.
+Our validation design is a 12-fold \emph{expanding-window walk-forward}. In fold $k$, training ends at a quarter boundary, validation is the next quarter, and testing is the following quarter. The twelve test quarters run from 2023\,Q1 through 2025\,Q4, yielding $T=749$ pooled test days. Because the label is a 21-trading-day forward return, we purge the final 21 training days to eliminate label overlap~\cite{lopezdeprado2018advances}. A secondary sliding 252-day specification is only a robustness exercise and opens no additional inferential family.
 
 \subsection{Information coefficient and portfolio}
-Daily IC is the cross-sectional Spearman rank correlation between predictions and next-day 21-day-forward returns over all stocks with non-missing features that day; headline IC is the pooled mean over all test days across all 12 folds. We use Spearman because rank IC is invariant to monotonic transforms and is the factor-investing convention. Each day we sort by predicted score, long the top $K$ and short the bottom $K$ with $K=\lfloor 10\%\times n_{\text{valid}}\rfloor$, equal-weight and dollar-neutral, rebalanced every 21 trading days. The long-short Sharpe is annualised by $\sqrt{252/21}$. \emph{Net} Sharpe subtracts a one-way transaction cost at $\{0,5,10,15,20,30\}$\,bps per rebalance (net${}={}$gross${}-{}$turnover$_{\text{L1}}\times\text{bps}/10^4$), with the headline level at 10\,bps; net Sharpe is reported only as a descriptive economic-sensitivity layer.
+Daily IC is the cross-sectional Spearman rank correlation between model scores and 21-trading-day forward returns, computed over stocks with non-missing features on that day. The headline IC is the pooled mean across all test days in the 12 folds. We use Spearman IC because rank correlation is invariant to monotone transformations of the scores and is standard in factor evaluation.
+
+For the portfolio exercise, each day we buy the top decile and short the bottom decile of predicted scores, with equal-weighted dollar-neutral positions rebalanced every 21 trading days. The long-short Sharpe ratio is computed from non-overlapping 21-day rebalance returns and annualized by $\sqrt{252/21}$. This Sharpe series is distinct from the daily IC series; daily-IC dependence is handled by the block${}=21$\,d bootstrap in Section~\ref{sec:families}.
+
+\emph{Net} Sharpe subtracts one-way transaction costs at each rebalance:
+\[
+N=G-\tau_{\text{L1}}c/10^4,
+\]
+where $N$ and $G$ are net and gross rebalance returns, $c$ is the one-way cost in bps, and $\tau_{\text{L1}}=\sum_i|\Delta w_i|$ is the realized per-rebalance $L1$ turnover, at most 4 under a full long-short rotation and measured per arm and fold, so an arm that rotates positions more pays a proportionally larger cost. We report $c=$0, 5, 10, 15, 20, and 30\,bps; the headline cost is 10\,bps. Net Sharpe is a descriptive economic-sensitivity layer, computed from the same tuned 12-fold confirmatory cells rather than from an earlier pilot.
 
 \subsection{Two confirmatory families}\label{sec:families}
-We ask two different questions and keep them statistically separate. \emph{Did any model win?} is a model-selection question answered against multiple candidates (Family-1). \emph{Did this specific edge cause an improvement?} is a controlled-intervention question answered by changing only the edge while holding everything else fixed (Family-2).
+The two confirmatory families answer different questions and are kept statistically separate. Family-1 asks whether any tuned model beats tuned LightGBM after model-selection adjustment. Family-2 asks whether changing only the edge set changes IC at a fixed operating point. A tuned model comparison need not identify the causal contribution of the edge itself.
 
-\textbf{Family-1 (predictive).} The benchmark is the tuned LightGBM rung (L0); the candidates are the nine other tuned rungs. We run Hansen SPA (consistent variant, loss${}={}-$daily IC, stationary block bootstrap, block${}=21$\,d) to ask whether the best of the $M=9$ candidates beats the benchmark after accounting for selection. As local evidence we run DM/HLN paired tests on a pre-registered family of 20 contrasts, five ladder rungs $\{$L1$-$L0, L2$-$L1, L6$-$L2, L7$-$L2, L2s$-$L2$\}$ and five edge-DAG rungs $\{$L3$-$L2, L4$-$L2, L5$-$L2, L5$-$L4, L5$-$L3$\}$, in each of the two universes, under BH-FDR at $q=0.05$. The DM statistic uses Newey--West HAC standard errors~\cite{newey1987simple}; the HLN factor $\sqrt{(T+1-2h+h(h-1)/T)/T}$ with $h=21$ corrects the small $T/h$ ratio.
+\textbf{Family-1 (predictive).} The benchmark is the tuned LightGBM rung (L0), and the candidate set contains the other nine tuned rungs. We apply Hansen's SPA test using the consistent variant, loss${}={}-$daily IC, and a stationary bootstrap with block length 21 trading days. This test asks whether the best candidate outperforms the benchmark after adjusting for model selection.
 
-\textbf{Family-2 (causal).} The capacity confound means a tuned-vs-tuned edge comparison is not a clean edge effect. We add fixed-capacity (FC) arms that run L3/L4/L5's edge sets at the frozen tuned hyperparameter vector of L2, varying \emph{only} the edge set. The matched $\Delta$IC isolates the pure edge effect at the L2 operating point. Inference is the paired fold-level seed-averaged $\Delta$IC over $n\approx12$ fold blocks, block bootstrap over folds, and BH-FDR over the six contrasts; the per-row CIs are unadjusted descriptive intervals.
+We also report local paired evidence from DM/HLN tests on 20 pre-registered contrasts: five ladder contrasts, $\{$L1$-$L0, L2$-$L1, L6$-$L2, L7$-$L2, L2s$-$L2$\}$, and five edge-set contrasts, $\{$L3$-$L2, L4$-$L2, L5$-$L2, L5$-$L4, L5$-$L3$\}$, each in both universes. The main correction is BH-FDR at $q=0.05$ over the pooled 20-test family. A per-universe BH correction gives the same rejection decisions.
 
-\textbf{Power.} For every contrast we report a minimum detectable effect $\text{MDE}=2.8\times\text{SE}_{\text{block}}$ with $n_{\text{eff}}=T_{\text{days}}/21$, so that fail-to-reject can be distinguished from no-effect.
+The DM statistic uses Newey--West HAC standard errors~\cite{newey1987simple} with the Newey--West (1994) data-driven bandwidth $L=\lfloor 4(T/100)^{2/9}\rfloor$ ($L=6$ at $T=749$) to absorb serial correlation in the daily loss differential. The HLN factor, $\sqrt{(T+1-2h+h(h-1)/T)/T}$ with $h=21$, is a separate small-sample $t$-correction for the $h$-step forecast horizon, not a second autocorrelation adjustment. The two operate on different margins, the HAC long-run variance and the small-sample degrees of freedom, and are therefore not double-counted; the small-sample factor is conservative.
+
+\textbf{Family-2 (causal).} A tuned-vs-tuned edge comparison does not by itself identify the contribution of the edge, because the compared models may differ in both graph structure and effective capacity. We therefore add FC arms, the experiment label for the fixed-operating-point arms, that run the L3, L4, and L5 edge sets at L2's frozen tuned hyperparameter vector, changing only the edge set. The matched $\Delta$IC is an edge effect at this L2 operating point.
+
+This interpretation has an important caveat. Although we keep the FC experiment label, the intervention fixes an operating point rather than model capacity literally. A denser edge set may be underfit under L2's hyperparameters, so part of the 0/6 non-significance could reflect fixed-operating-point underfitting rather than a genuinely null edge effect. Inference uses paired, fold-level, seed-averaged $\Delta$IC over $n\approx12$ fold blocks, with 5000 stationary block-bootstrap replications and BH-FDR control over six two-sided fold-block tests. The per-row confidence intervals are unadjusted and descriptive.
+
+\textbf{Power.} For each contrast, we report a minimum detectable effect (MDE) to distinguish statistical non-rejection from evidence of a precisely estimated zero. We define $\text{MDE}=2.8\times\text{SE}_{\text{block}}$, with $n_{\text{eff}}=T_{\text{days}}/21$. The multiplier $2.8\approx z_{0.975}+z_{0.80}$ is the standard two-sided 5\% test, 80\% power factor for a $z$-test under an approximately normal block-bootstrap sampling distribution. This MDE rests on a coarse non-overlapping block SE over $n_{\text{eff}}\approx36$ blocks and is a deliberately conservative power yardstick; it is not the HAC daily-loss SE that produces the DM/HLN $p$-values, so an ``underpowered'' label means the observed gap is small relative to block-level dispersion rather than that the daily DM test lacks resolution.
+
+Three sample-size notions enter the analysis: daily-IC inference uses $T=749$ pooled test days, the IC/Sharpe MDE uses $n_{\text{eff}}=T/21\approx36$ non-overlapping blocks, and Family-2 uses about 12 fold blocks.
+
+\textbf{Inference unit.} Before testing, both families average the ten seeds into one series: per-day for Family-1 and per-fold for Family-2. The unit of inference is therefore the day in Family-1 and the fold in Family-2. This matches the pre-registered seed-mean estimand but does not propagate the cross-seed dispersion discussed in Section~\ref{sec:intro}; that dispersion is reported separately as a single-seed deployment caveat.
 
 \subsection{Pre-registration}
-The frozen protocol and the frozen tuned hyperparameters (md5 \texttt{59ddd0a2}) were committed before the confirmatory launch. The two confirmatory families are the \emph{only} inferential families; all prior work (horizon ablation, the loss-function horse race, the Plan-AAA factor ranking) is flagged exploratory and is disclosed but never allowed to count as confirmatory evidence. Net Sharpe is a descriptive layer; IC remains the sole confirmatory metric, and no third BH-FDR family is opened on Sharpe.
+The protocol and tuned hyperparameters were frozen before the confirmatory run, with the hyperparameter file identified by md5 \texttt{59ddd0a2}. Only the two families described above are used for confirmatory inference. Earlier analyses, including horizon ablations, the loss-function horse race, and the Plan-AAA factor ranking, are disclosed as exploratory and do not enter the confirmatory decision rules. Net Sharpe is reported as a descriptive economic layer; IC is the only confirmatory metric, and we do not define a separate BH-FDR family for Sharpe.
 
 \section{Data and Setup}\label{sec:data}
 
-The universe is the S\&P~500 constituents as of each trading day; frequency is daily close-to-close. The label is the next-day cross-sectionally $z$-scored 21-day forward log return, locked across all experiments. Ten canonical seeds are used everywhere. Each ladder rung changes exactly one design choice relative to the rung below it (Table~\ref{tab:ladder}); every rung is independently tuned under an equal compute budget (Optuna, $N=30$ trials per arm). Graph $\alpha$1 is a 126-day rolling Spearman correlation (edge if $|\rho|>0.6$, refreshed every 21 days from training data only); $\alpha$2 is static GICS sector connectivity; news edges are point-in-time (two stocks share an edge on day $T$ if co-mentioned in an article published before NYSE close of $T-1$); $\alpha$4 stacks all three. The confirmatory budget is 2160 main cells (9 non-HATS arms $\times$ 2 universes $\times$ 12 folds $\times$ 10 seeds), 240 L7/HATS cells, and 720 Family-2 fixed-capacity cells; each store is internally complete (0 failed, 0 duplicate \texttt{cell\_id}) and consumed by its respective family. Models are GAT~\cite{velickovic2018gat}, GraphSAGE-Mean~\cite{hamilton2017graphsage}, an MLP, and LightGBM; the L7 per-relation parameterisation follows R-GCN~\cite{schlichtkrull2018rgcn}; SPA is computed with the \texttt{arch} package~\cite{sheppard_arch}.
+The stock universe is a fixed survivor snapshot of the S\&P~500: the 501 names with continuous price, sector, and news histories from 2021 through 2026. It is not point-in-time membership. Firms that left the index are absent rather than retained with delisting returns, and missing forward-return cells are excluded as NaN rather than zero-filled. The estimand is therefore this fixed survivor universe, not the point-in-time S\&P~500 (Limitation~L8).
+
+The data frequency is daily close-to-close. The label, fixed across all experiments, is the cross-sectionally $z$-scored, market-excess 21-trading-day forward return from day $T$ to day $T{+}21$,
+\[
+r_{T\to T+21}=p_{T+21}/p_T-1,
+\]
+demeaned by the day's cross-sectional mean and then $z$-scored. Predictions for day $T$ use features measured strictly at $T{-}1$, leaving a one-trading-day execution lag between the last feature timestamp and the beginning of the return window.
+
+We use the same ten canonical seeds in all experiments. Each ladder rung changes one design choice relative to the rung below it (Table~\ref{tab:ladder}), and each rung is tuned independently with 30 Optuna trials. Equal budget equalizes trial count, not search adequacy. Neural arms have higher-dimensional spaces than LightGBM, a caveat for the ``MLP beats GAT'' interpretation. A trials-sensitivity sweep is left for future work.
+
+We construct four graph specifications. Graph $\alpha$1 is a 126-day rolling Spearman-correlation graph, refreshed every 21 days from training data only, with an edge when $|\rho|>0.6$. Graph $\alpha$2 is static GICS sector connectivity. The news graph is point-in-time: two stocks share an edge on day $T$ if they are co-mentioned in an EODHD news-feed article whose publication timestamp, rather than event date, falls before the NYSE close on $T-1$. Graph $\alpha$4 stacks the correlation, sector, and news edges.
+
+The confirmatory run consists of 2160 main model-fold-seed cells, 240 L7/HATS cells, and 720 Family-2 fixed-operating-point cells. Each output store is complete, with no failed cells and no duplicate \texttt{cell\_id}, and each feeds only its pre-specified family. The model classes are GAT~\cite{velickovic2018gat}, GraphSAGE-Mean~\cite{hamilton2017graphsage}, MLP, and LightGBM. L7 follows an R-GCN-style relation-specific parameterization~\cite{schlichtkrull2018rgcn}, and SPA is computed with \texttt{arch}~\cite{sheppard_arch}.
 
 \begin{table}[t]
   \centering
   \caption{The tuned model ladder. Each rung isolates one design choice.}
   \label{tab:ladder}
+  \compacttable
   \begin{tabular}{@{}lll@{}}
     \toprule
     Rung & Model / graph & Isolates \\
@@ -150,23 +200,26 @@ The universe is the S\&P~500 constituents as of each trading day; frequency is d
 
 \section{Results}\label{sec:results}
 
-The per-arm bootstrap CIs say several arms have non-zero IC; SPA says none is confirmed to beat LightGBM; the local DM ladder says the lift is MLP-shaped, not graph-shaped; the causal family says no edge effect survives multiplicity; and the cost crosswalk says the two load-bearing claims survive net economics while the one IC claim that flips convention does not. We tell these in sequence.
+The results point in five directions. Several individual arms have bootstrap confidence intervals that exclude zero. Hansen's SPA test, however, does not confirm that any tuned arm beats LightGBM after model selection. The local DM ladder places the strongest predictive gain in the MLP rather than in the correlation graph. The causal edge family finds no BH-FDR rejection, and all edge contrasts are underpowered. Finally, the cost exercise shows that the two central Universe-C contrasts survive a 10\,bps transaction-cost convention, while the news-edge IC contrast does not carry to net Sharpe. We present these results in that order.
 
 \subsection{Headline IC ladder}\label{sec:headline}
-Figure~\ref{fig:headline} and Table~\ref{tab:ic} report per-arm pooled IC with 95\% block-bootstrap CIs (seed-averaged, $T=749$). Several arms exclude zero, most consistently the non-graph MLP (L1, both universes) and the full-attention arm (L6); the two pure correlation-GAT rungs (L2) do not exclude zero in either universe. Per-arm non-zero IC is weaker than ``beats the benchmark'', which Section~\ref{sec:spa} addresses with multiplicity control. C/L5s sits at IC${}\approx0.002$ because a quarter of its cells collapsed (Section~\ref{sec:stability}); it enters only the SPA candidate set.
+Figure~\ref{fig:headline} and Table~\ref{tab:ic} report seed-averaged pooled IC by arm, with 95\% block-bootstrap confidence intervals over $T=749$ test days. Several arms have intervals that exclude zero, most consistently the non-graph MLP (L1, in both universes) and the full-attention arm (L6). The two pure correlation-GAT rungs (L2) do not exclude zero in either universe. A non-zero per-arm IC is not the same as beating the benchmark; Section~\ref{sec:spa} addresses that benchmark comparison with multiplicity control.
+
+One arm requires special treatment. C/L5s has pooled IC${}\approx0.002$ over its defined cells because roughly one quarter of its cells collapse to a mathematically undefined IC (Section~\ref{sec:stability}). The arm remains in the $M=9$ SPA candidate set. Undefined days are excluded pointwise rather than zero-filled, so the candidate count remains unchanged and the arm is not dropped from the family.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{headline_ic_ladder}
-  \caption{Per-arm pooled IC forest for the L0--L7 ladder in both universes, with the tuned LightGBM (L0) reference. \emph{Seeds${}=10$; folds${}=12$ (expanding walk-forward, 2023\,Q1--2025\,Q4); metric${}={}$pooled Spearman IC; intervals${}={}$95\% stationary block-bootstrap (block${}=21$\,d, 5000 reps); benchmark${}={}$L0.}
+  \includegraphics[width=.86\textwidth]{headline_ic_ladder}
+  \Description{Forest plot of pooled IC by model rung and feature universe.}
+  \caption{Per-arm pooled IC for the L0--L7 ladder. Intervals are 95\% stationary block-bootstrap CIs (block${}=21$\,d, 5000 reps); seeds${}=10$, folds${}=12$, benchmark${}={}$L0.}
   \label{fig:headline}
 \end{figure*}
 
 \begin{table}[t]
   \centering
-  \caption{Per-arm pooled IC with 95\% block-bootstrap CI. ``e0'' marks CI excluding zero.}
+  \caption{Per-arm pooled IC with 95\% block-bootstrap CI. ``e0'' marks CI excluding zero. The C/L5s Univ-C value ($0.0018$) is conditional on its \emph{defined} cells: a quarter of its cells collapse to a mathematically undefined IC (Section~\ref{sec:stability}) and are excluded pointwise, not zero-filled.}
   \label{tab:ic}
-  \small
+  \compacttable
   \begin{tabular}{@{}lccc c@{}}
     \toprule
     Rung & Univ B IC & e0 & Univ C IC & e0 \\
@@ -186,12 +239,17 @@ Figure~\ref{fig:headline} and Table~\ref{tab:ic} report per-arm pooled IC with 9
 \end{table}
 
 \subsection{The predictive family: SPA and DM/HLN}\label{sec:spa}
-Hansen SPA fails to reject ``no candidate beats LightGBM'' in both universes ($p_{\text{consistent}}=0.2767$ for B, $0.0774$ for C; $M=9$, $T=749$). Universe~C is the smaller $p$-value but does not reject at 5\%, and the comparison is underpowered, so this is a fail-to-reject. The cherry-pick-robust verdict is: no tuned arm is confirmed to beat tuned LightGBM. The local DM/HLN ladder under BH-FDR over the 20-test family tells a sharper story (Figure~\ref{fig:spa}, Table~\ref{tab:dm}). \emph{Within this tuned ladder}, the neural lift comes from the non-graph MLP and the graph does not add to it: in Universe~C the MLP beats LightGBM (L1$-$L0${}=+0.0148$, BH-reject) while the correlation-GAT loses to the MLP (L2$-$L1${}=-0.0119$, BH-reject), and the tuned news-edge arm loses to the correlation-GAT (L3$-$L2${}=-0.0123$, BH-reject). These are local ladder rungs, not a global ``graphs hurt'' claim: the sector, full-attention, HATS, and combined-edge arms all recover above the correlation-GAT in Universe~C, and the SPA non-rejection is the multiplicity-honest summary.
+Hansen's SPA test does not reject the null that no candidate beats LightGBM in either universe ($p_{\text{consistent}}=0.2767$ for B and $0.0774$ for C; $M=9$, $T=749$). In Universe~C, the SPA bracket is $p_{\text{lower}}=0.055$ and $p_{\text{consistent}}=p_{\text{upper}}=0.077$, so even the lower bound remains above 5\%. The comparison is also underpowered, with observed gaps below the 80\% MDE. The selection-adjusted conclusion is therefore straightforward: no tuned arm is confirmed to outperform tuned LightGBM.
+
+The local DM/HLN ladder gives a more detailed, but narrower, view of the same experiment (Figure~\ref{fig:spa}, Table~\ref{tab:dm}). SPA and the DM ladder are distinct inferential layers. SPA controls selection error over the $M=9$ candidates against L0, whereas the DM ladder applies BH-FDR control to its own 20 pre-registered local contrasts. We report each layer at its own error rate and do not claim a joint family-wise rate spanning both.
+
+Within this tuned ladder, the strongest local evidence points to the non-graph MLP rather than to the correlation graph. In Universe~C, the MLP beats LightGBM locally (L1$-$L0${}=+0.0148$, BH-reject), while the correlation-GAT loses to the MLP (L2$-$L1${}=-0.0119$, BH-reject). The tuned news-edge arm also underperforms the correlation-GAT (L3$-$L2${}=-0.0123$, BH-reject). These are local contrasts, not a global claim that graphs hurt: the sector, full-attention, HATS, and combined-edge arms all recover above the correlation-GAT in Universe~C, and the SPA non-rejection remains the selection-adjusted summary. As above, the positive Universe-C MLP--LightGBM contrast is only suggestive because the feature basis was leak-selected (Limitation~L1). The negative graph contrasts are less exposed to that concern, because selection leakage can inflate apparent predictability but does not explain why the graph underperforms the MLP; consistent with this, the L2$-$L1 penalty is BH-significant in the clean price-volume Universe~B as well ($\Delta$IC${}=-0.0133$). Power is also asymmetric across the two directions: the correlation-graph penalty C\,L2$-$L1 exceeds its 80\% MDE, a detectable effect, whereas the MLP's gain over LightGBM C\,L1$-$L0 falls below its own MDE. The data therefore identify a detectable graph \emph{penalty} at this operating point while leaving any benchmark-beating \emph{benefit} too small to detect at this sample size.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{F9_spa_dm_confirmatory}
-  \caption{Left: Hansen SPA $p_{\text{consistent}}$ per universe with the 5\% reject region shaded; neither universe rejects. Right: the 20 DM/HLN ladder rungs as a BH-FDR forest ($\Delta$IC${}\pm{}$CI), filled${}={}$BH-reject, hollow${}={}$not. \emph{DM/HLN with NW-HAC SE + HLN small-sample correction ($h=21$); BH-FDR $q=0.05$ over 20 tests; benchmark${}={}$L0.}
+  \includegraphics[width=.86\textwidth]{F9_spa_dm_confirmatory}
+  \Description{SPA and DM/HLN confirmatory evidence for the tuned ladder.}
+  \caption{SPA and local DM/HLN evidence. Left: SPA $p_{\text{consistent}}$ by universe. Right: 20 pre-registered DM/HLN contrasts, with filled markers denoting BH-FDR rejection at $q=0.05$.}
   \label{fig:spa}
 \end{figure*}
 
@@ -199,7 +257,7 @@ Hansen SPA fails to reject ``no candidate beats LightGBM'' in both universes ($p
   \centering
   \caption{DM/HLN pairwise ladder (seed-averaged daily $\Delta$IC; BH-FDR over the 20-test family). $r$ = BH-reject.}
   \label{tab:dm}
-  \small
+  \compacttable
   \begin{tabular}{@{}l rc rc@{}}
     \toprule
     Pair (A$-$B) & B $\Delta$IC & $r$ & C $\Delta$IC & $r$ \\
@@ -219,23 +277,20 @@ Hansen SPA fails to reject ``no candidate beats LightGBM'' in both universes ($p
 \end{table}
 
 \subsection{Regime concentration}\label{sec:regime}
-Pooled IC hides that cross-sectional skill is episodic. Figure~\ref{fig:regime} disaggregates IC by fold: skill is concentrated in a minority of quarters (notably 2024\,Q4 and 2025\,Q2), while roughly half the quarters sit near zero or negative for nearly every arm. A pooled IC is an average over a strongly non-stationary series; per-fold disclosure is mandatory, and any single-quarter Sharpe should be read with its period count.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{regime_perfold_ic}
-  \caption{Per-arm $\times$ per-quarter IC heatmap (rungs $\times$ 12 folds) with a per-quarter mean-IC bar. \emph{Seeds${}=10$; folds${}=12$; metric${}={}$per-fold pooled Spearman IC.}
-  \label{fig:regime}
-\end{figure*}
+Pooled IC masks the episodic nature of cross-sectional predictability. Most positive signal is concentrated in a few quarters, especially 2024\,Q4 and 2025\,Q2; roughly half of the test quarters are near zero or negative for almost every arm. The pooled estimate is therefore an average over a nonstationary sequence. Single-quarter Sharpe ratios are even more fragile because they use few non-overlapping rebalance returns. This concentration affects the pooled IC \emph{levels} but not the load-bearing pairwise contrasts: in a leave-one-quarter-out check, none of the four BH-rejected ladder contrasts (L1$-$L0, L2$-$L1, L3$-$L2, L5$-$L3) changes sign when any single fold is removed (0/12 in both universes), so the graph-underperformance result is not an artifact of the 2024\,Q4 or 2025\,Q2 regimes.
 
 \subsection{Net-of-cost crosswalk}\label{sec:cost}
-Every pre-registered ranking claim is re-expressed under a 10\,bps net-of-cost convention (Table~\ref{tab:cost}, Figure~\ref{fig:cost}); IC remains the sole confirmatory metric. The two load-bearing Universe-C rungs survive net economics with CIs excluding zero. The economic separation behind the L1$-$L0 rung is in fact starker than the $+0.0148$ IC gap: tuned LightGBM's own net Sharpe at 10\,bps is negative ($-0.22$) while the MLP's is $+0.95$, though the paired net $\Delta$Sharpe erodes mildly with cost as the MLP pays down its higher turnover. The one cost-sensitive result is C L3$-$L2: the BH-significant IC underperformance of the news-edge rung versus corr-GAT does not carry to net Sharpe (net $\Delta$Sharpe${}=+0.08$, CI $[-0.77,+0.89]$ straddling zero, fold-fragile). The honest reading takes the net bootstrap CI as primary: the ranking-level underperformance does not reproduce economically, and this is a local IC rung, not a causal or economic statement that news edges help or hurt (Section~\ref{sec:causal}).
+We re-express each pre-registered ranking contrast under a 10\,bps net-of-cost convention (Table~\ref{tab:cost}, Figure~\ref{fig:cost}). IC remains the only confirmatory metric; the net-Sharpe exercise is descriptive. The two load-bearing Universe-C ladder contrasts (C\,L1$-$L0 and C\,L2$-$L1) survive this economic layer, with paired net $\Delta$Sharpe confidence intervals excluding zero; the edge-stacking contrast C\,L5$-$L3 also carries, and only the news-edge contrast C\,L3$-$L2 does not (Table~\ref{tab:cost}).
+
+For L1$-$L0, the economic separation is larger than the IC gap alone suggests. At 10\,bps, tuned LightGBM has net Sharpe $-0.22$ (95\% CI $[-0.82,+0.36]$), whereas the MLP has $+0.95$ ($[+0.18,+1.77]$). Because both level intervals are wide and overlap, the load-bearing object is the \emph{paired} per-fold net $\Delta$Sharpe (Table~\ref{tab:cost}): its point estimate equals the difference of the level means ($+1.17$), but its CI $[+0.36,+2.08]$ is computed from the paired fold differences rather than by differencing the two level intervals, and excludes zero. It declines mildly with cost because the MLP turns over more.
+
+The exception is C L3$-$L2. The news-edge rung underperforms the correlation-GAT in IC, but not in net Sharpe: net $\Delta$Sharpe is $+0.08$ with CI $[-0.77,+0.89]$. We read this ranking-level underperformance as economically fragile. It is a local IC result, not a causal or economic statement that news edges help or hurt (Section~\ref{sec:causal}). The crosswalk covers only Family-1 ranking pairs; Family-2 fixed-operating-point contrasts are evaluated only in IC.
 
 \begin{table}[t]
   \centering
-  \caption{Gross/net crosswalk for the load-bearing Universe-C rungs.}
+  \caption{Gross/net crosswalk for the two load-bearing Universe-C ladder contrasts (C\,L1$-$L0, C\,L2$-$L1) and the edge contrast C\,L5$-$L3. ``Carries?'' asks whether the gross-IC result reproduces in net Sharpe; ``CS'' (cost-sensitive) marks a gross-IC contrast that does not carry because its net $\Delta$Sharpe CI straddles zero.}
   \label{tab:cost}
-  \small
+  \compacttable
   \begin{tabular}{@{}l r l c@{}}
     \toprule
     Pair & Gross $\Delta$IC (BH) & Net $\Delta$Sharpe@10\,bps [CI] & Carries? \\
@@ -250,19 +305,22 @@ Every pre-registered ranking claim is re-expressed under a 10\,bps net-of-cost c
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{cost_gross_net}
-  \caption{Left: the net-Sharpe cost ladder (0--30\,bps) for the Universe-C arms; tuned LightGBM (L0) is already negative at 10\,bps while the MLP (L1) stays positive. Right: gross-IC-vs-net-Sharpe sign agreement across the 20 pre-registered pairs, with the single sign-flip (C L3$-$L2) annotated. \emph{Net convention${}={}$10\,bps one-way on L1 turnover; per-pair net $\Delta$Sharpe${}={}$fold-level seed-averaged, stationary block bootstrap.}
+  \includegraphics[width=.90\textwidth]{cost_gross_net}
+  \Description{Transaction-cost crosswalk from gross IC contrasts to net Sharpe contrasts.}
+  \caption{Net-of-cost crosswalk. Left: Universe-C cost ladder over 0--30\,bps. Right: sign agreement between gross IC and net Sharpe across the 20 pre-registered pairs, with C L3$-$L2 annotated.}
   \label{fig:cost}
 \end{figure*}
 
-\subsection{The causal family: matched-capacity edges}\label{sec:causal}
-Family-1's news-edge result confounds the edge with capacity. Family-2 removes that confound by running each edge set at the frozen L2 hyperparameter vector (Table~\ref{tab:family2}, Figure~\ref{fig:family2}). \textbf{0/6 contrasts survive BH-FDR and 6/6 are underpowered} ($|$matched $\Delta$IC$|<$MDE@80\%): edge effects are directionally positive but not family-significant, and fail-to-reject is not no-effect. The Universe-B reversals, matched $\Delta$IC positive where the tuned $\Delta$IC was negative, are evidence that the capacity confound masked a small positive edge effect at fixed capacity. In Universe~C the sector ($+0.0137$) and sector$+$news ($+0.0141$) contrasts agree in sign with their tuned counterparts, while the news contrast is small, positive ($+0.0011$), and opposite-signed to its negative tuned rung ($-0.0123$), so even the one edge that looked harmful on the tuned ladder is not harmful at fixed capacity.
+\subsection{The causal family: fixed-operating-point edges}\label{sec:causal}
+Family-1's news-edge result mixes the edge change with changes in the tuned model. Family-2 evaluates each edge set at the frozen L2 hyperparameter vector (Table~\ref{tab:family2}, Figure~\ref{fig:family2}). None of the six contrasts survives BH-FDR, and all six are underpowered ($|$matched $\Delta$IC$|<$MDE@80\%). The point estimates are directionally positive, but not statistically reliable.
+
+The sign reversals in Universe~B are suggestive but not conclusive: matched $\Delta$IC is positive where tuned $\Delta$IC was negative. In Universe~C, the sector ($+0.0137$) and sector$+$news ($+0.0141$) contrasts have the same sign as their tuned counterparts, while the news contrast is small and positive ($+0.0011$) despite a negative tuned rung ($-0.0123$). Thus, the fixed-operating-point test does not reproduce the tuned ladder's apparent news-edge harm. Given low power, this is a failure to detect harm, not evidence that the edge is harmless.
 
 \begin{table}[t]
   \centering
-  \caption{Family-2 fixed-capacity edge contrasts (matched $\Delta$IC, BH-FDR over 6). UP${}={}$underpowered.}
+  \caption{Family-2 fixed-operating-point edge contrasts (matched $\Delta$IC, BH-FDR over 6). UP${}={}$underpowered.}
   \label{tab:family2}
-  \small
+  \compacttable
   \begin{tabular}{@{}ll r cc r@{}}
     \toprule
     Univ & Edge & Matched $\Delta$IC & BH & UP & Tuned $\Delta$IC \\
@@ -279,92 +337,55 @@ Family-1's news-edge result confounds the edge with capacity. Family-2 removes t
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{family2_edge_causal}
-  \caption{Matched-$\Delta$IC (causal) vs tuned-$\Delta$IC (descriptive) for the six edge contrasts, with the $\pm$MDE@80\% band; no contrast clears the band and none survives BH-FDR. \emph{Matched $\Delta$IC${}={}$fold-level seed-averaged at the frozen L2 HP vector, block bootstrap over 12 folds, BH-FDR $q=0.05$ over 6 contrasts.}}
+  \includegraphics[width=.94\columnwidth]{family2_edge_causal}
+  \Description{Matched and tuned edge-effect estimates in the Family-2 fixed-operating-point test.}
+  \caption{Matched-$\Delta$IC versus tuned-$\Delta$IC for the six edge contrasts. The $\pm$MDE@80\% band contains every matched estimate, and no contrast survives BH-FDR.}
   \label{fig:family2}
 \end{figure}
 
-\subsection{A tuned-config stability failure}\label{sec:stability}
-One SAGE-Mean control arm under the full edge set in Universe~C (C/L5s) degenerates to a constant prediction in 27.5\% of its test fold-seeds (25 fully and 8 partially collapsed of 120). This is verified \emph{not} a training crash: the cells report a converged flag with a no-signal validation plateau, at which the cross-sectional Spearman IC is mathematically undefined. The mechanism is SAGE-mean aggregation over a dense edge set combined with the arm's tuned dropout of 0.5, which smooths the signal away, the same mechanism that explains why adding a correlation graph (L2) does not beat the MLP (L1). The arm is treated as missing (undefined IC $\neq$ a measured zero) and is never re-tuned, since re-tuning a single losing arm under an equal-budget design would be cherry-picking. The conclusion is invariant: under exclude/zero-fill/zero-skill the C/L5s mean IC stays ${}\approx0$ and the Universe-C SPA $p$ stays at $0.077$--$0.080$.
+\subsection{A tuned-configuration stability failure}\label{sec:stability}
+The Universe-C SAGE-Mean control arm with all edges (C/L5s) degenerates to constant predictions in 27.5\% of its test fold-seeds: 25 fully collapsed and 8 partially collapsed cells out of 120. This is not a training crash; affected cells report convergence, but validation performance plateaus at no signal, leaving Spearman IC undefined.
+
+A plausible mechanism is oversmoothing. SAGE-Mean aggregation over a dense edge set, combined with tuned dropout of 0.5, can smooth away cross-sectional variation. This is only a candidate explanation: the failure is observed in SAGE-Mean with all edges, whereas L2 is a GAT on the sparse correlation graph.
+
+We treat undefined IC as missing rather than as a measured zero, and we do not retune only this losing arm. The main conclusion is unchanged: under exclusion, zero-fill, or zero-skill handling, C/L5s mean IC remains approximately zero and the Universe-C SPA $p$-value remains between $0.077$ and $0.080$.
 
 \subsection{Exploratory failure modes}\label{sec:exploratory}
-These results sit outside the confirmatory families and are disclosed for transparency only. On a historical loss-function horse race (MSE was locked for the confirmatory ladder), ListMLE exhibited a systematic regime-shift inversion (Figure~\ref{fig:loss}): its per-cell mean IC is $-0.0458$ versus MSE's $+0.0113$. Its softmax-likelihood objective is dominated by the in-distribution rank order, so when test ranks shift the model produces anti-rankings. Separately, the Universe-C composition is the project's earlier Plan-AAA top-15 Alpha158 groups, originally ranked under a same-day-OHLC procedure; under strict $T-1$ leak correction only 5 of the top 15 stay in the top 15 (Figure~\ref{fig:planaaa}). Universe-C runtime features are evaluated at $T-1$ and are not leaked, but the basis for selecting them is fragile.
+The analyses in this subsection are outside the confirmatory families. In an earlier loss-function horse race, where MSE was later fixed for the confirmatory ladder, ListMLE showed a regime-shift inversion: per-cell mean IC was $-0.0458$, compared with $+0.0113$ for MSE. A plausible explanation is that softmax likelihood overweights the in-sample rank order; when the test ranking relation shifts, the fitted model can rank in the wrong direction.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{loss_listmle_inversion}
-  \caption{\emph{Exploratory (not confirmatory).} Mean IC per loss family on the historical loss horse race (per-cell, $\pm1$ SE); ListMLE inverts to a negative mean IC while MSE stays positive. MSE is the locked confirmatory loss.}
-  \label{fig:loss}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{plan_aaa_t1_stability}
-  \caption{\emph{Exploratory caveat (Limitation L1).} Original Plan-AAA rank vs rank after strict $T-1$ correction for the top-15 Alpha158 groups; only 5/15 remain in the top 15. Runtime features are at $T-1$; only the composition basis is fragile.}
-  \label{fig:planaaa}
-\end{figure}
+A separate issue concerns Universe~C. Its 51 features come from the project's earlier Plan-AAA top-15 Alpha158 groups, originally ranked under same-day OHLC. Under strict $T-1$ correction, only 5 of those 15 groups remain in the top 15. The runtime features are measured at $T-1$, but the feature-basis selection is leaked. We therefore treat Universe-C's positive results, including MLP${}>{}$LightGBM and any positive fixed-operating-point edge effect, as suggestive pending leak-free $T-1$ selection. Null and negative within-universe contrasts are less exposed because selection leakage can inflate signal but does not explain graph underperformance.
 
 \section{Discussion}\label{sec:discussion}
-A block-bootstrap CI tests a single point estimate against zero, whereas Hansen SPA asks whether the best of several candidates exceeds a benchmark after selection bias; both are correct and answer different questions. The headline is therefore not that GNNs fail, but that no tuned arm is \emph{confirmed} to beat a tuned tree benchmark on this span, and that the neural lift which does exist is MLP-shaped. In both universes the cleanest local DM rung is L2$-$L1${}<0$: adding a correlation-graph attention layer to the same features underperforms the plain MLP on IC, with the C/L5s collapse naming the candidate mechanism (aggregation over dense edges plus high dropout smooths the cross-sectional signal). This is a bounded statement about the correlation graph at the tuned operating point, not a general ``graphs hurt'' claim. Family-1's tuned news-edge rung looks like evidence that the news edge harms ranking, but Family-2 shows that at fixed capacity the same edge has a tiny, non-significant, and (in Universe~B) opposite-signed effect; equal-budget tuned ladders answer the deployment question, capacity-matched arms answer the scientific one, and conflating them is how edge-ablation claims get over-stated. Net economics does not rescue any edge; it confirms the one ranking-level edge effect was too small and too fold-fragile to be economically real.
+A block-bootstrap confidence interval and Hansen's SPA test answer different questions. The former evaluates a single point estimate against zero; the latter asks whether the best candidate exceeds a benchmark after model-selection adjustment. The evidence does not show that GNNs fail. It shows that, over this sample and protocol, no tuned arm is confirmed to outperform a tuned tree benchmark, and the strongest local neural gain comes from the MLP.
+
+The cleanest local DM contrast in both universes is L2$-$L1${}<0$: adding a correlation-GAT to the same node features reduces IC relative to the MLP. The C/L5s collapse offers one possible mechanism: dense-edge aggregation plus high dropout may smooth away cross-sectional signal. This mechanism is only suggestive, since the collapse is observed for SAGE-Mean with all edges and not directly for L2's sparse-correlation GAT. The claim is therefore bounded to the correlation graph at the tuned operating point, not graph architectures in general.
+
+The news-edge result shows why the two-family design matters. In Family-1, the tuned news-edge rung appears to harm ranking. In Family-2, the same edge change at the fixed L2 operating point is tiny, statistically insignificant, and in Universe~B opposite-signed. The tuned ladder answers a deployment question; the fixed-operating-point arms answer an edge-attribution question, subject to underfitting. Treating them as the same would overstate an edge ablation. The net-Sharpe exercise points in the same direction.
 
 \section{Limitations and Future Work}\label{sec:limits}
-\textbf{(L1)} Universe-C's basis (Plan-AAA top-15) has low stability: only 5/15 groups survive $T-1$ correction (runtime features are at $T-1$; the basis is fragile). \textbf{(L2)} Skill is carried by a minority of the 12 quarters; report per-fold. \textbf{(L3)} The C/L5s constant-collapse is a reported stability finding. \textbf{(L4)} The vs-LightGBM comparison is underpowered (MDE exceeds the observed gaps), so ``no reliable evidence of superiority'', not ``proven equal''. \textbf{(L5)} Net Sharpe is descriptive, heavy-tailed and turnover-sensitive, so economic claims rest on fold-level paired $\Delta$Sharpe. \textbf{(L6)} L6 represents only the dense learned-attention family~\cite{li2024master,cheng2021adgat}, not learned-sparse graphs (e.g.\ FinMamba~\cite{finmamba2025}); LSTM/Transformer time encoders are not benchmarked. \textbf{(L7)} Single market and single horizon. Future work: replicate on 5+ years to dilute single-quarter dominance; cross-market replication; intra-day rebalance to target the short-window news signal that 21-day averaging removes; learned-sparse architectures under the same two-family protocol.
+\textbf{(L1)} \emph{Selection-stage leakage in Universe-C's basis.} Universe~C's 51 columns come from Plan-AAA top-15 Alpha158 groups ranked under same-day OHLC. Under strict $T-1$ correction, only 5 of the 15 groups remain in the top 15. Runtime features are measured at $T-1$, but feature-basis selection is leaked, so Universe-C positive results, including MLP${}>{}$LightGBM and positive fixed-operating-point edge effects, are suggestive pending leak-free re-selection. Null and negative within-universe contrasts are less exposed because selection leakage can inflate signal but does not explain graph underperformance.
+
+\textbf{(L2)} Predictive skill is concentrated in a minority of the 12 test quarters, so fold-level results are needed to interpret pooled IC. \textbf{(L3)} The C/L5s constant-prediction collapse is reported as a stability finding rather than repaired by retuning. \textbf{(L4)} The comparison against LightGBM is underpowered because the observed gaps are below the MDE. The conclusion is therefore no reliable evidence of superiority, not proven equality.
+
+\textbf{(L5)} Net Sharpe is descriptive and sensitive to heavy tails and turnover; economic interpretation should rely on fold-level paired $\Delta$Sharpe rather than arm-level Sharpe alone. The equal-weight decile portfolio ignores liquidity constraints in smaller names and short-borrow availability and costs, so reported net Sharpe is an upper bound on realizable performance.
+
+\textbf{(L6)} L6 represents the dense learned-attention family~\cite{li2024master,cheng2021adgat}; it does not cover learned-sparse graph architectures such as FinMamba~\cite{finmamba2025}. We also do not benchmark LSTM or Transformer time encoders. \textbf{(L7)} The evidence comes from one market and one prediction horizon.
+
+\textbf{(L8)} \emph{Survivorship and non-point-in-time composition.} The universe is a fixed end-window survivor snapshot, not point-in-time (PIT) membership. A public-record constituent audit, rather than official S\&P~DJI or CRSP history, identifies two approximate deviations. First, 87 window members left before the snapshot date and are absent, equal to 14.8\% of ever-member names and 8.2\% of PIT member stock-days. Because reported results are within-universe paired contrasts on the same snapshot, this reduces mechanical cross-arm imbalance but does not make the estimand PIT. Attrition is non-uniform, and omitted names include 2023 regional-bank failures and acquisition targets. Second, the snapshot over-includes current constituents before index-addition dates, creating 8.1\% look-ahead stock-days and a two-sided composition mismatch of 16.3\%. Paired contrasts do not remove this sampling bias. The mismatch is bounded in liquidity terms (among 76 mid-window additions, the smallest market capitalization is \$6.6\,B and none is below \$5\,B), but not in distress terms: SVB, Signature, and First Republic remain omitted.
+
+\textbf{(L9)} The correlation-graph hyperparameters are fixed rather than ablated: the edge threshold is $|\rho|>0.6$, and the rolling window is 126 days. A threshold and window sensitivity sweep is left for future work.
+
+The next steps are a point-in-time universe rebuild with delisting returns, a longer sample, cross-market replication, intraday rebalancing for short-window news, and learned-sparse architectures evaluated under the same two-family protocol.
 
 \section{Reproducibility}\label{sec:repro}
-Code, the confirmatory run outputs, the frozen tuned hyperparameters (committed before launch), the three confirmatory analyzers, and the figure scripts are versioned in the project repository; a numeric-claim verifier is run on the working draft before each review. The pre-registered protocol and the two-family decision rules are fixed in a version-stamped protocol document.
+The project repository versions the code, confirmatory outputs, frozen tuned hyperparameters, walk-forward fold calendar (12 quarters, $T=749$), Optuna search grid, ten seeds, analysis scripts, and figure scripts. The tuned hyperparameters were committed before the confirmatory run. A numeric-claim verifier checks the draft against underlying outputs, and the pre-registered protocol fixes the two-family decision rules.
 
-%% --- Appendix: ST1 setup tables ---
-\appendix
-\section{Data and Experimental Setup (ST1)}\label{app:st1}
 
-\begin{table}[h]
-  \centering
-  \caption{ST1a. Walk-forward fold calendar; pooled $T=749$ test days.}
-  \label{tab:st1a}
-  \small
-  \begin{tabular}{@{}cc c cc@{}}
-    \toprule
-    Fold & Test quarter & Days & Fold & Test quarter / Days \\
-    \midrule
-    0 & 2023\,Q1 & 62 & 6  & 2024\,Q3 / 64 \\
-    1 & 2023\,Q2 & 62 & 7  & 2024\,Q4 / 64 \\
-    2 & 2023\,Q3 & 63 & 8  & 2025\,Q1 / 60 \\
-    3 & 2023\,Q4 & 63 & 9  & 2025\,Q2 / 62 \\
-    4 & 2024\,Q1 & 61 & 10 & 2025\,Q3 / 64 \\
-    5 & 2024\,Q2 & 63 & 11 & 2025\,Q4 / 61 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{table}[h]
-  \centering
-  \caption{ST1b. Hyperparameter search grid (Optuna, $N=30$ per arm; centres${}={}$pilot defaults).}
-  \label{tab:st1b}
-  \small
-  \begin{tabular}{@{}lll@{}}
-    \toprule
-    Dimension & Centre & Range \\
-    \midrule
-    \multicolumn{3}{@{}l}{\emph{Neural (MLP / GAT / L6 / L7)}}\\
-    learning rate    & $10^{-3}$ & log-uniform $[10^{-4},10^{-2}]$ \\
-    weight decay     & $10^{-4}$ & log-uniform $[10^{-5},10^{-3}]$ \\
-    dropout          & 0.3 & $\{0.1,0.2,0.3,0.5\}$ \\
-    hidden channels  & 64  & $\{32,64,128\}$ \\
-    num layers       & 2   & $\{1,2,3\}$ \\
-    attention heads  & 4   & $\{2,4,8\}$ \\
-    \midrule
-    \multicolumn{3}{@{}l}{\emph{LightGBM (L0)}}\\
-    num leaves        & 31   & $\{15,31,63,127\}$ \\
-    learning rate     & 0.05 & log-uniform $[0.01,0.1]$ \\
-    min data in leaf  & 20   & $\{10,20,50,100\}$ \\
-    $\lambda_{1},\lambda_{2}$ & $10^{-8}$ & log-uniform $[10^{-8},1.0]$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Fixed (not tuned): epochs${}=100$, patience${}=15$, gradient accumulation${}=32$; HATS relations${}=3$. The LightGBM grid is six-dimensional to match the neural dimension count and preserve an equal tuning budget. Ten canonical seeds: $\{7,34,86,99,123,456,789,1024,2024,2026\}$.
-
+\begingroup
+\scriptsize
+\setlength{\bibsep}{0pt}
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
+\endgroup
 
 \end{document}

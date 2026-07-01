@@ -6,33 +6,35 @@
 
 | 文件 | 说明 |
 |---|---|
-| `main.tex` | 全文（Abstract→§Reproducibility + Appendix ST1）。`\documentclass[sigconf,nonacm]{acmart}`。8 图 + 8 表 + 21 引用。 |
-| `references.bib` | 21 条 BibTeX（[1]–[21]），`\bibliographystyle{ACM-Reference-Format}`。注释/验证轨迹见 `docs/storya_references.md`。 |
+| `main.tex` | 全文（Abstract→§Reproducibility，无附录）。`\documentclass[sigconf,nonacm]{acmart}`。**8 页（ICAIF 硬上限）**，4 图 + 5 表 + 23 引用。**唯一正式投稿源**（2026-06-30 合并：原 9pp `main.tex` + 中间 codex 变体 + `main_jf_codex_compact.tex` 已合并为这一份 8pp 稿并删除多余文件，旧 9pp 可从 git 历史找回；备份在 session scratchpad）。 |
+| `main.pdf` | 本地 tectonic 编译输出（8 页，干净）。 |
+| `references.bib` | 23 条 BibTeX，`\bibliographystyle{ACM-Reference-Format}`。注释/验证轨迹见 `docs/storya_references.md`。 |
+| `.paper-review/` | PaperJury 评审 ledger（`LEDGER.json`/`LEDGER.md` + 历史 round 记录）。 |
 
-图片：`main.tex` 用 `\graphicspath{{../figures/}{figures/}}`，引用 `figures/*.pdf` 矢量母版（8 张：pipeline / headline_ic_ladder / F9_spa_dm_confirmatory / regime_perfold_ic / cost_gross_net / family2_edge_causal / loss_listmle_inversion / plan_aaa_t1_stability）。
+图片：`main.tex` 用 `\graphicspath{{../figures/}{figures/}}`，引用 `figures/*.pdf` 矢量母版（**4 张实际使用**：headline_ic_ladder / F9_spa_dm_confirmatory / cost_gross_net / family2_edge_causal；其余探索图在 9→8pp 裁剪中移出正文）。
 
 ## 编译
 
-**本机无 TeX**（无 pdflatex/acmart）→ 用 **Overleaf**（内置 acmart）：
-1. 新建 Overleaf 项目，上传 `main.tex` + `references.bib` + 8 张 `figures/*.pdf`（放 `figures/` 子目录或同级，`\graphicspath` 两路径都试）。
-2. 编译器选 pdfLaTeX；流程 `pdflatex → bibtex → pdflatex ×2`（Overleaf 自动）。
-
-本地若装了 TeX：
+**本地 tectonic 可编译**（acmart + bib 内建，已验证 8 页、0 error）：
 ```bash
-cd paper && latexmk -pdf main.tex     # 或 pdflatex main; bibtex main; pdflatex main; pdflatex main
+cd paper && tectonic -X compile main.tex     # 产出 main.pdf（8pp）
 ```
+或用 **Overleaf**（内置 acmart）：上传 `main.tex` + `references.bib` + 4 张 `figures/*.pdf`，编译器 pdfLaTeX，流程 `pdflatex → bibtex → pdflatex ×2`（自动）。
 
-## 校验状态（2026-06-25）
+## 校验状态（2026-06-30）
 
-- **数字忠实性**：脚本交叉核验 IC 表 / DM 20 对表 / Family-2 / SPA 值对源 CSV（`artifacts/storya_v21_family1`、`family2_fc`）→ **0 失配**。
-- **静态 LaTeX 审查**：裸 `%`/`&`/`_` 仅出现在注释与 CCSXML（acmart 特殊处理）；`\ref`↔`\label` 全配对；8 图 `\includegraphics` 目标全部命中 `../figures/*.pdf`；表格列数逐表核对一致。**未本地编译**（无 TeX）——首次 Overleaf 编译后需肉眼核对溢出/浮动位置。
+- **数字忠实性**：IC 表 / DM 20 对表 / Family-2 / SPA 值对源 CSV（`artifacts/storya_v21_family1`、`family2_fc`）→ 0 失配；compact↔旧 main.tex 数据数字零漂移（传递性继承）。
+- **PaperJury ultracode 评审通过**（2026-06-30，`artifacts/reviews/2026-06-30_paperjury_compact-review_round1.md` + `.paper-review/LEDGER.json`）：压缩 SAFE，0 CRITICAL；scope-2 修复 + Tier-1 结论加强（头条改为 leak-robust L2−L1<0）已落地。剩 8 个 reviewer-anticipation 文字项待选做。
+- **本地编译**：tectonic exit 0、**8 页**、`\ref`↔`\label` / `\cite`↔bib 全解析、4 图 `\includegraphics` 全命中。
 
 ## 待办（提交前）
 
-- 填 `\author` / `\affiliation` / `\email`（当前 Anonymous 占位）+ 确认 ICAIF '26 会议元数据（`\acmConference`）。
-- 首次 Overleaf 编译后：核对页数（目标 8–10pp）、图表浮动、ACM-Reference-Format 渲染；按页数预算决定是否精简 §5.7 exploratory 或把 ST1 移补充材料。
+- **作者块已填**（Tracy He / USC / tracyhe@usc.edu）= **非匿名 arXiv preprint 版**（当前 `main.pdf`）。投 **ICAIF 双盲**时只需在 `\documentclass` 加 `anonymous`（第 9 行 → `[sigconf,nonacm,anonymous]`），acmart 自动隐藏作者，无需删真名（文件内有注释说明）。
+- arXiv 上传：`main.tex` + `references.bib` + 4 张 `figures/*.pdf`（放 `figures/` 子目录匹配 `\graphicspath`）；可选把 `\acmConference[ICAIF '26]...` 改为中性 "Preprint. Under review." 以免未录用先挂会议页脚。
+- 可选清剩余 8 个 reviewer-anticipation major（见 plan 2026-06-30-a / `.paper-review/LEDGER.json`，纯文字加 hedge，不重跑）。
 - 可选补引：Stockformer / Pinheiro-Wedge（见 `docs/storya_references.md` 末「To-be-added」）。
 
 ## 变更日志
 
+- 2026-06-30: **合并为单一 8pp 投稿源**——把 codex compact（含 12 处评审修复 + Tier-1 结论加强）覆盖为 `main.tex`，删除中间 codex 变体 + 长名字 compact 文件 + 全部编译垃圾；本地 tectonic 验证 8 页；新增 `.paper-review/` 评审 ledger（→ progress: 2026-06-30-a）。
 - 2026-06-25: 初版 LaTeX 源（`main.tex` + `references.bib`），由 confirmatory 草稿 v2 转换；数字交叉核验 + 静态审查通过（→ progress: 2026-06-25-a）。
