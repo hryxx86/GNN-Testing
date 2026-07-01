@@ -278,7 +278,7 @@
       "summary": "The DM ladder reports Delta-IC and reject flags for 20 contrasts but per-contrast p-values for only 2 of them in prose. A reviewer cannot verify the BH ladder, cannot reconcile why the near-identical B L1-L0 (+0.0143) fails BH while C L1-L0 (+0.0148) passes, and cannot check the claimed pooled-20 vs per-universe BH equivalence. The opposite decisions for near-equal effect sizes are exactly the cells most in need of reported p-values.",
       "references": "stat-multiplicity-reviewer",
       "close_criterion": "Add per-contrast HLN statistic and BH-adjusted p-value columns (or raw p plus the BH critical rank) for all 20 contrasts so every reject/non-reject decision, the B-vs-C opposite decisions, and the pooled-vs-per-universe equivalence are independently verifiable.",
-      "status": "raised",
+      "status": "closed",
       "verdict": null,
       "reason_code": null,
       "tally": null,
@@ -291,7 +291,7 @@
       "rounds_touched": [],
       "drafted_patch": null,
       "journal_ref": null,
-      "notes": "engine_id=I-11; raised_by=[\"stat-multiplicity-reviewer\"]"
+      "notes": "tab:dm now reports HLN p-value per contrast (asterisk=BH-reject); B L1-L0 p=0.052 vs C L1-L0 p=0.011 makes the near-equal-dIC/opposite-decision transparent. source: family1_dm_hln.csv."
     },
     {
       "id": "I-12",
@@ -382,7 +382,7 @@
       "summary": "Point-in-time news handling is claimed as a contribution and the per-edge timing rule (co-mention in an article published before NYSE close of T-1) is stated, but the paper never asserts that no news-graph CONSTRUCTION parameter (entity-linking dictionary, co-mention threshold, vocabulary, any frequency normalization) is fit using full-sample or future data. With a 21-day forward label, any full-sample news-statistic fitting is a leakage channel on a component the paper specifically advertises as clean.",
       "references": "quant-finance-empirical-asset-pricing",
       "close_criterion": "State explicitly that all news-graph construction parameters (entity dictionary, co-mention threshold, any normalization) are computed using only data available at or before T-1, or disclose which are full-sample and add the channel to Limitations.",
-      "status": "raised",
+      "status": "closed",
       "verdict": null,
       "reason_code": null,
       "tally": null,
@@ -395,7 +395,7 @@
       "rounds_touched": [],
       "drafted_patch": null,
       "journal_ref": null,
-      "notes": "engine_id=I-15; raised_by=[\"quant-finance-empirical-asset-pricing\"]"
+      "notes": "Verified in run_storya_e3_news_edge.py + build_news_edge_source.py: news graph fits NO construction params (provider ticker tags, binary co-mention n_tickers>=2, per-day PIT cutoff only). §4 sentence added."
     },
     {
       "id": "I-16",
@@ -434,7 +434,7 @@
       "summary": "The within-universe paired-contrast defense neutralizes the survivorship/look-ahead bias (8.1% look-ahead, 16.3% composition mismatch, omitted 2023 distress names SVB/Signature/First Republic) ONLY for cross-arm ranking contrasts, where the bias is common-mode. But the paper also reports LEVEL quantities the paired argument does not protect: per-arm pooled IC 'excludes zero' (Table 2 'e0' column, Fig 1) and per-arm net-Sharpe LEVELS (LightGBM -0.22, MLP +0.95 in Sec 5.4). Including current constituents before their addition dates and excluding the exact distress names a long-short book would short in 2023 mechanically inflates these absolute levels, yet the L8 caveat is presented as covering only paired contrasts, not the level claims.",
       "references": "GNN-methods-reviewer; quant-finance-asset-pricing-reviewer",
       "close_criterion": "Add an explicit sentence (in L8 or the IC/Sharpe results) stating that absolute per-arm IC-excludes-zero and net-Sharpe LEVEL quantities are upward-biased by the survivor/look-ahead snapshot and should be read only relatively, OR demote the 'e0' and net-Sharpe-level statements to descriptive.",
-      "status": "raised",
+      "status": "closed",
       "verdict": null,
       "reason_code": null,
       "tally": null,
@@ -447,7 +447,7 @@
       "rounds_touched": [],
       "drafted_patch": null,
       "journal_ref": null,
-      "notes": "engine_id=I-17; raised_by=[\"GNN-methods-reviewer\",\"quant-finance-asset-pricing-reviewer\"]"
+      "notes": "L8 extended: pairing shields only cross-arm differences; per-arm IC-e0 (tab:ic) + net-Sharpe levels are unshielded, read as within-sample descriptive not PIT-realizable."
     },
     {
       "id": "I-18",

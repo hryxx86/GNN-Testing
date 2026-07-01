@@ -52,6 +52,8 @@
 %% For the ICAIF double-blind SUBMISSION, add `anonymous` to \documentclass
 %% options above (line 9): \documentclass[sigconf,nonacm,anonymous]{acmart}
 %% acmart then auto-hides this block; no need to delete the real names.
+%% Page count: this non-anonymous build is 9pp (fine for arXiv, no limit); the
+%% anonymous ICAIF build collapses the author block and fits the 8pp hard limit.
 \author{Tracy He}
 \affiliation{%
   \institution{University of Southern California, Viterbi School of Engineering}
@@ -171,7 +173,7 @@ demeaned by the day's cross-sectional mean and then $z$-scored. Predictions for 
 
 We use the same ten canonical seeds in all experiments. Each ladder rung changes one design choice relative to the rung below it (Table~\ref{tab:ladder}), and each rung is tuned independently with 30 Optuna trials. Equal budget equalizes trial count, not search adequacy. Neural arms have higher-dimensional spaces than LightGBM, a caveat for the ``MLP beats GAT'' interpretation. A trials-sensitivity sweep is left for future work.
 
-We construct four graph specifications. Graph $\alpha$1 is a 126-day rolling Spearman-correlation graph, refreshed every 21 days from training data only, with an edge when $|\rho|>0.6$. Graph $\alpha$2 is static GICS sector connectivity. The news graph is point-in-time: two stocks share an edge on day $T$ if they are co-mentioned in an EODHD news-feed article whose publication timestamp, rather than event date, falls before the NYSE close on $T-1$. Graph $\alpha$4 stacks the correlation, sector, and news edges.
+We construct four graph specifications. Graph $\alpha$1 is a 126-day rolling Spearman-correlation graph, refreshed every 21 days from training data only, with an edge when $|\rho|>0.6$. Graph $\alpha$2 is static GICS sector connectivity. The news graph is point-in-time: two stocks share an edge on day $T$ if they are co-mentioned in an EODHD news-feed article whose publication timestamp, rather than event date, falls before the NYSE close on $T-1$. The news graph fits no construction parameters: ticker tags are the provider's per-article annotations, an edge requires only co-mention in a multi-ticker article, and the only temporal parameter is this daily cutoff, so nothing (vocabulary, frequency, or threshold) is estimated from full-sample or future data. Graph $\alpha$4 stacks the correlation, sector, and news edges.
 
 The confirmatory run consists of 2160 main model-fold-seed cells, 240 L7/HATS cells, and 720 Family-2 fixed-operating-point cells. Each output store is complete, with no failed cells and no duplicate \texttt{cell\_id}, and each feeds only its pre-specified family. The model classes are GAT~\cite{velickovic2018gat}, GraphSAGE-Mean~\cite{hamilton2017graphsage}, MLP, and LightGBM. L7 follows an R-GCN-style relation-specific parameterization~\cite{schlichtkrull2018rgcn}, and SPA is computed with \texttt{arch}~\cite{sheppard_arch}.
 
@@ -255,23 +257,23 @@ Within this tuned ladder, the strongest local evidence points to the non-graph M
 
 \begin{table}[t]
   \centering
-  \caption{DM/HLN pairwise ladder (seed-averaged daily $\Delta$IC; BH-FDR over the 20-test family). $r$ = BH-reject.}
+  \caption{DM/HLN pairwise ladder: seed-averaged daily $\Delta$IC and HLN $p$-value ($^\ast$ = BH-FDR reject at $q=0.05$ over the 20-test family). Near-equal $\Delta$IC can differ in $p$ as the daily-loss variance differs by universe.}
   \label{tab:dm}
   \compacttable
-  \begin{tabular}{@{}l rc rc@{}}
+  \begin{tabular}{@{}l rr rr@{}}
     \toprule
-    Pair (A$-$B) & B $\Delta$IC & $r$ & C $\Delta$IC & $r$ \\
+    Pair (A$-$B) & B $\Delta$IC & B $p$ & C $\Delta$IC & C $p$ \\
     \midrule
-    L1$-$L0 & $+0.0143$ & n & $+0.0148$ & y \\
-    L2$-$L1 & $-0.0133$ & y & $-0.0119$ & y \\
-    L6$-$L2 & $+0.0052$ & n & $+0.0174$ & y \\
-    L7$-$L2 & $-0.0091$ & n & $+0.0102$ & y \\
-    L2s$-$L2& $+0.0079$ & n & $+0.0089$ & y \\
-    L3$-$L2 & $-0.0149$ & y & $-0.0123$ & y \\
-    L4$-$L2 & $-0.0081$ & n & $+0.0163$ & y \\
-    L5$-$L2 & $-0.0100$ & n & $+0.0152$ & y \\
-    L5$-$L4 & $-0.0019$ & n & $-0.0011$ & n \\
-    L5$-$L3 & $+0.0049$ & n & $+0.0275$ & y \\
+    L1$-$L0 & $+0.0143$ & $0.052$ & $+0.0148$ & $0.011^\ast$ \\
+    L2$-$L1 & $-0.0133$ & $<.001^\ast$ & $-0.0119$ & $<.001^\ast$ \\
+    L6$-$L2 & $+0.0052$ & $0.356$ & $+0.0174$ & $0.001^\ast$ \\
+    L7$-$L2 & $-0.0091$ & $0.195$ & $+0.0102$ & $0.002^\ast$ \\
+    L2s$-$L2& $+0.0079$ & $0.118$ & $+0.0089$ & $<.001^\ast$ \\
+    L3$-$L2 & $-0.0149$ & $0.006^\ast$ & $-0.0123$ & $0.009^\ast$ \\
+    L4$-$L2 & $-0.0081$ & $0.227$ & $+0.0163$ & $0.012^\ast$ \\
+    L5$-$L2 & $-0.0100$ & $0.110$ & $+0.0152$ & $<.001^\ast$ \\
+    L5$-$L4 & $-0.0019$ & $0.172$ & $-0.0011$ & $0.831$ \\
+    L5$-$L3 & $+0.0049$ & $0.066$ & $+0.0275$ & $<.001^\ast$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -353,7 +355,7 @@ We treat undefined IC as missing rather than as a measured zero, and we do not r
 \subsection{Exploratory failure modes}\label{sec:exploratory}
 The analyses in this subsection are outside the confirmatory families. In an earlier loss-function horse race, where MSE was later fixed for the confirmatory ladder, ListMLE showed a regime-shift inversion: per-cell mean IC was $-0.0458$, compared with $+0.0113$ for MSE. A plausible explanation is that softmax likelihood overweights the in-sample rank order; when the test ranking relation shifts, the fitted model can rank in the wrong direction.
 
-A separate issue concerns Universe~C. Its 51 features come from the project's earlier Plan-AAA top-15 Alpha158 groups, originally ranked under same-day OHLC. Under strict $T-1$ correction, only 5 of those 15 groups remain in the top 15. The runtime features are measured at $T-1$, but the feature-basis selection is leaked. We therefore treat Universe-C's positive results, including MLP${}>{}$LightGBM and any positive fixed-operating-point edge effect, as suggestive pending leak-free $T-1$ selection. Null and negative within-universe contrasts are less exposed because selection leakage can inflate signal but does not explain graph underperformance.
+A separate issue is Universe-C's feature-basis leakage: only 5 of its 15 Plan-AAA Alpha158 groups survive strict $T-1$ re-ranking, so its positive results (MLP${}>{}$LightGBM, positive edge effects) are suggestive pending leak-free selection, while null and negative contrasts are less exposed (detailed in Limitation~L1).
 
 \section{Discussion}\label{sec:discussion}
 A block-bootstrap confidence interval and Hansen's SPA test answer different questions. The former evaluates a single point estimate against zero; the latter asks whether the best candidate exceeds a benchmark after model-selection adjustment. The evidence does not show that GNNs fail. It shows that, over this sample and protocol, no tuned arm is confirmed to outperform a tuned tree benchmark, and the strongest local neural gain comes from the MLP.
@@ -371,7 +373,7 @@ The news-edge result shows why the two-family design matters. In Family-1, the t
 
 \textbf{(L6)} L6 represents the dense learned-attention family~\cite{li2024master,cheng2021adgat}; it does not cover learned-sparse graph architectures such as FinMamba~\cite{finmamba2025}. We also do not benchmark LSTM or Transformer time encoders. \textbf{(L7)} The evidence comes from one market and one prediction horizon.
 
-\textbf{(L8)} \emph{Survivorship and non-point-in-time composition.} The universe is a fixed end-window survivor snapshot, not point-in-time (PIT) membership. A public-record constituent audit, rather than official S\&P~DJI or CRSP history, identifies two approximate deviations. First, 87 window members left before the snapshot date and are absent, equal to 14.8\% of ever-member names and 8.2\% of PIT member stock-days. Because reported results are within-universe paired contrasts on the same snapshot, this reduces mechanical cross-arm imbalance but does not make the estimand PIT. Attrition is non-uniform, and omitted names include 2023 regional-bank failures and acquisition targets. Second, the snapshot over-includes current constituents before index-addition dates, creating 8.1\% look-ahead stock-days and a two-sided composition mismatch of 16.3\%. Paired contrasts do not remove this sampling bias. The mismatch is bounded in liquidity terms (among 76 mid-window additions, the smallest market capitalization is \$6.6\,B and none is below \$5\,B), but not in distress terms: SVB, Signature, and First Republic remain omitted.
+\textbf{(L8)} \emph{Survivorship and non-point-in-time composition.} The universe is a fixed end-window survivor snapshot, not point-in-time (PIT) membership. A public-record constituent audit, rather than official S\&P~DJI or CRSP history, identifies two approximate deviations. First, 87 window members left before the snapshot date and are absent, equal to 14.8\% of ever-member names and 8.2\% of PIT member stock-days. Because reported results are within-universe paired contrasts on the same snapshot, this reduces mechanical cross-arm imbalance but does not make the estimand PIT. Pairing shields only cross-arm \emph{differences}: the few \emph{level} statements (per-arm IC excluding zero, Table~\ref{tab:ic}; per-arm net Sharpe, \S\ref{sec:cost}) are unshielded and inflated by the survivor-and-look-ahead universe, so we read them as within-sample descriptive, not PIT-realizable, levels. Attrition is non-uniform, and omitted names include 2023 regional-bank failures and acquisition targets. Second, the snapshot over-includes current constituents before index-addition dates, creating 8.1\% look-ahead stock-days and a two-sided composition mismatch of 16.3\%. Paired contrasts do not remove this sampling bias. The mismatch is bounded in liquidity terms (among 76 mid-window additions, the smallest market capitalization is \$6.6\,B and none is below \$5\,B), but not in distress terms: SVB, Signature, and First Republic remain omitted.
 
 \textbf{(L9)} The correlation-graph hyperparameters are fixed rather than ablated: the edge threshold is $|\rho|>0.6$, and the rolling window is 126 days. A threshold and window sensitivity sweep is left for future work.
 

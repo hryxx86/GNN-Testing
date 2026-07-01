@@ -24,6 +24,8 @@
 
 **文件合并（H博士 选项 A）**：把含全部 12 处改动的 compact 8pp 内容覆盖为 `paper/main.tex`（旧 9pp 进 git 历史 + scratchpad 备份），删除中间变体 `main_jf_codex.tex`、长名字 `main_jf_codex_compact.tex` 及全部 `*.aux/.bbl/.blg/.log/.out/.pdf` 编译垃圾；`paper/` 现仅余 `main.tex`(8pp) + `references.bib` + `main.pdf`(刷新) + `README.md` + `.paper-review/`。tectonic 重编译 exit 0、**8 页**、全 ref 解析。`paper/README.md` 同步更新（4图5表23引用 / 无附录 / 本地可编译，结构性变更 per Rule 5）。**main.tex 现为唯一正式投稿源。**
 
+**作者块 + reviewer-anticipation 清 3 项（2026-06-30，续）**：填非匿名作者（arXiv preprint）——Tracy He（USC Viterbi, Financial Engineering）+ Jinchi Lv（USC Marshall, DSO）；`\acmConference` 改中性 Preprint；`anonymous` toggle 一行切 ICAIF 双盲（文件内注释）。清 I-11（tab:dm 补 20 个 HLN p 值，asterisk=BH-reject，直接解答 B L1-L0 p=0.052 vs C 0.011 之谜）、I-15（读代码核实 news 图无拟合构造参数后如实披露一句）、I-17（L8 扩到 level claims 不受配对保护）。§5.7 Universe-C 泄露段与 L1 重复→缩为指针。**页数**：非匿名 arXiv 版 9pp（无限制，OK），**匿名 ICAIF 版 8pp**（作者块塌缩，卡硬上限内，含全部修复）——一份源两用。gate-blocking major 8→5（剩 I-01/02/07/14/19）。
+
 ## 2026-06-29-a: ICAIF 8pp 页预算裁剪（减浮动体不减科学）— 11pp → 9pp
 
 确认 **ICAIF'26 = 8 页硬上限**（[官方 CFP](https://icaif2026.org/call-for-papers.html)：图+表+引用全包含、不收附录/补充材料、超页 desk-reject；README 老写的"8-10pp"乐观了）。H博士 认可"减冗余展示不减科学"的裁剪：
