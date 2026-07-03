@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-07-02-b: 评估建议落地 — T0×21 + T1×5 全部写入 main.tex；Codex TP3 过审；匿名版保住 8pp
+
+→ progress: 2026-07-02-b | plan: 2026-07-02-a | analysis: 2026-07-02-a
+
+**H博士 决策**：T2 不做（trials-sweep / leak-free 重选 / PIT 全部跳过），T0+T1 全修；"漏点不伤大雅的错误"——纯装饰性小项只做顺手的，不为其加轮次（据此放弃 abstract 精度统一 I-48 的激进版与可选收尾句 T0-13）。
+
+**Rule 9 TP3（Codex Round A，`artifacts/reviews/2026-07-02_codex_results_A.md`）**：4 项稳健性检查数字入纸前送审。Codex read-only sandbox 自行开源文件复算：per-seed 计数/LOSO/合池 BH 11 项/BY 7 存活/E3 数字**全部独立确认**；加权重构被确认等价于逐日 pooled mean、无 L5s 污染。判决 **PROCEED-WITH-FIXES**（0C/0M/**4 CONCERN 全接受**：合池 BH 须标 post-hoc sensitivity 非替代预注册族；BY 句须报 7/11；per-seed 8/10 两例须拆开报不得压缩；E3 措辞锁 "rules out grossly nonfunctional graph path" + 不暗示 tuned-arm adequacy）。E3 "20/20 cells 全正" 本人另行复核（`sanity_e3_planted/results.csv`）。
+
+**T1×5 落地（Codex 修订措辞）**：§4 末新增 Pipeline positive control 段（E3）；§5.2 加 SPA=global confirmatory 指定 + 26 检验合池 BH + BY 敏感性复合句（新引 `benjamini2001by`）；§5.3 加 LOSO seed 句（0/10 each + 8/9/10 分层报）；§5.2 末加 under-search 边界论证（L4/L5 同预算同空间恢复 +0.0163/+0.0152 + planted control 双重 bound）；§6 加 planted-control 交叉引用半句。
+
+**T0×21 落地**（择要）：**HXZ 引用修正**（65% 单检验 / 82% 多重校正——原句事实错误）；Table 1 caption "isolates"→"changes one nominal design axis"+列头 Targets（I-01）；abstract "equal-budget" 前置 + §6 under-search 半句（I-02）；Family-2 全文 causal→edge attribution（I-34，label sec:causal 保留）；501/503 调和（I-49）；label 公式 transform 措辞（I-44）；turnover 2.90 vs 2.25 实测句（I-42，source `cost_ladder_by_arm.csv`）；ΔSharpe CI 构造=12 fold-block 平稳 bootstrap（I-39）；≈36 rebalances caveat（I-46）；L5−L3 tuned-pair caveat（I-47/41）；"a quarter"→27.5%（I-28）。
+
+**页预算战役**：净增文本把匿名版顶到 9pp（浮动体级联，HEAD-anon 对照=8pp 确认为我的净增所致）→ 三轮收紧（S1-S3 压缩 + 冗余合并 ×15：§3.3/§5 开篇/§5.2 分层句由 S1 吸收/L4/L5/L9 压缩等）+ 四图微缩（.86→.79×2、.90→.82、.94→.85）+ 删 `sheppard_arch` note 字段 → **匿名 8pp / 非匿名 arXiv 9pp 双版本达成**，tectonic 0 error，红线 grep CLEAN，全部新数字对源终验一致，图字号视觉抽查合格。
+
+**未做（记录）**：T1-ε sliding 副轴句——执行时发现该结果跑在 **untuned anchor** 上（`run_storya_anchor_sliding.py`），与 D-RERUN-12F "untuned 结果不入 confirmatory draft" 冻结纪律冲突，主动放弃（评估报告 §6 相应条目作废）；I-48/22 激进精度统一与 T0-13 可选收尾句按 H博士 "漏点" 指示跳过。
+
+---
+
+## 2026-07-02-a: 全项目通读 + Paper 系统性评估（投稿前）— 报告 + 3 项零重跑稳健性新证据
+
+→ progress: 2026-07-02-a | plan: 2026-07-02-a | analysis: N/A（评估非新实验；4 项零重跑核查落档 `artifacts/audits/paper_eval_robustness.csv`，若 T1 入纸则届时走 TP3 + analysis.md）
+
+**任务**：H博士 要求完全读完整个项目、系统性评估 `paper/main.tex` 并提建议。导向 = 全力赶 ICAIF 8/2（CFP 抓取确认：deadline 2026-08-02、双盲 8pp 硬上限无附录、CMT、**arXiv preprint 明确允许**）。
+
+**覆盖**：main.tex 逐行 + main.pdf 逐页；Table 2/3/4/5 及 abstract 全部 load-bearing 数字对 8 个源 CSV 亲验 **0 失配**；4 个 confirmatory 分析器统计函数公式级核对**全部正确**（NW-1994 L=6 / Bartlett γ_l/T / HLN 因子 / BH step-up / arch SPA + StationaryBootstrap / Family-2 fold-block t / cost 层 12-block bootstrap）；20 检验族与 `protocol_v2_freeze.md` §6 逐字一致；LEDGER 49 项逐条；3 个 Explore agent 扫 docs/experiments/reviews 全量；文献检索 4 组（**无撞车**）。
+
+**核心发现**：
+1. **E3 planted-signal 阳性对照完全没进论文**——负结果论文第一攻击（"实现是坏的"）零防御，而 E3（GNN 恢复 82–91%/MLP≈0）是现成反证。最高价值 + 最低成本改进（+4 行）。
+2. **3 个 open majors 零重跑关闭**（新脚本 `analyze_paper_eval_robustness.py` → `artifacts/audits/paper_eval_robustness.csv`）：(a) I-14 — 6 个 BH-rejected contrasts leave-one-seed-out **0/10 全不翻号**、per-seed 同号 8–10/10；(b) I-07 — 26 检验（20 DM + 6 FC）合池 BH **决策 100% 不变**；(c) I-37/I-19 — BY（任意依赖）下 **headline L2−L1 双宇宙仍拒绝**而 C L1-L0/L3-L2/L4-L2 掉出，与论文 suggestive/cost-sensitive 分级完全同构（headline 集齐 bandwidth/universe/fold/seed/dependence 五重稳健）。
+3. **1 个事实性引用错误**：§2 HXZ "65% fail after multiple-comparison adjustment"——原文 65% 是单检验 |t|≥1.96 口径，多重校正后失败率 82%（I-35，必修）。
+4. Sliding-252d 副轴 §3.1 预告了但结果没报（8/10 同号现成，一句可堵 "expanding 伪影" 攻击）；A2（feature-horizon alignment，2026-04 唯一 UNRESOLVED 内部批评）经评估**已不适用**（horizon 主张没进 confirmatory 论文）。
+5. I-50 风险敞口量化：lag=21 下失守的只有 C L1-L0/L3-L2/L4-L2 三项次要主张（source: `family1_dm_hln.csv` HLN_p_t_lag21），headline 稳；维持 H博士 决策 B。
+
+**交付**：`docs/paper_evaluation_2026-07-02.md`（完整报告：七维评估 + T0×13/T1×5/T2×3 分级建议 + 页预算净零方案 + 12 项攻击面模拟 + LEDGER 逐条处置 + 4 周时间线；provenance verifier PASS）+ Artifact 网页速览版 + 复现脚本落档。**改动均未动 main.tex**（评估先行，待 H博士 逐条批准；T1 入纸前触发 TP3）。
+
 ## 2026-06-30-a: PaperJury ultracode REVIEW（compact 8pp）+ scope-2 修复 + Tier-1 结论加强
 
 → progress: 2026-06-30-a | plan: 2026-06-30-a | analysis: 2026-06-30-a

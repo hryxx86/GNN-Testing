@@ -6,6 +6,26 @@
 
 ---
 
+## 2026-07-02-a: 投稿前评估完成 → T0/T1 已全部落地 ✅（T2 经 H博士 决策跳过）
+
+**执行结果（2026-07-02-b）**：T0×21 + T1×5 全部写入 `paper/main.tex`（Codex TP3 PROCEED-WITH-FIXES，4 CONCERN 措辞修订全采纳）；**匿名 ICAIF 版 8pp / 非匿名 arXiv 版 9pp 双版本编译通过**；红线 grep CLEAN；新数字对源终验一致。sliding 副轴句（T1-ε）因 untuned-anchor 出身与冻结纪律冲突主动放弃。剩余投稿动作：arXiv 上传 → PaperJury diff 快速复核（可选）→ CMT 注册提交（8/1 前）。
+
+---
+
+## ~~2026-07-02-a（原计划记录）~~: 投稿前评估完成 → T0/T1/T2 待 H博士 批准执行
+
+→ progress: 2026-07-02-a | plan: 2026-07-02-a | analysis: N/A
+
+**已完成**：全项目通读 + 系统性评估（`docs/paper_evaluation_2026-07-02.md` + Artifact 速览版）。结论：可投；3 个 open majors（I-07/I-14/I-19）已用现成数据算完可零重跑关闭（`artifacts/audits/paper_eval_robustness.csv`）；最大缺口 = E3 阳性对照不在纸内。ICAIF CFP 确认：8/2 截止、双盲 8pp、arXiv 允许先挂、CMT、无附录。
+
+**下一步（按报告 §6/§10，全部需 H博士 逐条批准后执行）**：
+1. **T1 ×5**（~1.5–2 天，现成数据句子）：E3 planted-control 3–4 行；LOSO seed 一句；26 检验合池 BH 一句 + BY 敏感性一句；sliding 副轴一句。页预算净零（等量删减方案见报告 §6）。
+2. **T0 ×13**（~1 天文字）：**HXZ 65% 引用修正必做**（I-35 事实错误）；I-01 caption 软化；I-02 caveat 前置 + L4/L5 同预算反证连线；I-19 SPA=global confirmatory 显式化；I-34 causal→edge attribution；其余机械修（I-39/42/44/46/47/48/49/22/28）。
+3. **T2（可选）**：trials-sensitivity C/L1+L2 N=30→60（1–2 天 Colab，走 Rule 9 TP1）；leak-free Universe-C 与 PIT 不赶 8/2。
+4. **流程**：T1 数字入纸前触发 `/codex-results-review`（TP3）on `paper_eval_robustness.csv`；改完双版本编译（匿名 8pp 卡死）+ provenance verifier + 红线 grep；W2 arXiv 挂出；W3 PaperJury diff 复核 + CMT 预填；**8/1 前提交**。
+
+---
+
 ## 2026-06-30-a: Compact 8pp 稿 PaperJury 通过 + 已加强；剩余 reviewer-anticipation 待办 ⏳
 
 → progress: 2026-06-30-a | plan: 2026-06-30-a | analysis: 2026-06-30-a

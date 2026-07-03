@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-07-02-a: Paper 稳健性四检查（零重跑，post-hoc sensitivity）— 全部支持现有结论并入纸
+
+→ progress: 2026-07-02-b | plan: 2026-07-02-a | analysis: 2026-07-02-a
+
+**Context.** 投稿前评估提出的 4 项零重跑核查（脚本 `analyze_paper_eval_robustness.py`，输入 = 现有 confirmatory 输出），Codex TP3 Round A **PROCEED-WITH-FIXES**（0 CRIT/0 MAJOR/4 CONCERN 全修，`artifacts/reviews/2026-07-02_codex_results_A.md`；Codex 在 read-only sandbox 自行打开源文件复算，全部数字独立确认）。已按修订措辞写入 `paper/main.tex`。**定位：post-hoc sensitivity，不是新 confirmatory family，不替代预注册两族。**
+
+1. **Per-seed 符号 + leave-one-seed-out（关 I-14）**：6 个 BH-rejected contrasts 的 per-seed pooled ΔIC（fold IC_mean 按 n_test_days 加权重构，Codex 确认与逐日 pooled mean 等价、无 C/L5s 污染）。LOSO **0/10 全不翻号**；per-seed 同号 B L2−L1 8/10、B L3−L2 8/10、C L2−L1 9/10、C L3−L2 9/10、C L1−L0 10/10、C L5−L3 10/10（source: `artifacts/audits/paper_eval_robustness.csv` rows check=per_seed_sign）。
+2. **26 检验合池 BH（关 I-07）**：20 DM HLN p + 6 Family-2 t p 合为单一 BH 族（q=0.05）→ **拒绝决策与预注册分族逐项相同**（11 项 DM 拒绝不变、无 Family-2 新增；source: 同 CSV row check=pooled_bh_26, identical_to_preregistered=True）。
+3. **BY 任意依赖敏感性（回应 I-37/I-19）**：BY（q/c(m), m=20, c(m)=3.598）下 **7/11 存活**——B/C L2−L1、C L2s−L2、C L5−L2、C L5−L3、C L6−L2、C L7−L2；掉出的恰是 C L1−L0、B/C L3−L2、C L4−L2（source: 同 CSV rows check=by_20）→ headline（L2−L1<0）在最保守口径下双宇宙仍拒绝，掉出者与论文 suggestive/cost-sensitive 分级完全同构。
+4. **E3 planted-control 入纸（补最大叙事缺口）**：措辞按 Codex A-04 锁定 "pre-confirmatory planted-signal control rules out a grossly nonfunctional graph path"——achievable IC 0.047、GAT 82%/SAGE 91% 恢复、MLP≈0、GAT/SAGE 各 20/20 fold-seed cells 全正（source: `experiments/sanity_summary/verdicts.json` E3 块 + `experiments/sanity_e3_planted/results.csv`，本人复核 GAT 20/20 [0.0248,0.0536]、SAGE 20/20 [0.0353,0.0577]、MLP 12/20 [−0.0106,0.0205]）。明示跑在 pilot 管线、certifies gross operation not tuned-arm optimality。
+
+**结论**：四项检查全部**加固**而非动摇现有叙事——headline 现集齐 bandwidth（NW auto vs lag21）/ universe（B+C）/ fold（LOFO 0/12）/ seed（LOSO 0/10）/ dependence（BY）五重稳健；正向主张（C L1−L0）与 news 主张（L3−L2）在更保守口径下如期弱化，与其既有 suggestive/cost-sensitive 标签自洽。
+
 ## 2026-06-30-a: Compact-paper compression-integrity verdict + LOFO/MDE robustness（结论加强）
 
 → progress: 2026-06-30-a | plan: 2026-06-30-a | analysis: 2026-06-30-a
