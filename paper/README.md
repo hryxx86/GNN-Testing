@@ -36,6 +36,7 @@ cd paper && tectonic -X compile main.tex     # 产出 main.pdf（8pp）
 
 ## 变更日志
 
+- 2026-07-03: **M14 trials-sensitivity 两句入纸**——§4 "left for future work"→3×-budget sweep 结果句（B 存活 p=0.002 BH-reject / C 掉出 p=0.059 方向不变）、§6 under-search 备选解读→"narrows but does not close"限定句；摘要/§1 保留预注册口径；四图再微缩（.75/.75/.78/.83）保住**匿名 8pp**（非匿名 9pp）；措辞 Codex TP3 批准 + H博士 签核（→ progress: 2026-07-03-c）
 - 2026-07-02: **投稿前评估建议落地（T0×21 + T1×5）**——新增 §4 Pipeline positive control（E3 planted-signal）、§5.2 合池 BH + BY 敏感性句（新引 benjamini2001by，现 24 条）、§5.3 LOSO seed 句、§5.2 under-search 边界论证；HXZ 引用修正（65%/82%）；Family-2 标签 causal→edge attribution；Table 1 caption 去 isolation 措辞；turnover/CI 构造/≈36 等半句补披露；页预算三轮收紧 + 四图微缩（.79/.79/.82/.85）→ **匿名 8pp / 非匿名 9pp 双版本验证**；Codex TP3 `artifacts/reviews/2026-07-02_codex_results_A.md`（→ progress: 2026-07-02-b）
 - 2026-06-30: **合并为单一 8pp 投稿源**——把 codex compact（含 12 处评审修复 + Tier-1 结论加强）覆盖为 `main.tex`，删除中间 codex 变体 + 长名字 compact 文件 + 全部编译垃圾；本地 tectonic 验证 8 页；新增 `.paper-review/` 评审 ledger（→ progress: 2026-06-30-a）。
 - 2026-06-25: 初版 LaTeX 源（`main.tex` + `references.bib`），由 confirmatory 草稿 v2 转换；数字交叉核验 + 静态审查通过（→ progress: 2026-06-25-a）。

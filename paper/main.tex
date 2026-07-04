@@ -171,7 +171,7 @@ r_{T\to T+21}=p_{T+21}/p_T-1,
 \]
 i.e., $r_{T\to T+21}$ demeaned by the day's cross-sectional mean and then $z$-scored. Predictions for day $T$ use features measured strictly at $T{-}1$, leaving a one-trading-day execution lag between the last feature timestamp and the beginning of the return window.
 
-We use the same ten canonical seeds in all experiments. Each ladder rung changes one nominal design axis relative to the rung below it (Table~\ref{tab:ladder}), and each rung is tuned independently with 30 Optuna trials. Equal budget equalizes trial count, not search adequacy. Neural arms have higher-dimensional spaces than LightGBM, a caveat for the ``MLP beats GAT'' interpretation. A trials-sensitivity sweep is left for future work.
+We use the same ten canonical seeds in all experiments. Each ladder rung changes one nominal design axis relative to the rung below it (Table~\ref{tab:ladder}), and each rung is tuned independently with 30 Optuna trials. Equal budget equalizes trial count, not search adequacy. Neural arms have higher-dimensional spaces than LightGBM, a caveat for the ``MLP beats GAT'' interpretation. A trials-sensitivity sweep probes it: re-tuning L2 at $3\times$ the budget (90 trials, matching the MLP's search density) leaves the leak-free Universe-B penalty significant (L2$-$L1${}=-0.0090$, HLN $p=0.002$, BH-reject) but drops Universe-C's below significance ($-0.0069$, $p=0.059$, sign unchanged); the gap narrows without closing, so the primary leak-free result is not an equal-budget artifact.
 
 We construct four graph specifications. Graph $\alpha$1 is a 126-day rolling Spearman-correlation graph, refreshed every 21 days from training data only, with an edge when $|\rho|>0.6$. Graph $\alpha$2 is static GICS sector connectivity. The news graph is point-in-time: two stocks share an edge on day $T$ if they are co-mentioned in an EODHD news-feed article whose publication timestamp, rather than event date, falls before the NYSE close on $T-1$. The news graph fits no construction parameters: ticker tags are the provider's per-article annotations, an edge requires only co-mention in a multi-ticker article, and the only temporal parameter is the daily cutoff---nothing is estimated from full-sample or future data. Graph $\alpha$4 stacks the correlation, sector, and news edges.
 
@@ -213,7 +213,7 @@ One arm requires special treatment. C/L5s has pooled IC${}\approx0.002$ over its
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.79\textwidth]{headline_ic_ladder}
+  \includegraphics[width=.75\textwidth]{headline_ic_ladder}
   \Description{Forest plot of pooled IC by model rung and feature universe.}
   \caption{Per-arm pooled IC for the L0--L7 ladder. Intervals are 95\% stationary block-bootstrap CIs (block${}=21$\,d, 5000 reps); seeds${}=10$, folds${}=12$, benchmark${}={}$L0.}
   \label{fig:headline}
@@ -251,7 +251,7 @@ Within this tuned ladder, the strongest local evidence points to the non-graph M
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.79\textwidth]{F9_spa_dm_confirmatory}
+  \includegraphics[width=.75\textwidth]{F9_spa_dm_confirmatory}
   \Description{SPA and DM/HLN confirmatory evidence for the tuned ladder.}
   \caption{SPA and local DM/HLN evidence. Left: SPA $p_{\text{consistent}}$ by universe. Right: 20 pre-registered DM/HLN contrasts, with filled markers denoting BH-FDR rejection at $q=0.05$.}
   \label{fig:spa}
@@ -309,7 +309,7 @@ The exception is C L3$-$L2. The news-edge rung underperforms the correlation-GAT
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.82\textwidth]{cost_gross_net}
+  \includegraphics[width=.78\textwidth]{cost_gross_net}
   \Description{Transaction-cost crosswalk from gross IC contrasts to net Sharpe contrasts.}
   \caption{Net-of-cost crosswalk. Left: Universe-C cost ladder over 0--30\,bps. Right: sign agreement between gross IC and net Sharpe across the 20 pre-registered pairs, with C L3$-$L2 annotated.}
   \label{fig:cost}
@@ -341,7 +341,7 @@ The sign reversals in Universe~B are suggestive but not conclusive: matched $\De
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=.85\columnwidth]{family2_edge_causal}
+  \includegraphics[width=.83\columnwidth]{family2_edge_causal}
   \Description{Matched and tuned edge-effect estimates in the Family-2 fixed-operating-point test.}
   \caption{Matched-$\Delta$IC versus tuned-$\Delta$IC for the six edge contrasts. The $\pm$MDE@80\% band contains every matched estimate, and no contrast survives BH-FDR.}
   \label{fig:family2}
@@ -362,7 +362,7 @@ A separate issue is Universe-C's feature-basis leakage: only 5 of its 15 Plan-AA
 \section{Discussion}\label{sec:discussion}
 A per-arm bootstrap CI and Hansen's SPA test answer different questions: one evaluates a point estimate against zero, the other whether the best candidate beats a benchmark after selection adjustment. The evidence does not show that GNNs fail. It shows that, over this sample and protocol---with the graph path itself checked by a planted-signal control (\S\ref{sec:data})---no tuned arm is confirmed to outperform a tuned tree benchmark, and the strongest local neural gain comes from the MLP.
 
-The cleanest local DM contrast in both universes is L2$-$L1${}<0$: adding a correlation-GAT to the same node features reduces IC relative to the MLP, though at a fixed 30-trial budget an under-searched GAT space remains an alternative reading (\S\ref{sec:spa}). The C/L5s collapse offers one possible mechanism: dense-edge aggregation plus high dropout may smooth away cross-sectional signal. This mechanism is only suggestive, since the collapse is observed for SAGE-Mean with all edges and not directly for L2's sparse-correlation GAT. The claim is therefore bounded to the correlation graph at the tuned operating point, not graph architectures in general.
+The cleanest local DM contrast in both universes is L2$-$L1${}<0$: adding a correlation-GAT to the same node features reduces IC relative to the MLP; a $3\times$-budget trials sweep (\S\ref{sec:data}) narrows but does not close this gap in the leak-free universe, so it is not merely an equal-budget artifact, even if exhaustive tuning fairness is not established. The C/L5s collapse offers one possible mechanism: dense-edge aggregation plus high dropout may smooth away cross-sectional signal. This mechanism is only suggestive, since the collapse is observed for SAGE-Mean with all edges and not directly for L2's sparse-correlation GAT. The claim is therefore bounded to the correlation graph at the tuned operating point, not graph architectures in general.
 
 The news-edge result shows why the two-family design matters. In Family-1, the tuned news-edge rung appears to harm ranking. In Family-2, the same edge change at the fixed L2 operating point is tiny, statistically insignificant, and in Universe~B opposite-signed. The tuned ladder answers a deployment question; the fixed-operating-point arms answer an edge-attribution question, subject to underfitting. Treating them as the same would overstate an edge ablation; the net-Sharpe exercise points the same way.
 

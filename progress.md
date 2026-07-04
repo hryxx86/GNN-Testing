@@ -4,6 +4,58 @@
 
 ---
 
+## 2026-07-03-c: M14 两句 paper 编辑落地 — 匿名版保住 8pp，M14 里程碑 commit
+
+→ progress: 2026-07-03-c | plan: 2026-06-30-a (M14 收尾) | analysis: 2026-07-03-a（无新分析）
+
+**H博士 签核**：handoff 2026-07-03 §A 两句 Codex-TP3-approved 编辑经 plan 审批通过（= 签核），本条目为执行记录。
+
+**落地**（`paper/main.tex`）：
+- **Edit 1（§4 Data and Setup）**：替换 "A trials-sensitivity sweep is left for future work." → M14 完整句（3× budget / 90 trials 密度追平 MLP；B: L2−L1=−0.0090, HLN p=0.002, BH-reject；C: −0.0069, p=0.059, sign unchanged；"not an equal-budget artifact"）(source: `artifacts/storya_v21_family1_m14/family1_dm_hln.csv` rows B/C L2,L1)。相对 handoff 草稿仅做零内容微缩（"re-tuning the correlation-GAT (L2)"→"re-tuning L2"、"the Universe-C penalty"→"Universe-C's"），数字与论断逐字不动。
+- **Edit 2（§6 Discussion）**：替换 30-trial under-search 备选解读半句 → "3×-budget trials sweep (§4) narrows but does not close this gap in the leak-free universe... even if exhaustive tuning fairness is not established"。
+- 摘要/§1 按共识**保留** "BH-significant in both universes"（预注册 30-trial 预算下准确；M14 为 §4/§6 敏感性限定）。§5.2 under-search 边界句的 `\S\ref{sec:data}` 引用现指向新增 sweep 结果，自然衔接。
+- 编辑前本人对源 CSV 复核全部数字（M14 + confirmatory 两文件，0 discrepancy）。
+
+**页预算**：HEAD-anon 基线=8pp 满页零余量 → 净增 ~8 行把匿名版顶到 9pp（bib 溢出）→ 四图再微缩（.79→**.75**×2、.82→**.78**、.85→**.83**，同 2026-07-02-b 先例）+ 上述句内微缩 → **匿名 8pp 恢复**（bib 齐页底）、非匿名 arXiv 版 9pp。tectonic 0 error、PDF 内 0 个未解析 `??`、两句新内容在 PDF 渲染验证到位。repo 保持非匿名源 + 非匿名 main.pdf。
+
+**Rule 9**：TP1 PASSED（M14 plan 2026-06-30）；TP2 N/A（无新代码）；TP3 PASSED（`artifacts/reviews/2026-07-03_codex_results_A.md`，措辞即 TP3 批准稿）。
+
+## 2026-07-03-b: Codex Review — Results (Touchpoint 3, Round A) — M14
+
+- Target: `artifacts/storya_v21_family1_m14/` (M14 GAT trials-sensitivity)
+- Reviewer: **codex** (gpt-5.5 xhigh, 178K tokens) — primary，无 fallback（响应 <15min）
+- Full review: `artifacts/reviews/2026-07-03_codex_results_A.md`
+- Summary: **0 CRITICAL / 2 MAJOR / 3 CONCERN**，verdict **PROCEED-WITH-FIXES**
+- Codex 独立写 Python 重算 pooled IC / val-IC / 240-cell converge，**全部与我的数字吻合**
+- 逐条亲自验证后**全部接受修复**：
+  - A-01(MAJOR)：M14 非 confirmatory-30 的超集（TPE RNG per-process 重启，winner params 不同）→ analysis.md 改"独立 90-trial retune"
+  - A-02(MAJOR)：密度追平非"穷尽公平"定理 → 软化"回应 I-02 具体等预算/密度质疑（限 B）"
+  - A-03(CONCERN)：C 加"方向仍负、近名义显著"
+  - A-04(CONCERN)：引用 pre-registered plan(2026-06-30, primary=B)防 cherry-pick
+  - **A-05(CONCERN，我犯的数字错)**：analysis.md 把 confirmatory B L2−L1 p 误写 6.9e-4（串了 C 的 6.87e-6 指数）→ 校正为源文件值 **3.97e-4≈4.0e-4**（source: family1_dm_hln.csv:3）
+- 关键修订：verdict 不变（B ROBUST），但"defuses I-02"→"addresses the specific density objection in B"；paper 措辞相应软化
+
+→ progress: 2026-07-03-b | plan: 2026-06-30-a | analysis: 2026-07-03-a
+
+## 2026-07-03-a: M14 GAT trials-sensitivity sweep — 头条对搜索预算 ROBUST（leak-free B），C 显著性 search-sensitive
+
+→ progress: 2026-07-03-a | plan: 2026-06-30-a (M14) | analysis: 2026-07-03-a
+
+**背景**：2026-07-02-b 曾记"T2/trials-sweep 跳过"，H博士 随后本会话改主意，指示单独把 headline arm L2 加大 trials 实跑 → M14 supersede 那个 skip。
+
+**做了什么**（复用现有脚本，无新代码）：把 L2(GAT+corr) 单独重调到 **90 trials**（密度追平 MLP：GAT 离散空间 108 组合 vs MLP 36，正好 3×），B+C 两宇宙，其余臂不动（等预算 30-trial = 单边给图优势）。本地 Mac MPS：tune ~5h + eval 7.67h（240 cells，0 fail/0 dup/0 nonconverged）+ analyzer。**非破坏**：confirmatory `frozen_hparams.json` / `main12_tuned` / `family1` 全未动；M14 产出在独立 `_m14` 路径 + symlink 合并目录 `main12_m14_merged`。备份 `{B,C}_L2.json.30trial.bak`。
+
+**结果**（pre-registered 判定，主检验 = Universe B leak-free）：
+- val-IC：B 0.0543→**0.0560**、C 0.0550→**0.0630**（更多搜索找到更好 val 配置，sanity ✓）(source: `experiments/storya_v21_tune/{B,C}_L2.json` winner_mean_val_ic_3seed)
+- pooled test-IC（day-weighted）：L2 B 0.0238→**0.0281**、C 0.0224→**0.0274**（gap 收窄 ~30-40% 但仍负）(source: `experiments/storya_v21_main12_m14_retune/results.csv`)
+- **DM-HLN L2−L1** (source: `artifacts/storya_v21_family1_m14/family1_dm_hln.csv`)：
+  - **B（主）：ΔIC=−0.0090, HLN p=2.1e-3, BH-reject ✓** — 3× 预算下 clean 宇宙图仍显著输 MLP → **头条 ROBUST**
+  - **C：ΔIC=−0.0069, HLN p=0.059, BH-reject ✗** — 从 confirmatory 的 p=6.9e-6 掉出显著 → **C 显著性 search-sensitive**
+
+**判定**（措辞经 Codex TP3 校正，见 2026-07-03-b）：pre-reg 主检验(B) = **ROBUST** → 头条"correlation-GAT 不如 MLP"扛住 3× L2-only 预算压力测试，**回应 I-02 的具体等预算/密度质疑（限主宇宙 B）——非证明穷尽调参公平**（密度追平只是 TPE 下的启发式，非优化公平定理）。Nuance：更多搜索确实收窄 gap ~30-40%（I-02 方向部分为真），且 **C 掉出显著**（p 6.9e-6→0.059，但 ΔIC 仍负、接近名义显著）→ 当前 main.tex "BH-significant in both universes" 需精修为"leak-free B 稳健显著；leak-selected C 对搜索预算敏感（方向不变、近名义）"。primary=B 已在 approved plan（2026-06-30，跑前）预注册，需引用防 B/C cherry-pick。
+
+**对 paper 影响**：待 H博士 定夺（paper edit 单独签核）。
+
 ## 2026-07-02-b: 评估建议落地 — T0×21 + T1×5 全部写入 main.tex；Codex TP3 过审；匿名版保住 8pp
 
 → progress: 2026-07-02-b | plan: 2026-07-02-a | analysis: 2026-07-02-a

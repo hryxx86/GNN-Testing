@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-07-03-a: M14 GAT trials-sensitivity — 头条对 3× 搜索预算稳健（leak-free），C 显著性 search-sensitive
+
+→ progress: 2026-07-03-a | plan: 2026-06-30-a | analysis: 2026-07-03-a
+
+**Motivation.** Reviewer I-02: the equal-30-trial budget under-searches the GAT (its categorical HP space is 3× the MLP's — the extra `gat_heads` dim → 108 vs 36 combos), so "correlation-GAT (L2) underperforms MLP (L1)" could be a search-budget artifact. A val→test diagnostic (2026-07-01) could not separate under-search from inherent fragility. M14 settles it: re-tune only L2 at 90 trials (density-matched), one-sided advantage.
+
+**Method.** `run_storya_v21_tune.py --arm L2 --universe {B,C} --n-trials 90` — an **independent, deterministic 90-trial L2 retune** under the same nominal protocol. (The tuner restarts the TPE sampler RNG per process, so this is NOT a superset of the confirmatory 30-trial search — verified: the 90-trial winner params differ from the 30-trial backup, e.g. B dropout 0.3/hidden 64/2-layer → 0.1/32/1-layer; source `experiments/storya_v21_tune/B_L2.json` vs `.30trial.bak`. Corrected per Codex TP3 CODEX-M14-A-01.) Winner merged into `frozen_hparams_m14.json`; re-eval via `run_storya_v21_main12.py --arms L2` (240 cells); L2−L1 recomputed on a symlink-merged dir (confirmatory L0/L1/L3-L7 + M14 L2@90) via `compute_family1_ladder.py`. All other arms unchanged at 30 trials. Non-destructive.
+
+**Findings.**
+- More search found better *val* configs (as it must): B val-IC 0.05429→0.05595, C 0.05503→0.06304 (source: `experiments/storya_v21_tune/{B,C}_L2.json`). The 90-trial B winner is *simpler* (hidden 32 / 1 layer / dropout 0.1 vs 64/2/0.3).
+- *Test* pooled IC also rose but stayed below the MLP: L2 B 0.0238→0.0281, C 0.0224→0.0274 (source: `experiments/storya_v21_main12_m14_retune/results.csv`, day-weighted; MLP L1 B=0.0371, C=0.0343 from `experiments/storya_v21_main12_tuned/results.csv`). The graph-vs-MLP gap narrows ~30–40% but does not close.
+- **DM-HLN L2−L1** (source: `artifacts/storya_v21_family1_m14/family1_dm_hln.csv`):
+  - **Universe B (leak-free, primary): ΔIC=−0.0090, HLN p=0.0021, BH-reject** — vs confirmatory −0.0133 / p=4.0e-4 / reject (source: `artifacts/storya_v21_family1/family1_dm_hln.csv:3`, HLN_p_t=0.0003968; corrected per Codex TP3 CODEX-M14-A-05, was mis-cited 6.9e-4). Survives.
+  - **Universe C (leak-selected): ΔIC=−0.0069, HLN p=0.059, BH-NOT-reject** — vs confirmatory −0.0119/6.9e-6/reject. Loses significance.
+
+**Interpretation** (finalized after Codex TP3 PROCEED-WITH-FIXES, `artifacts/reviews/2026-07-03_codex_results_A.md`; all 5 findings applied):
+(1) The load-bearing, leak-free conclusion — the correlation-GAT underperforms the plain MLP — survives BH significance at 3× the GAT budget in the clean price-volume universe. This **addresses the specific equal-30-trial / categorical-search-density objection (I-02) in the primary leak-free universe**; it does NOT prove exhaustive tuning fairness or rule out all under-tuning explanations (density-matching is a heuristic under adaptive TPE, not an optimizer-fairness theorem) [A-02].
+(2) I-02's *direction* is partly real: extra search shrinks the gap ~30–40%, and in the leak-selected Universe-C the significance does not survive (p 6.9e-6 → 0.059); note the ΔIC stays **negative and near nominal two-sided significance** [A-03].
+(3) Manuscript consequence: refine "L2−L1 BH-significant in both universes" → "robustly significant in the leak-free Universe-B; search-budget-sensitive (direction unchanged, near-nominal) in the leak-selected Universe-C." Label it a sensitivity, not a replacement confirmatory family [Codex prose].
+(4) Pre-registration: primary=Universe-B was pre-committed in the approved M14 plan (dated 2026-06-30, before the run) — cite it to pre-empt B/C cherry-picking [A-04].
+Net: this strengthens (not weakens) the leak-first framing; the leak-free result is now shown robust to a 3× L2-only budget stress test.
+
 ## 2026-07-02-a: Paper 稳健性四检查（零重跑，post-hoc sensitivity）— 全部支持现有结论并入纸
 
 → progress: 2026-07-02-b | plan: 2026-07-02-a | analysis: 2026-07-02-a
