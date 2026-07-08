@@ -119,7 +119,7 @@ The local ladder shows where any neural lift comes from, and its most robust sig
 
 Other architectures relax the graph more aggressively. Cheng and Li~\cite{cheng2021adgat} infer dynamic firm relations through unmasked attention, and Li et al.~\cite{li2024master} alternate intra- and inter-stock attention. Our L6 rung is a controlled proxy for this dense-attention family, but it does not reimplement AD-GAT's dynamic-relation inference or MASTER's market-gated attention. Related work also includes spatiotemporal hypergraphs~\cite{sawhney2021sthansr}, pattern-specific routing~\cite{lin2021tra}, MLP-only token mixing~\cite{fan2024stockmixer}, and multi-relational dynamic graphs~\cite{qian2024mdgnn}. The common feature is richer relational structure evaluated without multi-seed, multiplicity-controlled, cost-aware protocols.
 
-\paragraph{Methodology-oriented empirical finance.} Our design also follows a methodological line in empirical asset pricing that treats multiple testing, dependence, and sample splitting as first-order concerns. Hou, Xue, and Zhang~\cite{hou2020replicating} replicate 452 cross-sectional anomalies under a common protocol: 65\% fail even the single-test hurdle ($|t|\ge1.96$), and the failure rate rises to 82\% under their multiple-testing hurdle. L\'opez de Prado's~\cite{lopezdeprado2018advances} purge-and-embargo validation and block-bootstrap methods shape our walk-forward design. Hansen~\cite{hansen2005spa} motivates the SPA test; Politis and Romano~\cite{politis1994stationary} provide the stationary bootstrap, and Newey and West~\cite{newey1987simple} provide the HAC standard errors.
+\paragraph{Methodology-oriented empirical finance.} Our design also follows a methodological line in empirical asset pricing that treats multiple testing, dependence, and sample splitting as first-order concerns. Gu, Kelly, and Xiu~\cite{gu2020ml} set the recursive out-of-sample benchmark for machine-learning return prediction and find no gain beyond shallow networks. Hou, Xue, and Zhang~\cite{hou2020replicating} replicate 452 cross-sectional anomalies under a common protocol: 65\% fail even the single-test hurdle ($|t|\ge1.96$), and the failure rate rises to 82\% under their multiple-testing hurdle. Avramov, Cheng, and Metzker~\cite{avramov2023ml} show machine-learning long-short profits concentrate in hard-to-arbitrage stocks and shrink under value weighting and cost screens, motivating our gross-and-net cost layer. L\'opez de Prado's~\cite{lopezdeprado2018advances} purge-and-embargo validation and block-bootstrap methods shape our walk-forward design. Hansen~\cite{hansen2005spa} motivates the SPA test; Politis and Romano~\cite{politis1994stationary} provide the stationary bootstrap, and Newey and West~\cite{newey1987simple} provide the HAC standard errors.
 
 \paragraph{Position relative to prior work.} To the best of our knowledge, this is the first S\&P~500 stock-ranking study to combine ten seeds, a 12-fold expanding walk-forward design, a tuned ladder, two pre-registered confirmatory families, gross and net portfolio evaluation, point-in-time news handling, and disclosure of a tuned-configuration stability failure. Closely related GNN-ranking papers typically report a single split and seed, without multiple-comparison control or a gross/net cost ladder; we treat those as reporting differences, not as evidence that earlier methods could not be evaluated under this protocol.
 
@@ -213,7 +213,7 @@ One arm requires special treatment. C/L5s has pooled IC${}\approx0.002$ over its
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.75\textwidth]{headline_ic_ladder}
+  \includegraphics[width=.73\textwidth]{headline_ic_ladder}
   \Description{Forest plot of pooled IC by model rung and feature universe.}
   \caption{Per-arm pooled IC for the L0--L7 ladder. Intervals are 95\% stationary block-bootstrap CIs (block${}=21$\,d, 5000 reps); seeds${}=10$, folds${}=12$, benchmark${}={}$L0.}
   \label{fig:headline}
@@ -247,11 +247,11 @@ Hansen's SPA test does not reject the null that no candidate beats LightGBM in e
 
 The local DM/HLN ladder gives a more detailed, but narrower, view of the same experiment (Figure~\ref{fig:spa}, Table~\ref{tab:dm}). We report each layer at its own error rate and do not claim a joint family-wise rate spanning both: SPA is the confirmatory answer to the global benchmark question, and the DM ladder is pre-registered local evidence at its own FDR level. Two post-hoc sensitivities (not replacements for the pre-registered families) bound the layering: pooling the 20 DM and six Family-2 $p$-values into one BH family rejects the same 11 DM contrasts and no Family-2 contrast, and Benjamini--Yekutieli~\cite{benjamini2001by}, valid under arbitrary dependence, keeps 7 of the 11---L2$-$L1 still rejects in \emph{both} universes, while C\,L1$-$L0 and L3$-$L2 drop, consistent with their suggestive and cost-sensitive labels.
 
-Within this tuned ladder, the strongest local evidence points to the non-graph MLP rather than to the correlation graph. In Universe~C, the MLP beats LightGBM locally (L1$-$L0${}=+0.0148$, BH-reject), while the correlation-GAT loses to the MLP (L2$-$L1${}=-0.0119$, BH-reject). The tuned news-edge arm also underperforms the correlation-GAT (L3$-$L2${}=-0.0123$, BH-reject). These are local contrasts, not a global claim that graphs hurt: the sector, full-attention, HATS, and combined-edge arms all recover above the correlation-GAT in Universe~C, and the SPA non-rejection remains the selection-adjusted summary. As above, the positive Universe-C MLP--LightGBM contrast is only suggestive because the feature basis was leak-selected (Limitation~L1). The negative graph contrasts are less exposed to that concern, because selection leakage can inflate apparent predictability but does not explain why the graph underperforms the MLP; consistent with this, the L2$-$L1 penalty is BH-significant in the clean price-volume Universe~B as well ($\Delta$IC${}=-0.0133$). Power is also asymmetric across the two directions: the correlation-graph penalty C\,L2$-$L1 exceeds its 80\% MDE, a detectable effect, whereas the MLP's gain over LightGBM C\,L1$-$L0 falls below its own MDE. The data therefore identify a detectable graph \emph{penalty} at this operating point while leaving any benchmark-beating \emph{benefit} too small to detect at this sample size. Under-search of the higher-dimensional graph arms at the fixed 30-trial budget (\S\ref{sec:data}) is an alternative reading of the negative contrasts, bounded by two observations: the same-budget, same-space GAT arms L4 and L5 land \emph{above} L2 in Universe~C ($+0.0163$, $+0.0152$, both BH-reject), and the planted-signal control (\S\ref{sec:data}) shows the stack converts graph-borne signal when present.
+Within this tuned ladder, the strongest local evidence points to the non-graph MLP rather than to the correlation graph. In Universe~C, the MLP beats LightGBM locally (L1$-$L0${}=+0.0148$, BH-reject), while the correlation-GAT loses to the MLP (L2$-$L1${}=-0.0119$, BH-reject). The tuned news-edge arm also underperforms the correlation-GAT (L3$-$L2${}=-0.0123$, BH-reject). These are local contrasts, not a global claim that graphs hurt: the sector, full-attention, HATS, and combined-edge arms all recover above the correlation-GAT in Universe~C, and the SPA non-rejection remains the selection-adjusted summary. As above, the positive Universe-C MLP--LightGBM contrast is only suggestive because the feature basis was leak-selected (Limitation~L1). The negative graph contrasts are less exposed to that concern, because selection leakage can inflate apparent predictability but does not explain why the graph underperforms the MLP; consistent with this, the L2$-$L1 penalty is BH-significant in the clean price-volume Universe~B as well ($\Delta$IC${}=-0.0133$). Power is also asymmetric across the two directions: the correlation-graph penalty C\,L2$-$L1 exceeds its 80\% MDE, a detectable effect, whereas the MLP's gain over LightGBM C\,L1$-$L0 falls below its own MDE. The data therefore identify a detectable graph \emph{penalty} at this operating point while leaving any benchmark-beating \emph{benefit} too small to detect at this sample size. Under-search of the higher-dimensional graph arms at the fixed 30-trial budget (\S\ref{sec:data}) is an alternative reading of the negative contrasts, bounded by two observations: the same-budget, same-space GAT arms L4 and L5 land \emph{above} L2 in Universe~C ($+0.0163$, $+0.0152$, both BH-reject), and the planted-signal control shows the stack converts graph-borne signal when present.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.75\textwidth]{F9_spa_dm_confirmatory}
+  \includegraphics[width=.73\textwidth]{F9_spa_dm_confirmatory}
   \Description{SPA and DM/HLN confirmatory evidence for the tuned ladder.}
   \caption{SPA and local DM/HLN evidence. Left: SPA $p_{\text{consistent}}$ by universe. Right: 20 pre-registered DM/HLN contrasts, with filled markers denoting BH-FDR rejection at $q=0.05$.}
   \label{fig:spa}
@@ -309,7 +309,7 @@ The exception is C L3$-$L2. The news-edge rung underperforms the correlation-GAT
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=.78\textwidth]{cost_gross_net}
+  \includegraphics[width=.76\textwidth]{cost_gross_net}
   \Description{Transaction-cost crosswalk from gross IC contrasts to net Sharpe contrasts.}
   \caption{Net-of-cost crosswalk. Left: Universe-C cost ladder over 0--30\,bps. Right: sign agreement between gross IC and net Sharpe across the 20 pre-registered pairs, with C L3$-$L2 annotated.}
   \label{fig:cost}
@@ -341,7 +341,7 @@ The sign reversals in Universe~B are suggestive but not conclusive: matched $\De
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=.83\columnwidth]{family2_edge_causal}
+  \includegraphics[width=.81\columnwidth]{family2_edge_causal}
   \Description{Matched and tuned edge-effect estimates in the Family-2 fixed-operating-point test.}
   \caption{Matched-$\Delta$IC versus tuned-$\Delta$IC for the six edge contrasts. The $\pm$MDE@80\% band contains every matched estimate, and no contrast survives BH-FDR.}
   \label{fig:family2}
@@ -382,7 +382,7 @@ The news-edge result shows why the two-family design matters. In Family-1, the t
 The next steps are a point-in-time universe rebuild with delisting returns, a longer sample, cross-market replication, intraday rebalancing for short-window news, and learned-sparse architectures evaluated under the same two-family protocol.
 
 \section{Reproducibility}\label{sec:repro}
-The project repository versions the code, confirmatory outputs, frozen tuned hyperparameters (committed before the confirmatory run), the fold calendar (12 quarters, $T=749$), the Optuna grid, the ten seeds, and all analysis and figure scripts. A numeric-claim verifier checks the draft against underlying outputs, and the pre-registered protocol fixes the two-family decision rules.
+The project repository versions the code, confirmatory outputs, frozen tuned hyperparameters, the fold calendar, the Optuna grid, the ten seeds, and all analysis and figure scripts. A numeric-claim verifier checks the draft against underlying outputs, and the pre-registered protocol fixes the two-family decision rules.
 
 
 \begingroup

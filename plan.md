@@ -6,6 +6,21 @@
 
 ---
 
+## 2026-07-07-a: 文献对照 R1/R2 已落地；投稿前剩余动作清单
+
+→ progress: 2026-07-07-a/-b | plan: 2026-07-07-a | analysis: 2026-07-03-b
+
+**本 session 完成**：M14 两句入纸（2026-07-03-c，commit 499fd75）→ 15 篇文献对照评估（`docs/lit_benchmark_2026-07-03.md`）→ R1/R2 补引（GKX+ACM）落地、匿名 8pp 保持 → 4-agent closeout 审计 PASS（2 doc-drift MAJOR 当场修复）。
+
+**剩余投稿动作（优先级序）**：
+1. arXiv 上传（非匿名 9pp 版；`main.tex`+`references.bib`+4 图）
+2. 可选：剩余 reviewer-anticipation majors 清账核对（哪些已被 2026-07-02 平行 session 关闭；纯文字 pass）
+3. CMT 注册 + 提交（**8/1 前**；匿名版 = documentclass 加 `anonymous`，已验证 8pp）
+4. R6（future work / camera-ready）：VW-decile 净 Sharpe 敏感性——现有输出重算，无需重训
+5. R5：`docs/lit_benchmark_2026-07-03.md` §5/§6.1 法证表 = rebuttal 弹药（7/8 单切分、0/8 多重校正、0/8 成本、AD-GAT 选择性汇报、RSR/STHAN-SR Wikidata look-ahead）
+
+---
+
 ## 2026-07-02-a: 投稿前评估完成 → T0/T1 已全部落地 ✅（T2 经 H博士 决策跳过）
 
 **执行结果（2026-07-02-b）**：T0×21 + T1×5 全部写入 `paper/main.tex`（Codex TP3 PROCEED-WITH-FIXES，4 CONCERN 措辞修订全采纳）；**匿名 ICAIF 版 8pp / 非匿名 arXiv 版 9pp 双版本编译通过**；红线 grep CLEAN；新数字对源终验一致。sliding 副轴句（T1-ε）因 untuned-anchor 出身与冻结纪律冲突主动放弃。剩余投稿动作：arXiv 上传 → PaperJury diff 快速复核（可选）→ CMT 注册提交（8/1 前）。
@@ -2025,10 +2040,11 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-06-26 | **M2 (√12 annualization) + M12 (turnover_L1 one-way) + confirmatory-net = VERIFIED-CORRECT, text-clarify only (NOT recompute)** | PaperJury treated these as "must-implement / can-flip"; code review showed otherwise. M2: L/S Sharpe is on NON-overlapping 21d rebalance returns (`run_storya_e1_anchor.py:809`), so √(252/21) is matched — no overlap inflation. M12: turnover_L1=Σ|Δw| (=4 full rotation), one-way `L1_one_way` (`:838,863,886`). conf-net: cost layer already reads tuned 12-fold confirmatory (`compute_cost_confirmatory.py:404` → `experiments/storya_v21_main12_tuned/results.csv`), paper Table tab:cost matches `cost_headline_crosswalk.csv` to 2dp; old E6 cost_ladder NOT used. → no recompute; clarify the convention in §3.2. → progress 2026-06-26-a. |
 | 2026-06-26 | **M4 (Universe-C selection leakage) = disclose path (a) + FORCED downgrade of Universe-C positive results to suggestive** | Universe-C basis = Plan-AAA top-15 ranked under same-day leakage (5/15 survive T-1). Runtime IC not leaked (T-1 + assert). Decision: keep universe, but Universe-C POSITIVE results (MLP>LGB +0.0148; positive FC edges) demoted to "suggestive, pending leak-free re-selection"; null/negative within-universe contrasts UNAFFECTED (selection leak only inflates apparent signal). L1 de-templated to "selection-stage leakage". leak-free re-run → QUEUE. → progress 2026-06-26-a. |
 | 2026-06-30 | **Compact-paper headline REFRAMED to lead with leak-robust L2−L1<0; HAC lag=21 sensitivity NOT reported (decision B)** | PaperJury ultracode review of the 8pp compact found compression SAFE (0 number drift) and surfaced that the bandwidth-robust, both-universe, regime-robust negative (graph underperforms MLP, L2−L1<0, BH-sig in clean Universe-B too) is far stronger than the previously-headlined leak-fragile MLP>LightGBM positive. Reframed abstract/§1/§5.2 to lead with the negative (closes leakage I-04/I-10 + regime I-08/I-18 objections using existing `family1_lofo.csv` LOFO 0/12 + `family1_mde.csv`). Decision B on I-50: the NW-1994 auto bandwidth (L=6) is the standard default, so the lag=21 fragility of C L1-L0 (p=0.063) / C L3-L2 (p=0.070) is NOT reported — leading with the bandwidth-robust L2−L1<0 covers the robustness story honestly without weakening the abstract. → progress 2026-06-30-a; analysis 2026-06-30-a; review `artifacts/reviews/2026-06-30_paperjury_compact-review_round1.md`. |
+| 2026-07-07 | **Lit-benchmark R1/R2 ADOPTED (cite GKX RFS'20 + ACM MS'23 in §2); R3/R4 (KMZ/THGNN) DEFERRED; R6 (VW-decile sensitivity) = future work** | 15-paper forensic benchmark (`docs/lit_benchmark_2026-07-03.md`) found GKX/JKP/KMZ/ACM/THGNN uncited; H博士 adopted the two highest-value anchors: GKX (canonical recursive-OOS protocol + shallow-beats-deep supports MLP>GAT) and ACM (MS-scale validation of the cost layer). Page cost absorbed by figure micro-shrink (.73/.73/.76/.81) + 4 zero-content trims; anon 8pp verified. R3/R4 deferred on page budget; R5 forensic table retained as rebuttal material. → progress 2026-07-07-a; analysis 2026-07-03-b. |
 
 → progress: 2026-05-28-a..f | analysis: N/A
 → progress: 2026-06-10-a/c, 2026-06-11-a/b | analysis: 2026-06-11-a
 → progress: 2026-06-21-a | analysis: 2026-06-21-a
 → progress: 2026-06-26-a | analysis: 2026-06-26-a
 
-*Last updated: 2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*
+*Last updated: 2026-07-07 (R1/R2 补引落地 + closeout PASS；上一版：2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*

@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-07-03-b: 15 篇顶会/顶刊文献对照评估 — 我们的评估协议在全部 15 篇中最严格；头条获 4 条独立证据链佐证
+
+→ progress: 2026-07-03-d | plan: N/A（R1-R6 建议待 H博士 决策后入 plan） | analysis: 2026-07-03-b
+
+**Full report**: `docs/lit_benchmark_2026-07-03.md`（15 篇逐篇结构化总结 + 16 行法证对照矩阵 + 评估）。选取：A 组 8 篇直接竞品（RSR TOIS'19 / STHAN-SR AAAI'21 / AD-GAT AAAI'21 / TRA KDD'21 / THGNN CIKM'22 / MASTER·StockMixer·MDGNN AAAI'24）、B 组 5 篇金融顶刊 rigor（GKX RFS'20 / HXZ RFS'20 / JKP JF'23 / KMZ JF'24 / ACM MS'23）、C 组 2 篇批判性（CSUR'24 GNN 综述 / AIR'24 LOB benchmark）。
+
+**核心发现**（数字均来自各论文原文，报告内逐条注明来源页）：
+1. **协议审计：A 组 8 篇中 7 篇单一时间切分、0 篇多重比较校正、0 篇交易成本建模**（RSR/THGNN 明示"成本便宜"而忽略）、种子众数 5（1 篇未报、StockMixer 仅 3）；AD-GAT 存在"30 次训练按验证集选 top-5 汇报"的选择性报告；RSR/STHAN-SR 的 Wikidata 关系图为单快照贯穿测试期（图构建 look-ahead）。我们论文在全部 8 个审计轴上严格占优；main.tex:124 的"first to combine"声明经审计成立。
+2. **头条 L2−L1<0 的 4 条独立佐证**：(a) StockMixer AAAI'24 = MLP 系模型在竞品自家数据集上击败 GNN 混合体；(b) RSR/STHAN-SR 自家消融中 no-graph 变体多处胜过 graph 变体（RSR NASDAQ: Rank_LSTM 0.68 > GCN 0.24）；(c) GKX 在 60 年面板发现"深度>3 层无增益、浅胜深"；(d) ACM MS'23：EW→VW 砍半 DL 利润、剔除 distressed 后无一深度方法在 5% 显著。
+3. **THGNN（CIKM'22 SOTA）的图 ≈ 我们的 α1**（trailing corr |ρ|≥0.6）→ 我们压测的正是 SOTA 实际使用的边类型，非稻草人。
+4. **剩余暴露面（按风险排序）**：样本尺度（12 季 vs GKX 30 年 OOS / JKP 93 国）> EW-only 组合层（HXZ/ACM 显示 EW 膨胀，我们 S&P500 无 micro-cap 部分免疫）> KMZ 复杂性反方观点（我们 GAT hidden 32–64 远离 P>T 区间，claim 已 bound）> JKP 分层贝叶斯替代（我们 BH/BY 是保守方向）。均已在 L2/L5/L7 披露。
+5. **建议 R1-R6**（待 H博士 决策，8pp 预算紧张）：R1 补引 GKX（§2 方法论段缺经典锚点）、R2 补引 ACM MS'23（成本层外部验证）、R3 可选 KMZ（复杂性反方预防 I-02 升级）、R4 可选 THGNN（α1 处）、R5 零成本——A 组法证表存为 rebuttal 弹药、R6 VW-decile 敏感性（现有输出可重算，无需重训）。GKX/JKP/KMZ/ACM/THGNN 目前均未被论文引用（grep 验证）。
+
+**Verdict**：我们的协议是 15 篇中最严格（A 组全轴占优；对 B 组在预注册/MDE 功效/阳性对照三轴超越）；发表风险不在协议而在评审偏好广度 vs 内部效度。
+
 ## 2026-07-03-a: M14 GAT trials-sensitivity — 头条对 3× 搜索预算稳健（leak-free），C 显著性 search-sensitive
 
 → progress: 2026-07-03-a | plan: 2026-06-30-a | analysis: 2026-07-03-a

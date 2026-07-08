@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-07-07-b: Session Closeout Audit (4-agent parallel) — PASS-WITH-CONCERNS，2 MAJOR 当场修复
+
+- Scope: paper/main.tex + paper/references.bib（R1/R2 补引 + 微缩）、docs/lit_benchmark_2026-07-03.md（新）、progress.md/docs/analysis.md 新条目（git diff HEAD 划定；本 session 无实验代码改动）
+- Agents: explore-leakage / explore-statistics / explore-correctness / explore-doc-drift（并行，独立上下文）
+- Full reviews: `artifacts/reviews/2026-07-07_explore-{leakage,statistics,correctness,doc-drift}_closeout.md`
+- Summary: Leakage 0/0/1（MDGNN 措辞已保守，无行动）; Stats 0/0/0（GKX/ACM 引文忠实性确认、lit_benchmark 9 项数字对 main.tex 零偏差、"first to combine" 经 15 篇矩阵验证）; Correctness 0/0/0（bib 元数据 DOI 级验证、cite key/图/label 完整性全过）; Doc Drift 0/2/2
+- Critical fixes applied: 无 CRITICAL
+- Majors fixed on the spot: DD-MAJOR-1 docs/README.md 补索引 lit_benchmark + header 日期刷新（连带修 CONCERN-2）; DD-MAJOR-2 补 progress 2026-07-07-a（R1/R2 执行记录）。CONCERN-1（paper/README 变更日志内容/排版混排）→ 2026-07-07 新行已显式分离
+- Verdict: **PASS**（修复后无遗留 MAJOR）
+
+→ progress: 2026-07-07-b | plan: 2026-07-07 (Decision Log) | analysis: N/A
+
+## 2026-07-07-a: R1/R2 补引落地（H博士 批准）— GKX + ACM 入 §2，匿名版保住 8pp
+
+→ progress: 2026-07-07-a | plan: 2026-07-07 (Decision Log) | analysis: 2026-07-03-b (R1-R6 来源)
+
+**H博士 决策**："加吧"= 采纳 lit_benchmark R1（补引 Gu-Kelly-Xiu RFS'20）+ R2（补引 Avramov-Cheng-Metzker MS'23）；R3/R4（KMZ/THGNN 补引）搁置；R5（rebuttal 材料）保留于报告；R6（VW-decile 敏感性）列 future work。
+
+**落地**（`paper/main.tex` §2 方法论段 + `paper/references.bib`）：
+- GKX 句："...set the recursive out-of-sample benchmark for machine-learning return prediction and find no gain beyond shallow networks."（置于 HXZ 句前）
+- ACM 句："...show machine-learning long-short profits concentrate in hard-to-arbitrage stocks and shrink under value weighting and cost screens, motivating our gross-and-net cost layer."（置于 HXZ 句后）
+- bib +2 条（gu2020ml / avramov2023ml，元数据经 closeout 审计 DOI 级验证，`artifacts/reviews/2026-07-07_explore-correctness_closeout.md`）
+- **页预算**：净增把匿名版顶到 9pp → 四图再微缩（.73/.73/.76/.81，纯排版无内容变化）+ 3 处零内容微trim（Repro 段两个冗余括号、§5.2 重复 `\S\ref{sec:data}`、Qlib bib journal 字段缩写、ACM 句删 "that"）→ **匿名 8pp 恢复**、非匿名 9pp；tectonic 0 error、0 未解析引用、两句渲染验证到位。
+
+**Rule 9**：非实验触发点；引文忠实性 + bib 元数据由 4-agent closeout 审计覆盖（见 2026-07-07-b）。
+
+## 2026-07-03-d: 15 篇顶会/顶刊文献对照评估（H博士 指令）— 报告 docs/lit_benchmark_2026-07-03.md
+
+→ progress: 2026-07-03-d | plan: N/A | analysis: 2026-07-03-b
+
+**任务**：H博士 指令"找 15 篇本方向最相关近期顶刊论文，逐部分总结，全面对照评估我们的论文"。
+
+**执行**：literature-review skill 流程（PRISMA-lite）：web 多源检索（arXiv/ACM DL/Springer/出版社页）+ 自有 references.bib 候选池 → 筛选 15 篇（8 直接竞品 + 5 金融顶刊 rigor + 2 批判性；排除日志在报告 §1）→ 3 个并行 general-purpose agent 逐篇取原文提取（科研问题/数据/方法/评估协议法证/结果/结论/局限/消融）→ 本人合成 16 行对照矩阵 + 评估。
+
+**产出**：`docs/lit_benchmark_2026-07-03.md`（317 行英文报告）。关键结论：(1) A 组 8 竞品 7/8 单切分、0/8 多重校正、0/8 成本建模，我方协议全轴占优，"first to combine" 声明经审计成立；(2) 头条 L2−L1<0 获 StockMixer/RSR 自家消融/GKX 浅胜深/ACM 经济约束 4 条独立佐证；(3) 剩余暴露 = 样本尺度、EW-only、KMZ 复杂性反方；(4) 建议 R1-R6（补引 GKX/ACM 等）待 H博士 决策。详见 analysis.md 2026-07-03-b。
+
+**Rule 9**：非实验/非代码触发点（文献分析任务），TP1-3 不适用；发现与建议均以原文页级证据支撑，agent 提取的每篇数字附来源链接（报告内）。
+
 ## 2026-07-03-c: M14 两句 paper 编辑落地 — 匿名版保住 8pp，M14 里程碑 commit
 
 → progress: 2026-07-03-c | plan: 2026-06-30-a (M14 收尾) | analysis: 2026-07-03-a（无新分析）
