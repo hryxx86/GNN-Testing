@@ -4,6 +4,172 @@
 
 ---
 
+## 2026-08-29-a: Paper 作者署名变更（H博士 指示）— 独立作者 Ruixi (Tracy) He，Lv 教授移至致谢
+
+- H博士 明确指示（5 项）：①作者块仅保留本人并更名 "Ruixi (Tracy) He"（单位/邮箱不变）；②全项目 grep 清除作者元数据中的 Lv；③Lv 教授移入致谢；④稿件日期 August 2026；⑤重编译验证
+- `paper/main.tex` 修改：作者块删 Jinchi Lv（原 65-71 行）、`\author{Ruixi (Tracy) He}`、`\shortauthors{He}`；新增 `acks` 致谢（"I am grateful to Professor Jinchi Lv (USC Marshall, Data Sciences and Operations) for his supervision and guidance throughout this project. All errors are my own."，anonymous 模式下 acmart 自动隐藏）；`\titlenote{Preprint---August 2026.}`（nonacm 抑制页脚 → 用标题脚注呈现日期）+ `\acmConference` 日期字段同步
+- **全项目 grep 核查**：非归档文件中 "Lv/jinchilv" 作者元数据仅存在于 main.tex 作者块（已清）；progress/plan/handoff 中为历史工作记录、`archived/**` 只读，均按规则保留不动
+- **tectonic 重编译验证（本机）**：exit 0 / 9pp；pdftotext 核验标题页仅 1 作者 "Ruixi (Tracy) He"、全文 "Lv" 仅剩 ACKNOWLEDGMENTS 1 处、"∗ Preprint—August 2026." 在首页；pdfinfo 无残留作者元数据
+- 未提交 git（待 H博士 确认后 commit）
+
+→ progress: 2026-08-29-a | plan: N/A | analysis: N/A
+
+## 2026-07-29-a: CSI300 PIT 成分层解决（官方公告链重建，74 时点零差异）→ 闸门标准 RE-FREEZE → 自建 bundle 构建启动
+
+- **成分侦察 agent 返回**：qlib 官方 cn_index collector 已坏（2022 公告改名 + 2023-05 起 PDF 附件），agent 重写现代化实现覆盖四个格式时代（HTML 表 2018-21 / xlsx 2022 / PDF 2023-26 / 临时退市 xlsx 2025），从中证指数官网抓全 18 份公告（16 定期 + 2 临时，本机可达无封锁）
+- **交付**：`experiments/cn_membership_scout/csi300_instruments_draft.txt`（592 spans / 540 唯一代码 / 2018-12-17→2026-07-29）+ 变更明细 584 行（每行标注公告 ID）+ PROVENANCE.md
+- **验证（agent 74 时点 + Claude 亲自抽查）**：16 个定期生效日与锁定预期完全一致；Wayback 官方快照 5/5 精确、DoltHub/tushare 月度 61/61 精确、旧 bundle 季度 8/8 精确、**零对称差**；Claude 抽查 3 个日期 PIT 成员数精确 = 300；已知调样新闻 3 例核对通过（含寒武纪-U 2023-12 调入 14/14）
+- 格式小疣：SH600008 等地板化退化 span（start>end）→ 列入 C1 re-freeze 审计项
+- **闸门标准 RE-FREEZE 落地**（`docs/j_cn_data_gate_criteria_2026-07-28.md` 附注日期修订节，非静默改动）：主价格源 → baostock 自建 qlib bundle（K 线已验证可达且最新，强制 per-call 超时+重试+缓存）；成分源 → 上述 instruments 文件；C1 重定义为 span 完整性审计 + 快照回归 + 6 时点 300 计数；C2–C5 门槛不变、窗口覆盖须 ~100%
+- **自建 bundle 构建 agent 已启动**（后台）：540 代码 × raw+hfq 双拉 → factor 推导 → dump_bin → `~/.qlib/qlib_data/cn_data_custom` → D.features + akshare 交叉验证
+- baostock 成分端点判死记录：3/3 挂起（75s/90s/300s 耐心）——只影响成分（已由 CSIndex 路径替代），K 线层无碍
+
+→ progress: 2026-07-29-a | plan: Decision Log 2026-07-28 | analysis: N/A
+
+## 2026-07-28-i: Codex Review — Results (Touchpoint 3, Round A) on M Scout Step-1 → PASS-WITH-CONCERNS；结论入 analysis.md
+
+- Target: `experiments/m_scout_step1/`（confirmatory 全量输出）
+- Reviewer: codex @ gpt-5.6-sol xhigh；Full review: `artifacts/reviews/2026-07-28_codex_results_mscout_A.md`（agent 最终消息只带摘要 → 从 transcript 定向提取全文存档）
+- Summary: 0 CRITICAL + 0 MAJOR + 4 CONCERN；Verdict: **PASS-WITH-CONCERNS**
+- 4 CONCERN 全接受并以措辞方式落地（M3-A-01 贴线披露"不能排除 ≤+0.029 正 IC"；M3-A-02 精确窗口 + 封锁历史衰减声明；M3-A-03 幸存者/快照行业限定、方向不定号；M3-A-04 S4 仅 hypothesis-generating 不回流主分支）
+- Codex 独立复核：DEAD 机械推导正确（0.02854 < 0.03180）；SE_block=0.0162 合理（日 IC lag-1 自相关 ~0.905，重叠标签所致）；branch_floor 顺序合规
+- **analysis.md 2026-07-28-a 已写入**（措辞逐条执行 T3 许可/禁止清单）
+- 决策含义：M 无 WRDS 时缩水为 paper-1 支持性诊断；paper-2 骨架天平向 J 倾斜（条件于 J 数据闸门）
+
+→ progress: 2026-07-28-i | plan: Decision Log 2026-07-28 | analysis: 2026-07-28-a
+
+## 2026-07-28-h: J 数据闸门实现完成 → 闸门抓到数据层封锁：Qlib 社区 bundle 止于 2020-09-25 + 段内价格错误 + C1 不可独立验证
+
+- `analyze_cn_data_gate.py` 实现完成（agent 产出；C1–C5 独立函数、seed 42、akshare 缓存层、--smoke/--checks；未跑 full gate、未下 verdict——按冻结程序留待 T2 后）
+- **数据层发现（Claude 亲自验证 bundle 日历尾行 = 2020-09-25）**：
+  1. **Qlib 社区 CN bundle 陈旧**——数据止于 2020-09-25，对 J 冻结窗口（2020Q1–2025Q4）覆盖仅 ~12% → 现源下 J 的 confirmatory 不可能
+  2. **C2 段内 PROVISIONAL-FAIL（真发现）**：smoke 尺度对账一致率 84.9% vs 阈值 99.5%；SZ002027 等 2020 年价格错误由两家独立源（EastMoney+Sina）一致反对 qlib（source: experiments/cn_data_gate/smoke/c2_violations.csv，183 行逐日证据）
+  3. **C1 按冻结标准不可实现**：akshare 1.18.80 无 CSI300 历史成分 API（index_stock_hist 上游移除；csindex 仅当日快照）→ 独立验证覆盖 0%
+  4. 附带方法发现：EastMoney qfq 是**加法复权**（收益率失真 ~2×，不可用于对账）；Sina qfq-factor 为除法因子、事件日起前向适用（601898 非事件日与 qlib 位级一致）——C2 的正确对账构造已在脚本内落地
+- C3（停退市，PASS-prov）/ C4（涨跌停掩码 F1=1.0，PASS-prov）/ C5（日历+标签复现 15/15，PASS-prov）在覆盖段内干净
+- **闸门程序按预期工作**：零建模投入前拦截 → 进入"替代源修复"分支（闸门文档预设路径）；baostock 探测进行中（价格/复权/停牌 + query_hs300_stocks 历史成分）
+- 影响：J 的数据工程成本上修（需自建 qlib bundle 或换数据层）；C1 标准需 re-freeze（源变更后）→ 连同替代源方案一并提交 H博士 + T2
+
+→ progress: 2026-07-28-h | plan: Decision Log 2026-07-28 | analysis: PENDING
+
+## 2026-07-28-g: M 侦察脚本 T2（3 MAJOR 全修）→ confirmatory 跑完 → 分支裁决 DEAD（bounded）；T3 已送审
+
+- `analyze_m_scout_step1.py` 实现完成（agent 产出，763 行；label 函数与 run_storya_e1_anchor.py:422-435 逐行一致，Claude 亲自比对；smoke 亲自复跑 0.3s 通过）
+- **Codex T2 Round A**（gpt-5.6-sol）：0 CRITICAL + 3 MAJOR + 0 CONCERN，BLOCK-EXECUTION。主信号路径（label/T-1/S1 相关窗/分支顺序/BH 族）被明确判干净；3 MAJOR 全部亲自核实成立并按 suggested_fix 修复：M2-A-01 S4 tercile 等权→VW（CONFIG (e) 冻结要求）；M2-A-02 W-FRI 尾部残缺周 bin 丢弃 + dv_wk 对齐；M2-A-03 JSON NaN → _json_sanitize + allow_nan=False。修复验证：smoke 重跑 + strict JSON 解析 + 周 bin 检查全过。Review: `artifacts/reviews/2026-07-28_codex_code_mscout_A.md`
+- **Confirmatory `--full` 结果**（experiments/m_scout_step1/，1107 IC 天，3.5s）：主特征 sector-peer momentum mean IC = −0.0041，95% CI [−0.0353, +0.0285]，SE_block=0.0162 → F=0.0318 / M3=0.0454（source: experiments/m_scout_step1/branch_rule.csv）→ **verdict DEAD（bounded：CI 上界 < F）**。次要族 0/4 BH 拒绝；S4 Lo-MacKinlay 大→小不对称 +0.0531 为唯一近信号（p=0.061，p_BH=0.22）（source: experiments/m_scout_step1/secondary_family.csv）
+- 解读闸门：**T3 已送审（后台）**——结论在 T3 过审前不写入 analysis.md
+- 并行状态：J 闸门实现 agent 仍在跑（analyze_cn_data_gate.py）
+
+→ progress: 2026-07-28-g | plan: Decision Log 2026-07-28 | analysis: PENDING（待 T3）
+
+## 2026-07-28-f: H博士 批准 → M 侦察 + J 数据闸门并行启动（冻结件先行）
+
+- H博士 directive："批准，并行启动"（① M Step-1 侦察 + WRDS 核查；② J 的 CN 数据 kill gate）
+- **看数据前冻结件已落地**：`docs/prereg_m_scout_2026-07-28.md`（bounded 2021–2026；唯一主特征 sector-peer momentum 126d/T-1；分支规则三段式且 SE 先于点估计计算；次要族 4 检验 BH q=0.05；Wikidata 仅描述性）+ `docs/j_cn_data_gate_criteria_2026-07-28.md`（5 项检查：PIT 成员/复权对账/停退市完备/涨跌停掩码/日历与 T+1 标签，全过才放行，采样 seed 42）
+- 环境侦察：gnn env Python 3.11.15；pyqlib 0.9.x + akshare 已装入 gnn env；磁盘 95GB 空闲；**本机无 WRDS 凭证** → H博士 行动项（USC 邮箱申请 WRDS 账号；bounded 侦察不受阻，dead-anomaly 分支被 Rev-9 gate）
+- 执行中（后台）：① Qlib CN 日频 bundle 下载（首次 `qlib.run.get_data` 入口在新版已移除 → 改 `qlib.tests.data.GetData` 重试）；② `analyze_m_scout_step1.py` 实现 agent（按 prereg 逐条实现 + smoke，明确禁止跑 confirmatory/解读结果——须先过 Touchpoint 2）
+- 本地面板确认：`data/reference/sp500_5y_prices.csv` + `sp500_sectors.csv` 为 M 侦察数据源
+
+→ progress: 2026-07-28-f | plan: Decision Log 2026-07-28（批准行） | analysis: N/A
+
+## 2026-07-28-e: Codex Review — Plan (Touchpoint 1, Round B, gpt-5.6-sol) on A/J/K/M 修正稿
+
+- Target: `docs/idea_expansions_2026-07-28.md`（含 §Rev-1..11）
+- Reviewer: codex @ gpt-5.6-sol xhigh（模型切换后首次评审；约 7 分钟返回）
+- Full review: `artifacts/reviews/2026-07-28_codex_plan_B.md`
+- Summary: 0 CRITICAL + 8 MAJOR + 1 CONCERN；**verdict PROCEED-WITH-FIXES**（Round A 是 BLOCK-EXECUTION → 修正被认可）
+- Cross-round diff: Round A 12 条 → 8 FIXED + 4 PARTIALLY-FIXED（残余全部在本轮处置：A-02→Rev-12、M-02→Rev-20、J-03/K-02 维持披露）
+- 新发现 9 条全接受（8 FIXED via §Rev-12..20 + 1 as-concern）。亮点：B-02（方差分解应声明 finite-design 估计量而非随机效应总体声明）、B-08（M 的 Wikidata 边非 PIT——正是我们在 lit_benchmark 批 RSR/STHAN-SR 的同款 look-ahead，被 5.6-sol 抓回来）、B-06（K 需要 selected-edge 非 GNN 基线才能声明机制）
+- 跨模型一致性：5.6-sol 确认 5.5 的排序（M 侦察+WRDS 先行 → J 闸门并行、过闸即 paper-2 骨架 → A 等显式设计矩阵 → K 殿后），修正稿零 CRITICAL
+- Gate：胜出 idea 的正式 plan doc 须以 §Rev-1..20 为约束；偏离才触发 Round C
+
+→ progress: 2026-07-28-e | plan: 2026-07-26-a（增补） | analysis: N/A
+
+## 2026-07-28-d: Codex 模型升级 gpt-5.6-sol + CLI 升级 + Rule 9 运行时条款 + Round B 重评启动
+
+- H博士 directive："需要改成5.6 sol,更新rule" + "重新评估一轮"
+- `~/.codex/config.toml`: `model = "gpt-5.5"` → `"gpt-5.6-sol"`（`model_reasoning_effort = "xhigh"` 保持）
+- 冒烟发现旧 CLI 不支持 5.6 系（API 400 "requires a newer version of Codex"）→ `brew upgrade codex`：0.116.0 → 0.145.0 → 冒烟通过（"OK gpt-5.6-sol ready"）
+- CLAUDE.md Rule 9 新增 **Codex 运行时** 条款（模型锁定 + 变更流程）；plan.md Decision Log 2026-07-28 行
+- 历史注记：2026-07-28_codex_plan_A（3C+7M+2Cn）为 gpt-5.5 xhigh 产物
+- Round B 启动：修正后设计稿（§Rev-1..11）+ Round A 发现清单发给 gpt-5.6-sol 重评（cross-round diffing per docs.md §6：逐条验证 Round A 修复 + 新发现 CODEX-B-*）→ `artifacts/reviews/2026-07-28_codex_plan_B.md`
+
+→ progress: 2026-07-28-d | plan: 2026-07-26-a + Decision Log 2026-07-28 | analysis: N/A
+
+## 2026-07-28-c: Ideation 工作流文件索引建立 — `docs/next_paper_ideation_index.md`（专门管理）
+
+- H博士 指令：本次对话所有文件写入一个新文档专门管理
+- 新建 `docs/next_paper_ideation_index.md`：登记本工作流 3 个新建文件（lit_scan / idea_expansions / codex_plan_A review）+ 4 个修改文件（progress/analysis/plan/docs-README 的对应条目）+ 新 session 阅读顺序 + 当前决策状态 + 未来文件预留登记位（正式 plan doc、CN 数据闸门报告、M 侦察产出、Round B、WRDS 结论）
+- 规则：本工作流后续新增文件必须在该索引补登记；新 session 从该索引进入
+- `docs/README.md` 同步挂载（文献对照 + ideation 工作流小节 + 变更日志行）
+
+→ progress: 2026-07-28-c | plan: 2026-07-26-a | analysis: N/A
+
+## 2026-07-28-b: Codex Review — Plan (Touchpoint 1, Round A) on A/J/K/M idea 设计稿
+
+- Target: `docs/idea_expansions_2026-07-28.md`
+- Reviewer: codex（正常响应，约 5 分钟，无 fallback）
+- Full review: `artifacts/reviews/2026-07-28_codex_plan_A.md`
+- Summary: 3 CRITICAL + 7 MAJOR + 2 CONCERN
+- Verdict: BLOCK-EXECUTION（对设计稿；无在跑实验，实际含义 = 修正后入正式 plan 再 Round B）
+- Resolutions: 11 FIXED（设计稿 §Rev-1..11 落地）+ 1 ACCEPTED-AS-CONCERN（CODEX-J-03 的 PIT-US 面板延期，混杂披露替代）；0 REJECTED
+- 三条 CRITICAL 均经 Claude 亲自核实成立：A-01 旧格点混 vintage（April Step-0 五折旧协议 vs v2.1 冻结 12 折——正是 D-RERUN-12F 我们自己否决过的混协议错误）；J-01 CN 数据层需正式 kill gate；K-01 选边/确认边界缺 21d embargo
+- Codex 排序结论：M 侦察 + WRDS 核查立即；J 数据闸门并行，过闸即 paper-2 骨架；A 等干净 factorial/provenance 方案；K 殿后或并臂——与我方原排序一致，A 的启动条件被收紧
+
+→ progress: 2026-07-28-b | plan: 2026-07-26-a（增补） | analysis: N/A
+
+## 2026-07-28-a: A/J/K/M 四候选完整设计展开（应 H博士 点名）→ `docs/idea_expansions_2026-07-28.md`
+
+- H博士 从两批候选中点名 A（Nonstandard Errors 方差分解）/ J（CSI300 跨市场复制）/ K（稀疏子图假说）/ M（peer-momentum 悖论机制研究）要求扩展
+- 产出：每个候选的完整设计草案（RQ / 文献锚 / 设计轴与臂 / 统计机器 / 结局分支 / 算力估计 / venue / 风险与缓解）+ 论文弧线（paper 1 → M why → J where → A what-dominates → K rescue）+ 排期建议（8–9 月 ICLR 改稿为主线，M-step-1 侦察 + WRDS 权限核查穿插；10 月定 paper-2 骨架）
+- 关键设计决策点（均待正式 plan doc 后走 Touchpoint 1）：A 用分数因子 + 混合效应处理不平衡网格；J 先做 1 周 Qlib CN 数据质检 spike 再承诺，24 fold 功效加倍；K 走 screening+stability-selection 路线（mask 路线降为 robustness）；M 预注册分支裁决规则（现代 implied IC vs Step-3 MDE）
+- 仍 PENDING H博士 总决策；无实验代码改动
+
+→ progress: 2026-07-28-a | plan: 2026-07-26-a（增补） | analysis: N/A
+
+## 2026-07-26-a: 近半年金融 ML 文献扫描（6 并行 agent，~70 篇）+ 下一篇 idea 多轮自辩 → 候选 A/B 待 H博士 决策
+
+- H博士 指令：重新分析近半年（2026-01→07）金融 ML 文献，整理思路/方法/模型/结果，找与论文相关创新点，多轮自我辩论论证
+- 执行：6 个并行检索 agent（GNN图方法 / LLM金融 / 基础模型 / 评估严谨性 / regime非平稳 / 损失与决策导向），arXiv 摘要页直接核验；综合报告写入 `docs/lit_scan_2026-07-26.md`（六切面综述 + 9 空白清单 G1–G9 + idea 候选 A–F + 辩论记录）
+- 关键结论：GNN 批判位空置；预注册+等预算+SPA/FDR 组合无人占据；{arch,loss,tuning,seed} 四因子分解、rank-IC seed 方差分解、GW 条件预测能力检验、LLM 信号族 FDR 均为无人区；并发近邻 = Wade arXiv:2605.19278（必引必区分）
+- 多轮自辩（4 轮，全文见本 session 记录，条目版见 lit_scan §5）裁决：**B（图组件条件预测能力，复用已存预测近零算力，兼作 ICLR rebuttal 弹药）先行；A（深度排序 Nonstandard Errors 方差分解，吸收容量轴+蒸馏臂）为 ICLR 后下一主论文**；C/D/E/F 缓存
+- Rule 9 说明：本条目为文献分析 + idea 提案，未写实验 plan；H博士 拍板后出正式 plan doc → 触发 Touchpoint 1（Codex plan review）
+- 文档同步：analysis.md 2026-07-26-a（发现条目）、plan.md 2026-07-26-a（决策项挂起）
+
+→ progress: 2026-07-26-a | plan: 2026-07-26-a | analysis: 2026-07-26-a
+
+## 2026-07-09-a: Lv 教授回信 → venue 定 ICLR 2027；arXiv 推迟至中稿后；回信致谢已起草
+
+- Lv 回信要点（2026-07-09）：①愿花大量时间细读、给 writing/updating/polishing 详细意见（署名事实上确认——"we may try out"）；②提议冲 ICLR、用官网 Tex 模板；③主张顶会双盲 → 中稿后再挂 arXiv，"otherwise easy rejection"
+- H博士 裁决：完全接受、致谢、venue 听导师的 → 昨日"转期刊（QF）"计划 SUPERSEDED
+- 查证记录：ICLR 官方政策实际**允许**审稿期挂 arXiv（iclr.cc CFP："submission to archival repositories such as arXiv is allowed during the review period"）——与 Lv 说法不符，但 H博士 决定尊重导师偏好不争辩；ICLR 2027 = 北美西海岸（iclr.cc/FutureMeetings，非聚合站误标的巴西），到场负担低（USC 短途）；ICLR 2027 CFP 未发布（Conferences/2027/Dates 404），预计截稿 ~9 月下旬（往年惯例：2026 届为 9/19 摘要 + 9/24 全文）
+- 回信 v3 已起草（scratchpad `email_to_prof_lv_2026-07-08.md` 顶部）：短、致谢、接受 ICLR、同意 arXiv 等中稿后、预告 9 月截稿 + 着手 ICLR 模板改稿
+- 下一步主线：ICLR 单栏模板改稿（正文 ~9pp + 无限附录，R3/R4/R5/R6/M14 可回填附录）→ 8 月 Lv 详细意见逐条处置 → ~9 月下旬提交
+- endorsement/category 调研结论（2026-07-08-a）不作废，顺延到 acceptance 后挂 arXiv 时使用
+
+→ progress: 2026-07-09-a | plan: 2026-07-07-a（再改版）+ Decision Log 2026-07-09 | analysis: N/A
+
+## 2026-07-08-b: Venue pivot ICAIF → 期刊（H博士 重开并裁决）+ 页脚修正重编译 + 邮件改版
+
+- 触发：H博士 询问 ICAIF 是否必须到场 → 官方 CFP 查证（icaif2026.org/call-for-papers.html）：纯线下（"at least one author ... attend in person" + "No pre-recorded videos"）、禁一稿多投、截稿 8/2、Milan 11/14–17。H博士 不愿到场、明确偏好期刊 → 撤销 5/27 venue LOCKED，转期刊（QF = 首候选，final target 等 Lv 推荐）
+- paper 修正：main.tex:41 页脚 "Preprint. Under review at ICAIF 2026." → "Preprint."（不属实且与新路线矛盾）；tectonic 重编译 0 error，PyPDF2 验证 9pp、首页无 ICAIF、署名完整；根目录附件副本已刷新
+- 邮件 v2（scratchpad 同文件覆盖）：去掉全部 ICAIF/硬期限；三个阻塞项编号（endorsement/分类/署名）；末段请 Lv 推荐期刊（可删）；软性催促 = "endorsement+署名是仅有阻塞项"
+- plan.md：剩余投稿动作改版（CMT CANCELLED、期刊投稿 NEW、R6 可回填期刊版）+ Decision Log 2026-07-08 行
+- Rule 9 说明：venue 属 H博士 行政/策略决策而非实验设计，无 Codex touchpoint；页脚为 metadata 注释级修改
+
+→ progress: 2026-07-08-b | plan: 2026-07-07-a（改版）+ Decision Log 2026-07-08 | analysis: N/A
+
+## 2026-07-08-a: 导师邮件起草（paper feedback + arXiv endorsement/分类/署名）+ endorsement 资格调研
+
+- 背景：Lv 教授旅行中 8 月回国，晚于 ICAIF CMT 截稿（8/2，内部目标 8/1 前提交，见 plan.md 2026-07-02-a）；4 件事须邮件解决：paper 修改意见 / arXiv endorsement / primary category / co-authorship（main.tex 作者栏已列 Lv，但署名未经其确认）
+- Endorsement 调研（web 查证，非记忆）：arXiv 2026-01-21 新政——机构邮箱不再单独豁免，首投需同 endorsement domain 内作者 personal endorsement（source: blog.arxiv.org 2026-01-21 + info.arxiv.org/help/endorsement.html）；Lv arXiv 记录 55 篇集中于 stat.ME/stat.ML/math.ST/cs.LG，q-fin 为 0 篇（source: arxiv.org author search "Lv, Jinchi"）→ 可 endorse cs.LG/stat.ML，基本不可 endorse q-fin.CP；H博士 提及的 "From Deep Learning to LLMs" survey (arXiv:2503.21422) 经核实作者无 Lv
+- 分类建议：primary cs.LG + cross-list q-fin.ST/q-fin.PM（备选 primary stat.ML）；邮件中如实说明约束、请 Lv 裁决
+- 产出：英文请教型邮件草稿 + arXiv 首投操作清单（scratchpad `email_to_prof_lv_2026-07-08.md`）；附件 = paper/main.pdf 改名副本 `He_GNN_Stock_Ranking_draft_Jul2026.pdf`；回复期限：快决定 7/17、paper 意见 7/24
+- 发送由 H博士 本人完成；arXiv 上传（plan.md 2026-07-02-b 剩余动作 1）现依赖导师回复
+- 附带修正：官方 CFP 复核确认截稿 8/2 不变，但 ICAIF '26 举办地为 Milan 11/14–17（非 Singapore=ICAIF'25 地点）→ main.tex:40 注释中的备用 \acmConference 行已改 Milan（纯注释行，arXiv 版编译不受影响；做 ICAIF 匿名版恢复该行时生效）
+
+→ progress: 2026-07-08-a | plan: 2026-07-02-b（arXiv 上传项标注依赖）| analysis: N/A
+
 ## 2026-07-07-b: Session Closeout Audit (4-agent parallel) — PASS-WITH-CONCERNS，2 MAJOR 当场修复
 
 - Scope: paper/main.tex + paper/references.bib（R1/R2 补引 + 微缩）、docs/lit_benchmark_2026-07-03.md（新）、progress.md/docs/analysis.md 新条目（git diff HEAD 划定；本 session 无实验代码改动）

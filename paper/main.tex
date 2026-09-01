@@ -37,8 +37,8 @@
 %% --- Preprint metadata (arXiv version). For ICAIF double-blind submission:
 %%     (1) add `anonymous` to \documentclass (line 9), and
 %%     (2) restore the commented ICAIF \acmConference line below (delete the Preprint one).
-% \acmConference[ICAIF '26]{ACM International Conference on AI in Finance}{November 2026}{Singapore}
-\acmConference[Preprint]{Preprint. Under review at ICAIF 2026.}{}{}
+% \acmConference[ICAIF '26]{ACM International Conference on AI in Finance}{November 14--17, 2026}{Milan, Italy}
+\acmConference[Preprint]{Preprint}{August 2026}{}
 \acmYear{2026}
 \copyrightyear{2026}
 \setcopyright{none}
@@ -46,15 +46,15 @@
 \begin{document}
 
 \title{When Do Graph Neural Networks Help in Cross-Sectional Stock Ranking?}
+\titlenote{Preprint---August 2026.}
 \subtitle{A Multi-Seed, Multi-Universe, Cost-Aware Study of the U.S. S\&P~500}
 
-%% Author block — NON-ANONYMOUS (arXiv preprint version).
-%% For the ICAIF double-blind SUBMISSION, add `anonymous` to \documentclass
+%% Author block — NON-ANONYMOUS (arXiv preprint version), SOLE AUTHOR.
+%% For a double-blind SUBMISSION, add `anonymous` to \documentclass
 %% options above (line 9): \documentclass[sigconf,nonacm]{acmart}
-%% acmart then auto-hides this block; no need to delete the real names.
-%% Page count: this non-anonymous build is 9pp (fine for arXiv, no limit); the
-%% anonymous ICAIF build collapses the author block and fits the 8pp hard limit.
-\author{Tracy He}
+%% acmart then auto-hides this block (and the acks section); no need to
+%% delete the real name.
+\author{Ruixi (Tracy) He}
 \affiliation{%
   \institution{University of Southern California, Viterbi School of Engineering}
   \department{Financial Engineering}
@@ -62,15 +62,7 @@
   \country{USA}}
 \email{tracyhe@usc.edu}
 
-\author{Jinchi Lv}
-\affiliation{%
-  \institution{University of Southern California, Marshall School of Business}
-  \department{Data Sciences and Operations}
-  \city{Los Angeles}
-  \country{USA}}
-\email{jinchilv@marshall.usc.edu}
-
-\renewcommand{\shortauthors}{He and Lv}
+\renewcommand{\shortauthors}{He}
 
 \begin{abstract}
 Graph neural networks (GNNs) are often reported to improve cross-sectional stock ranking by encoding relations among stocks as graph edges. Many reported gains, however, come from single-seed, single-split evaluations and do not adjust for multiple testing. We ask a narrower question: when, if at all, does the graph help? We evaluate an equal-budget tuned ladder from LightGBM to a heterogeneous relational GNN (L0--L7) over twelve expanding quarterly walk-forward folds and ten seeds on the U.S. S\&P~500.
@@ -384,6 +376,9 @@ The next steps are a point-in-time universe rebuild with delisting returns, a lo
 \section{Reproducibility}\label{sec:repro}
 The project repository versions the code, confirmatory outputs, frozen tuned hyperparameters, the fold calendar, the Optuna grid, the ten seeds, and all analysis and figure scripts. A numeric-claim verifier checks the draft against underlying outputs, and the pre-registered protocol fixes the two-family decision rules.
 
+\begin{acks}
+I am grateful to Professor Jinchi Lv (USC Marshall, Data Sciences and Operations) for his supervision and guidance throughout this project. All errors are my own.
+\end{acks}
 
 \begingroup
 \scriptsize

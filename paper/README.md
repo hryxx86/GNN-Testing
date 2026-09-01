@@ -29,13 +29,14 @@ cd paper && tectonic -X compile main.tex     # 产出 main.pdf（8pp）
 
 ## 待办（提交前）
 
-- **作者块已填**（Tracy He / USC / tracyhe@usc.edu）= **非匿名 arXiv preprint 版**（当前 `main.pdf`）。投 **ICAIF 双盲**时只需在 `\documentclass` 加 `anonymous`（第 9 行 → `[sigconf,nonacm,anonymous]`），acmart 自动隐藏作者，无需删真名（文件内有注释说明）。
+- **作者块已填**（**独立作者 Ruixi (Tracy) He** / USC Viterbi / tracyhe@usc.edu；Lv 教授移至 Acknowledgments 致谢，2026-08-29）= **非匿名 preprint 版**（当前 `main.pdf`，9pp）。投**双盲**时只需在 `\documentclass` 加 `anonymous`（第 9 行 → `[sigconf,nonacm,anonymous]`），acmart 自动隐藏作者块与 acks 致谢，无需删真名（文件内有注释说明）。
 - arXiv 上传：`main.tex` + `references.bib` + 4 张 `figures/*.pdf`（放 `figures/` 子目录匹配 `\graphicspath`）；可选把 `\acmConference[ICAIF '26]...` 改为中性 "Preprint. Under review." 以免未录用先挂会议页脚。
 - 可选清剩余 8 个 reviewer-anticipation major（见 plan 2026-06-30-a / `.paper-review/LEDGER.json`，纯文字加 hedge，不重跑）。
 - 可选补引：Stockformer / Pinheiro-Wedge（见 `docs/storya_references.md` 末「To-be-added」）。
 
 ## 变更日志
 
+- 2026-08-29: **作者署名变更（H博士 指示）**——独立作者 Ruixi (Tracy) He；Jinchi Lv 从作者块移除、移入 `acks` Acknowledgments 致谢（"supervision and guidance…All errors are my own"）；`\shortauthors{He}`；标题脚注 "Preprint—August 2026."（nonacm 下页脚不渲染，改用 `\titlenote`）+ `\acmConference` 日期字段同步。tectonic 重编译 9pp / 0 error 验证：标题页仅 1 作者，全文 "Lv" 仅剩致谢 1 处（→ progress: 2026-08-29-a）
 - 2026-07-07: **R1/R2 补引落地**——§2 方法论段 +GKX（RFS'20，"no gain beyond shallow networks"）+ACM（MS'23，成本层外部验证）两句 + bib 2 条（DOI 级审计验证）。**排版（无内容变化）**：四图微缩至 .73/.73/.76/.81 + Repro 段冗余括号/§5.2 重复引用/Qlib bib 字段等 4 处零内容 trim → 匿名 8pp 恢复 / 非匿名 9pp。4-agent closeout 审计全 PASS（→ progress: 2026-07-07-a/-b）
 - 2026-07-03: **M14 trials-sensitivity 两句入纸**——§4 "left for future work"→3×-budget sweep 结果句（B 存活 p=0.002 BH-reject / C 掉出 p=0.059 方向不变）、§6 under-search 备选解读→"narrows but does not close"限定句；摘要/§1 保留预注册口径；四图再微缩（.75/.75/.78/.83）保住**匿名 8pp**（非匿名 9pp）；措辞 Codex TP3 批准 + H博士 签核（→ progress: 2026-07-03-c）
 - 2026-07-02: **投稿前评估建议落地（T0×21 + T1×5）**——新增 §4 Pipeline positive control（E3 planted-signal）、§5.2 合池 BH + BY 敏感性句（新引 benjamini2001by，现 24 条）、§5.3 LOSO seed 句、§5.2 under-search 边界论证；HXZ 引用修正（65%/82%）；Family-2 标签 causal→edge attribution；Table 1 caption 去 isolation 措辞；turnover/CI 构造/≈36 等半句补披露；页预算三轮收紧 + 四图微缩（.79/.79/.82/.85）→ **匿名 8pp / 非匿名 9pp 双版本验证**；Codex TP3 `artifacts/reviews/2026-07-02_codex_results_A.md`（→ progress: 2026-07-02-b）
