@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-09-07-a: paper/iclr2027 自包含化 — figures/ 本地副本子目录 + 隔离编译验证
+
+- H博士 指示：论文用图整理复制到 iclr2027 子文件夹，确保整个文件夹拷到其他设备可编译
+- `paper/iclr2027/figures/` 新建，7 张 PDF 母版复制入内；`\graphicspath` 改 `{figures/}{../../figures/}}`（本地优先、根目录回退）
+- **可移植性验证（亲自跑）**：全文件夹复制到仓库外隔离目录（回退路径失效）编译 → exit 0 / 23pp / 0 未解析引用 / 无缺图；主仓编译亦复验 9 页内 0 溢出
+- 注意事项：根目录 figures/ 母版重新生成后需同步 `cp` 到本地副本（README 已记）
+
+→ progress: 2026-09-07-a | plan: N/A | analysis: N/A | README: paper/iclr2027/README.md 2026-09-07
+
 ## 2026-09-06-b: Session Closeout Audit（4-agent 并行，补 2026-09-06-a 欠账）+ AI statement 减轻 + 段落压缩
 
 - **本轮先行修改**（H博士 指示）：①AI use statement 按 ICLR 2027 官方 AI 政策减轻口径——政策查证（iclr.cc/Conferences/2027/AIPolicyForAuthors）：不要求点名厂商；drafting/文献检索/润色属建议披露→移除；保留 4 类必披露（implement methods / 数据清洗 / 方法论反馈 / 结果解读辅助）+ 必需责任句；②10 处段落压缩/拆分（纯措辞，数字零漂移）；③CFP 日期查证：**9/18 = 摘要截稿，9/25 = 全文截稿（AOE）**，6 处文档双日期口径修正

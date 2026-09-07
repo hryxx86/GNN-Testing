@@ -17,7 +17,9 @@
 \usepackage{hyperref}
 \usepackage{url}
 
-\graphicspath{{../../figures/}}
+% Local copies first (self-contained folder for Overleaf/arXiv upload);
+% repo-root figures/ kept as fallback so regenerated masters are picked up.
+\graphicspath{{figures/}{../../figures/}}
 
 % Light table compaction for the single-column layout.
 \newcommand{\compacttable}{\small\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{0.95}}

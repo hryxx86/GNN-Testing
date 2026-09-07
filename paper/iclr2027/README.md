@@ -10,8 +10,9 @@
 | `main.pdf` | tectonic 编译输出（23 页；双盲提交版，"Under review" 头 + 匿名）。 |
 | `references.bib` | 30 条（acmart 版 26 条 + 新增 thgnn2022 / kmz2024jf / jkp2023jf / patel2024survey，DOI 已验证）。 |
 | `iclr2027_conference.{sty,bst}`, `natbib.sty`, `fancyhdr.sty` | ICLR 2027 官方 kit（github.com/ICLR/Master-Template）。 |
+| `figures/` | 本文所用 7 张图的 PDF 母版**本地副本**（正文 4：headline_ic_ladder / F9_spa_dm_confirmatory / cost_gross_net / family2_edge_causal；附录 3：regime_perfold_ic / loss_listmle_inversion / plan_aaa_t1_stability）。 |
 
-图片：`\graphicspath{{../../figures/}}`，正文 4 图 + 附录 3 图（regime_perfold_ic / loss_listmle_inversion / plan_aaa_t1_stability）。
+图片：`\graphicspath{{figures/}{../../figures/}}` —— 优先本地副本，根目录 `figures/` 为回退（母版重新生成后需 `cp` 同步本地副本）。**本文件夹自包含**：整体拷贝到任何装有 tectonic（或上传 Overleaf）的设备可直接编译，已做仓库外隔离编译验证（2026-09-07，exit 0 / 23pp / 0 缺图）。
 
 ## 附录结构
 
@@ -37,5 +38,6 @@ cd paper/iclr2027 && tectonic -X compile main.tex   # 23pp, exit 0
 
 ## 变更日志
 
+- 2026-09-07: **新增 `figures/` 本地子目录**（7 张母版副本）+ `\graphicspath` 改为本地优先——文件夹自包含，仓库外隔离编译验证通过（→ progress: 2026-09-07-a）
 - 2026-09-06 (b): AI use statement 按 ICLR 官方政策减轻口径（去厂商名、去建议披露项、保留 4 类必披露 + 责任句）+ 10 处段落压缩/拆分；**纯措辞改动，数字零漂移**（closeout doc-drift agent 独立复核 numeric-token diff 为空），9pp/23pp 不变
 - 2026-09-06: 初版完成——workflow 转换（主转换 agent 中途撞月度限额，附录 4 片段自 transcript 恢复）+ 7 轮压页 + 数字审计 + 双盲/署名双模式编译验证（→ progress: 2026-09-06-a）
