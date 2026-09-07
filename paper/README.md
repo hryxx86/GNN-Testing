@@ -1,6 +1,6 @@
 # paper/ — LaTeX submission sources (acmart + ICLR 2027)
 
-> **2026-09-06 起主线投稿源 = `iclr2027/`**（ICLR 2027 单栏版，截稿 9/18，见 `iclr2027/README.md`）。本目录根部的 acmart 版保留为 arXiv/期刊备用源。
+> **2026-09-06 起主线投稿源 = `iclr2027/`**（ICLR 2027 单栏版，摘要截稿 9/18 / 全文 9/25 AOE，见 `iclr2027/README.md`）。本目录根部的 acmart 版保留为 arXiv/期刊备用源。
 
 > **作用**: Story A 论文「When Do GNNs Help in Cross-Sectional Stock Ranking?」的 **ACM SIGCONF (acmart)** 提交版 LaTeX 源。由 `docs/storya_paper_draft_v2.md`（confirmatory 工作草稿，已过 Codex T3 四轮）转换而来——**提交版去掉了工作草稿的 provenance 括注 / editor 清单 / 红线框 / verbose plain-English 框**；每个数字仍可溯源到草稿与其源 CSV。
 

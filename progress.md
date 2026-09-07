@@ -4,18 +4,36 @@
 
 ---
 
+## 2026-09-06-b: Session Closeout Audit（4-agent 并行，补 2026-09-06-a 欠账）+ AI statement 减轻 + 段落压缩
+
+- **本轮先行修改**（H博士 指示）：①AI use statement 按 ICLR 2027 官方 AI 政策减轻口径——政策查证（iclr.cc/Conferences/2027/AIPolicyForAuthors）：不要求点名厂商；drafting/文献检索/润色属建议披露→移除；保留 4 类必披露（implement methods / 数据清洗 / 方法论反馈 / 结果解读辅助）+ 必需责任句；②10 处段落压缩/拆分（纯措辞，数字零漂移）；③CFP 日期查证：**9/18 = 摘要截稿，9/25 = 全文截稿（AOE）**，6 处文档双日期口径修正
+- **Closeout 审计**（Scope: paper/iclr2027/* + 四文档；agents: explore-leakage / statistics / correctness / doc-drift；full reviews: `artifacts/reviews/2026-09-06_explore-*_closeout.md`）：
+
+| Agent | CRITICAL | MAJOR | CONCERN | Verdict |
+|-------|----------|-------|---------|---------|
+| Leakage | 0 | 1 | 5 | PROCEED-WITH-FIXES |
+| Statistics | 0 | 1 | 4 | PASS-WITH-CONCERNS |
+| Correctness | 0 | 0 | 5 | PASS-WITH-CONCERNS |
+| Doc Drift | 0 | 2 | 3 | PROCEED-WITH-FIXES |
+
+- **修复（全部当场落地，逐条 Claude 亲自对源核实后修）**：2 MAJOR 收敛于同两处压缩过头——L8 "largely shielded" 恢复两侧表述（配对不消除 look-ahead 采样偏差）；M14 §4 恢复双侧披露（C 掉出显著性 p=0.059）。CONCERN 13/14 修复：LOFO 范围重新限定回 4 对比、BY 掉落名单补 C L4−L2、news 图构造细节入附录 A 新小节、+0.0143 开脱句恢复、within-universe 限定词×2、THGNN "as described" 对冲、sec:prereg 引用重定向 + 2 死标签删除、L7 关系类型/21d head 入附录 A、单季 Sharpe 脆弱句入附录 D、Spearman 论证恢复 §3.2；1 项 ACCEPTED-AS-CONCERN（EXPS-CO-05 Discussion CI-vs-SPA 句依赖 §5.1 既有守卫，页预算决策已记录）。doc-drift 5 项（双日期/今天锚点/R6 理由/tri-doc README 项/未提交工作树）全部修复
+- **修复后复验**：tectonic 23pp / 正文 9 页内 0 溢出 / 0 未解析引用 / 双盲构建无 Ruixi/Lv 泄露 / 红线 0.044 无 / +0.0143 与 p=0.059 对源正确
+- **Verdict: PASS**（0 CRITICAL 未决、0 MAJOR 未决）
+
+→ progress: 2026-09-06-b | plan: 2026-09-06-a | analysis: N/A
+
 ## 2026-09-06-a: ICLR 2027 模板改稿完成 — 9pp 正文 + 附录 A–D 回填，82 项数字审计通过；署名变更已 push（cfac65d）
 
-- **背景**：H博士 2026-09-01 确认署名变更 commit + 指示"截稿 9/18，今天写完给人看"→ ICLR 转换启动
+- **背景**：H博士 2026-09-01 确认署名变更 commit + 指示"截稿 9/18，今天（= 2026-09-01）写完给人看"→ ICLR 转换启动（后经 iclr.cc CFP 查证：9/18 = 摘要截稿，全文截稿 9/25，均 AOE）
 - **产出**：`paper/iclr2027/`（main.tex 单文件 + 官方 kit + references.bib 30 条 + README）。正文压入 **9 页硬限**（AI use statement 起于 p10 顶），总 23pp；双盲提交版默认（`\iclrfinalcopy` 一行切署名版，已双模式编译验证）
-- **附录回填**（plan 2026-07-09-a 预定项全落地）：A=ST1 fold 日历+HP 网格+冻结超参表（n_trials 25/29 偏差披露）+DM/HLN 公式；B=8 系统协议法证矩阵（R5）+THGNN/KMZ/JKP 定位（R3/R4）；C=M14 全表+per-seed/LOSO 表+BH/BY 网格+planted 阳性对照全表；D=L8/m10 全审计表+C/L5s+探索图 3 张。**R6 VW-decile：无数据，未写**（agent 确认 artifacts 无 VW 结果，按不编造原则跳过）
+- **附录回填**（plan 2026-07-09-a 预定项全落地）：A=ST1 fold 日历+HP 网格+冻结超参表（n_trials 25/29 偏差披露）+DM/HLN 公式；B=8 系统协议法证矩阵（R5）+THGNN/KMZ/JKP 定位（R3/R4）；C=M14 全表+per-seed/LOSO 表+BH/BY 网格+planted 阳性对照全表；D=L8/m10 全审计表+C/L5s+探索图 3 张。**R6 VW-decile 未写**（市值文件 `data/reference/sp500_market_caps.csv` 为 dateless end-of-sample 快照，按日 VW 加权会引入 look-ahead——见 analyze_m_scout_step1.py PIT note；artifacts 亦无既算 VW 结果，按不编造原则跳过。analysis.md:51 旧句"现有输出可重算"以此为准作废）
 - **执行记录（如实）**：Workflow 5 agent 并行；主转换 agent 在收尾时撞**账号月度用量限额**中断（main.tex 已写完，null 返回）；4 个附录片段文件遭 /tmp 定期清理删除 → 从 workflow transcript 的 Write 调用中完整恢复；汇编+7 轮压页+验证由主 session 亲自完成（限额期间不再 spawn subagent）
 - **压页方式**（内容保留式）：重复段指针化（正控/Power/MDE/regime/L8 全文均在附录）+ 3 图缩尺 + abstract 合并单段（模板要求）+ 散文紧缩；**修复主转换 agent 的 2 个失效附录指针**（cost CI 回填正文、news-graph 误指 app:setup 移除）
 - **验证（亲自跑，非口头）**：82 项数字抽查 PASS（frozen_hparams JSON / paper_eval_robustness.csv / m10_universe_gap.md / analysis.md M14+planted+perfold / lit_benchmark 数字逐一比对源文件）；正文相对 acmart 无新增数字；0 未解析引用；无 acmart 残留；红线 grep 通过；新增 4 条 bib 含 DOI（agent 对 ACM DL/Wiley 验证）
 - **Rule 9 说明**：本轮为论文格式转换+既有内容重组（无新实验/新分析代码），未触发 TP1-3;**session closeout 3-agent 审计因月度限额无法 spawn，顺延至限额恢复后首个 session 补跑**（不掩盖:此为强制项的延期执行）
-- 待办：H博士 通读 → 送同行反馈 → 9/18 前提交（CFP 官方要求以 OpenReview 页为准，提交前需注册）
+- 待办：H博士 通读 → 送同行反馈 → 摘要提交 9/18 AOE → 全文提交 9/25 AOE（OpenReview，提交前需注册）
 
-→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A
+→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A | README: paper/README.md + paper/iclr2027/README.md 2026-09-06
 
 ## 2026-08-29-a: Paper 作者署名变更（H博士 指示）— 独立作者 Ruixi (Tracy) He，Lv 教授移至致谢
 

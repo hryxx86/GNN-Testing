@@ -8,13 +8,13 @@
 
 ## 2026-09-06-a: ICLR 2027 改稿完成 → 剩余：H博士 通读 + 同行反馈 + 9/18 前提交
 
-→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A
+→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A | README: paper/README.md + paper/iclr2027/README.md 2026-09-06
 
-- **已完成**：署名变更（独立作者 Ruixi (Tracy) He，Lv 致谢；commit cfac65d）→ `paper/iclr2027/` ICLR 单栏版全稿（9pp 正文 + 附录 A–D 回填 R3/R4/R5/M14/ST1/L8；R6 VW 无数据未写）；82 项数字审计 + 双盲/署名双模式编译验证。**截稿 2026-09-18（H博士 2026-09-01 提供）**，替代此前 ~9/24 估计。
+- **已完成**：署名变更（独立作者 Ruixi (Tracy) He，Lv 致谢；commit cfac65d）→ `paper/iclr2027/` ICLR 单栏版全稿（9pp 正文 + 附录 A–D 回填 R3/R4/R5/M14/ST1/L8；R6 VW 未写：市值文件为 dateless 快照，PIT 按日加权会引入 look-ahead，artifacts 亦无既算 VW 结果）；82 项数字审计 + 双盲/署名双模式编译验证。**摘要截稿 2026-09-18 / 全文截稿 2026-09-25（均 AOE；iclr.cc CFP 2026-09-06 查证。H博士 2026-09-01 提供的 9/18 = 摘要截稿）**。
 - **剩余动作（优先级序）**：
   1. H博士 通读 `paper/iclr2027/main.pdf`（23pp）→ 送同行反馈（双盲版可直接发；要署名版取消注释 `\iclrfinalcopy` 重编译）
   2. 反馈处置 + 修订
-  3. OpenReview 注册 + 摘要/全文提交（9/18 前；CFP 细则以官方页为准）
+  3. OpenReview 注册 + **摘要提交（9/18 AOE）** → **全文提交（9/25 AOE）**
   4. **欠账**：session closeout 3-agent 审计（月度限额中 spawn 失败）→ 限额恢复后首个 session 补跑
 - Lv 教授详细意见若到达 → 逐条处置（既有主线项不变）
 

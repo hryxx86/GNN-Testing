@@ -1,6 +1,6 @@
 # paper/iclr2027/ — ICLR 2027 submission source
 
-> **作用**: Story A 论文「When Do GNNs Help in Cross-Sectional Stock Ranking?」的 **ICLR 2027** 单栏投稿版。由 acmart 版（`../main.tex`）转换而来：正文重构压入 **9 页硬限**，被压内容全部移入附录（A–D，无信息删除）；每个数字与 acmart 源及底层 CSV/docs 逐字一致（82 项数字忠实性抽查通过，2026-09-06）。截稿 **2026-09-18**（H博士 2026-09-01 提供）。
+> **作用**: Story A 论文「When Do GNNs Help in Cross-Sectional Stock Ranking?」的 **ICLR 2027** 单栏投稿版。由 acmart 版（`../main.tex`）转换而来：正文重构压入 **9 页硬限**，被压内容全部移入附录（A–D，无信息删除）；每个数字与 acmart 源及底层 CSV/docs 逐字一致（82 项数字忠实性抽查通过，2026-09-06）。摘要截稿 **2026-09-18** / 全文截稿 **2026-09-25**（均 AOE，iclr.cc CFP）。
 
 ## 当前内容
 
@@ -37,4 +37,5 @@ cd paper/iclr2027 && tectonic -X compile main.tex   # 23pp, exit 0
 
 ## 变更日志
 
+- 2026-09-06 (b): AI use statement 按 ICLR 官方政策减轻口径（去厂商名、去建议披露项、保留 4 类必披露 + 责任句）+ 10 处段落压缩/拆分；**纯措辞改动，数字零漂移**（closeout doc-drift agent 独立复核 numeric-token diff 为空），9pp/23pp 不变
 - 2026-09-06: 初版完成——workflow 转换（主转换 agent 中途撞月度限额，附录 4 片段自 transcript 恢复）+ 7 轮压页 + 数字审计 + 双盲/署名双模式编译验证（→ progress: 2026-09-06-a）
