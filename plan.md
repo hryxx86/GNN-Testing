@@ -6,18 +6,50 @@
 
 ---
 
+## 2026-09-06-a: ICLR 2027 改稿完成 → 剩余：H博士 通读 + 同行反馈 + 9/18 前提交
+
+→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A
+
+- **已完成**：署名变更（独立作者 Ruixi (Tracy) He，Lv 致谢；commit cfac65d）→ `paper/iclr2027/` ICLR 单栏版全稿（9pp 正文 + 附录 A–D 回填 R3/R4/R5/M14/ST1/L8；R6 VW 无数据未写）；82 项数字审计 + 双盲/署名双模式编译验证。**截稿 2026-09-18（H博士 2026-09-01 提供）**，替代此前 ~9/24 估计。
+- **剩余动作（优先级序）**：
+  1. H博士 通读 `paper/iclr2027/main.pdf`（23pp）→ 送同行反馈（双盲版可直接发；要署名版取消注释 `\iclrfinalcopy` 重编译）
+  2. 反馈处置 + 修订
+  3. OpenReview 注册 + 摘要/全文提交（9/18 前；CFP 细则以官方页为准）
+  4. **欠账**：session closeout 3-agent 审计（月度限额中 spawn 失败）→ 限额恢复后首个 session 补跑
+- Lv 教授详细意见若到达 → 逐条处置（既有主线项不变）
+
+---
+
+## 2026-07-26-a: 下一篇论文 idea 候选（A/B 优先）— PENDING H博士 决策；主线仍为 ICLR 2027 改稿
+
+→ progress: 2026-07-26-a | plan: 2026-07-26-a | analysis: 2026-07-26-a
+
+**背景**：近半年文献扫描完成（`docs/lit_scan_2026-07-26.md`），多轮自辩后收敛两个候选（均基于已有基础设施，不与 9 月 ICLR 截稿冲突）：
+
+1. **候选 B（先行，小论文/rebuttal 弹药）**："When, Exactly?" — 对 paper-1 已存的逐日预测跑 Giacomini-White 条件预测能力检验（条件集预注册：T-1 VIX / 横截面离散度 / 相关图密度 / 波动 regime 等，FDR 校正），检验图惩罚是否 regime 特异。近零算力（无重训）。空白 G5：regime-gate 文献（KDD'26/IJCAI'26）零推断。
+2. **候选 A（ICLR 提交后启动，下一主论文）**："Nonstandard Errors in Deep Cross-Sectional Ranking" — {graph, architecture, loss, label horizon, tuning budget, seed, universe, split} 分数因子网格 + 混合效应方差分解；大量格点已算完（2160 confirmatory + 360 horizon + 150 arch + M14 + loss horse race）。锚点：Chen-Hanauer-Kalsbach SSRN 5031755。吸收容量轴（G7）与蒸馏臂（G8）。
+3. 缓存：C（LLM 文本信号入冻结协议，Chrono*+LAP）/ D（registered-report benchmark 平台）/ E/F（独立容量/蒸馏研究）。
+4. **第二批候选 G–N（2026-07-27 应 H博士 要求追加，详见 lit_scan §4b）**：G 预注册前瞻实盘测试（时间敏感，近零算力）/ H 图构建 multiverse / I planted-signal 功效审计方法论 / J 跨市场复制（CSI300 主场对决，可吸收 B）/ K 稀疏子图假说 / L 已发表 GNN 结果证据审计（零算力）/ M peer-momentum 悖论机制研究 / N 种子集成 vs 架构等算力对决（并入 A）。辩论速裁：新批 top = M / L / G / J。
+
+**流程**：H博士 选定后 → 正式 plan doc（预注册条件集/网格）→ Rule 9 Touchpoint 1（`/codex-plan-review`）→ 实施。**在此之前不动任何实验代码。**
+
+**2026-07-28 增补**：H博士 点名 A/J/K/M 扩展 → 完整设计草案见 `docs/idea_expansions_2026-07-28.md`（含论文弧线 M→J→A→K 与排期建议）。→ progress: 2026-07-28-a
+
+---
+
 ## 2026-07-07-a: 文献对照 R1/R2 已落地；投稿前剩余动作清单
 
 → progress: 2026-07-07-a/-b | plan: 2026-07-07-a | analysis: 2026-07-03-b
 
 **本 session 完成**：M14 两句入纸（2026-07-03-c，commit 499fd75）→ 15 篇文献对照评估（`docs/lit_benchmark_2026-07-03.md`）→ R1/R2 补引（GKX+ACM）落地、匿名 8pp 保持 → 4-agent closeout 审计 PASS（2 doc-drift MAJOR 当场修复）。
 
-**剩余投稿动作（优先级序）**：
-1. arXiv 上传（非匿名 9pp 版；`main.tex`+`references.bib`+4 图）
-2. 可选：剩余 reviewer-anticipation majors 清账核对（哪些已被 2026-07-02 平行 session 关闭；纯文字 pass）
-3. CMT 注册 + 提交（**8/1 前**；匿名版 = documentclass 加 `anonymous`，已验证 8pp）
-4. R6（future work / camera-ready）：VW-decile 净 Sharpe 敏感性——现有输出重算，无需重训
-5. R5：`docs/lit_benchmark_2026-07-03.md` §5/§6.1 法证表 = rebuttal 弹药（7/8 单切分、0/8 多重校正、0/8 成本、AD-GAT 选择性汇报、RSR/STHAN-SR Wikidata look-ahead）
+**剩余投稿动作（优先级序）**（2026-07-09-a 再改版：venue → **ICLR 2027**，Lv 教授提议 + H博士 接受，见 Decision Log）：
+1. **ICLR 2027 模板改稿（NEW，主线）**：acmart 双栏 8-9pp → ICLR 单栏（~9pp 正文 + references + **无限附录**）。附录可回填页数受限被砍的内容：R3/R4（KMZ/THGNN 引用讨论）、R6（VW-decile 敏感性）、R5 法证表、M14 全表等。ICLR 2027 官方 CFP 未发布（2026-07-09 查证 404）；按近年惯例预计 **摘要 ~9/19、全文 ~9/24/2026** 截稿，CFP 出来后锁定。模板 kit 就绪后先搭骨架。
+2. **等 Lv 教授详细意见**（他明确承诺细读；8 月回国；意见到达后逐条处置 + 改稿）
+3. ~~arXiv 上传~~ **DEFERRED（2026-07-09-a）**：Lv 主张中稿后再挂（双盲顾虑；ICLR 政策实际允许审稿期挂 arXiv——iclr.cc CFP 明文，但尊重导师偏好）。endorsement/category 问题一并顺延到 acceptance 后。
+4. ~~期刊投稿（QF）~~ **SUPERSEDED（2026-07-09-a）**：被 ICLR 2027 取代；若 ICLR 被拒（通知预计 2027/1），期刊仍是 fallback。
+5. 可选：剩余 reviewer-anticipation majors 清账核对（哪些已被 2026-07-02 平行 session 关闭；纯文字 pass）
+6. R5：`docs/lit_benchmark_2026-07-03.md` §5/§6.1 法证表 = rebuttal 弹药（7/8 单切分、0/8 多重校正、0/8 成本、AD-GAT 选择性汇报、RSR/STHAN-SR Wikidata look-ahead）→ ICLR rebuttal 期（预计 2026/11–12）直接可用
 
 ---
 
@@ -2033,6 +2065,8 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-06-15 | **Positioning LOCKED: the local 12-fold untuned-anchor track (expanding main axis + sliding 副轴) is a PILOT / robustness cross-check, NOT the protocol confirmatory main table** | Surfaced that the local `run_storya_e1_anchor.py` is the self-labelled "untuned anchor"; protocol §5/§1.1 mandates the TUNED L0–L7 ladder (`run_storya_v21_main12.py`, Colab) as the only confirmatory main table and rejected reusing the untuned anchor (M3). So the local 12-fold formal null (SPA/DM/CI/power) + the sliding 副轴 (8/10 same-sign) are pilot-grade — an early sanity read for the ladder, NOT the paper's headline. Tracks are independent/parallel (no dependency); local pilot need not wait for the ladder, but headline confirmatory numbers DO await the ladder. analysis.md 2026-06-15-a records everything as PILOT. Simple `compute_e6_edge_ablation.py` (E3/E4 SAGE/untuned) superseded by the ladder edge arms (L3/L4/L5−L2) → kept historical/exploratory, not re-run. |
 | 2026-06-21 | **C/L5s degenerate-cell treatment = EXCLUDE (primary); 27.5% constant-collapse reported as a stability finding; NEVER re-tuned** | Verified mechanism (not assumed): the 25 fully + 8 partial C/L5s cells CONVERGED to a constant prediction (`converged_flag=1`, `best_val_loss≈0.998` no-signal plateau, identical L/S Sharpe across seeds) → cross-sectional IC mathematically UNDEFINED (0/0), NOT a crash and NOT a measured 0. H博士 framing: zero-fill would fabricate 0s for undefined values AND cannot be cleanly implemented for partial cells without per-day date labels → EXCLUDE (undefined = missing) is the only non-fabricating, implementable treatment. zero-fill + zero-skill pre-registered as robustness appendix (all three → C/L5s IC≈0, C SPA p stable 0.077–0.080, conclusion-invariant; `family1_cl5s_robustness.csv`). The 27.5% rate is itself a finding (equal-budget tuned-champion dropout0.5/3-layer SAGE-Mean degenerates under thin-data + high-dropout smoothing → "smoothing hurts ranking"). Re-tuning C/L5s FORBIDDEN (equal-budget symmetry = cherry-pick). Isolated to C/L5s; L5s not in any DM pair → only enters SPA M=9. |
 | 2026-06-21 | **D-RERUN-12F confirmatory analysis COMPLETE — Family-1 + Family-2, Touchpoint 2+3 PASSED** | Analyzers `compute_family1_ladder.py` + `compute_fc_edge_causal.py` ran at full n_boot=5000 on 2160 main + 240 L7 + 720 FC cells. Headline: no tuned arm reliably beats tuned LightGBM (SPA B p=0.277 / C p=0.077, neither rejects); local DM ladder evidence = neural gain from MLP not the graph, tuned news edge hurts (read LOCALLY not global/causal — Codex T3 R-A-01); Family-2 0/6 BH-FDR + 6/6 underpowered (directional-not-reliable). T2 `2026-06-20_codex_code_A.md` (PROCEED, both fixed), T3 `2026-06-21_codex_results_A.md` (PASS-WITH-CONCERNS, all narrative-discipline). Ghost-dim audit clean (12+6 dims). → analysis.md 2026-06-21-a. NEXT = paper figs/tables regen on confirmatory numbers + §Results rewrite. Fallback-reviewer transparency: finance-gnn used prematurely (Codex mis-judged dead, actually slow at gpt-5.5 xhigh) → re-ran Codex controlled. |
+| 2026-07-28 | **Codex reviewer 模型升级 gpt-5.5 → gpt-5.6-sol（xhigh 保持）**；codex-cli 0.116.0 → 0.145.0 | H博士 directive "改成5.6 sol,更新rule"。旧 CLI 不支持 5.6 系（API 400 报错）→ brew 升级后 `codex exec` 冒烟通过。CLAUDE.md Rule 9 新增"Codex 运行时"条款（模型变更流程：批准→改config→冒烟→更新条款→progress 记录）。历史评审（含 2026-07-28_codex_plan_A）为 gpt-5.5 xhigh 产物；A/J/K/M 设计稿由 5.6-sol 重评一轮（Round B，同日）。 |
+| 2026-07-28 | **H博士 批准并行启动：① M Step-1 侦察（bounded 面板）+ WRDS 核查；② J 的 CN 数据 kill gate** | Codex Round A+B 双轮一致排序（M 侦察先行 + J 闸门并行）；执行前冻结件已落地：`docs/prereg_m_scout_2026-07-28.md`（唯一主特征 = sector-peer momentum 126d、三段分支规则先算 SE 后看点估计、次要族 BH q=0.05）+ `docs/j_cn_data_gate_criteria_2026-07-28.md`（5 项检查全过才放行，任一失败 J BLOCKED）。本机无 WRDS 凭证 → H博士 需用 USC 邮箱申请（dead-anomaly 分支硬前提，bounded 侦察不受阻）。审计/侦察脚本产出结果前须过 Touchpoint 2。 |
 | 2026-06-23 | **Paper figures rebuilt via `nature-figure` (data) + `scientific-schematics` (schematics); all 2026-05-28 pilot figs/tables deleted; global figure font = sans-serif Arial** | The 2026-05-28 batch (27 figs + 10 tables) was low-quality AND on pilot data (untuned anchor, 5-fold, `storya_e1_anchor`/`storya_e6_dm_spa`), superseded by confirmatory. H博士: clear the whole old batch (figures/ + tables/ untracked → not git-recoverable, but re-renderable from retained `paper_figs/*.py`), keep only the new `F9_spa_dm_confirmatory` sample. Rebuild standard: conclusion-first + self-review (nature-figure). Font standard LOCKED = sans-serif Arial (mathtext DejaVu Sans), written into `paper_figs/rcparams_storya.py` — crisper at small sizes + ML-venue convention; per-script `--font serif` available as `_serif` alt. F9 fixes (vs old): ΔIC+CI not p-on-axis, sig via red-fill/grey-open double-encode, top conclusion banner, no in-figure fig number, C SPA p=0.077 never called "near significant". → progress 2026-06-23-a. |
 | 2026-06-21 | **Cost-口径 = DESCRIPTIVE economic-sensitivity layer; IC stays the SOLE confirmatory metric (no 3rd BH-FDR family on Sharpe); net口径 headline = 10bps** | H博士 made cost a BLOCKING completion item (the paper criticizes prior work for ignoring costs → every headline claim must carry a gross/net dual口径). New analyzer `compute_cost_confirmatory.py` reads the per-cell `Sharpe_net_*bps` already stored in the confirmatory results.csv (no re-run); gross ΔIC + BH copied verbatim from `family1_dm_hln.csv`; old E1/E6/pilot Sharpe NOT mixed in. Net Sharpe deliberately NOT promoted to a confirmatory family (would over-claim + add multiplicity; project treats decile-L/S Sharpe as economic sensitivity, not robust alpha) — it is a crosswalk that annotates + flags cost-sensitive claims, with fold-level block bootstrap CI + strict LOFO. Result: MLP>LGB and graph-doesn't-help HOLD at net (CIs exclude 0); the IC "news hurts" (C L3-L2) does NOT reproduce at net (CI straddles 0, 6/6 fold sign-split) → flagged cost-sensitive but near-zero/fragile, never promoted to "news helps". T2 `2026-06-21_codex_code_cost_A.md` (PASS-WITH-CONCERNS, 1 CRIT rejected w/ evidence + 2 fixed), T3 `2026-06-21_codex_results_cost_A.md` (PASS-WITH-CONCERNS, A-07 fixed + A-02 wording). → analysis.md 2026-06-21-a §5; progress 2026-06-21-b. |
 
@@ -2041,10 +2075,12 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-06-26 | **M4 (Universe-C selection leakage) = disclose path (a) + FORCED downgrade of Universe-C positive results to suggestive** | Universe-C basis = Plan-AAA top-15 ranked under same-day leakage (5/15 survive T-1). Runtime IC not leaked (T-1 + assert). Decision: keep universe, but Universe-C POSITIVE results (MLP>LGB +0.0148; positive FC edges) demoted to "suggestive, pending leak-free re-selection"; null/negative within-universe contrasts UNAFFECTED (selection leak only inflates apparent signal). L1 de-templated to "selection-stage leakage". leak-free re-run → QUEUE. → progress 2026-06-26-a. |
 | 2026-06-30 | **Compact-paper headline REFRAMED to lead with leak-robust L2−L1<0; HAC lag=21 sensitivity NOT reported (decision B)** | PaperJury ultracode review of the 8pp compact found compression SAFE (0 number drift) and surfaced that the bandwidth-robust, both-universe, regime-robust negative (graph underperforms MLP, L2−L1<0, BH-sig in clean Universe-B too) is far stronger than the previously-headlined leak-fragile MLP>LightGBM positive. Reframed abstract/§1/§5.2 to lead with the negative (closes leakage I-04/I-10 + regime I-08/I-18 objections using existing `family1_lofo.csv` LOFO 0/12 + `family1_mde.csv`). Decision B on I-50: the NW-1994 auto bandwidth (L=6) is the standard default, so the lag=21 fragility of C L1-L0 (p=0.063) / C L3-L2 (p=0.070) is NOT reported — leading with the bandwidth-robust L2−L1<0 covers the robustness story honestly without weakening the abstract. → progress 2026-06-30-a; analysis 2026-06-30-a; review `artifacts/reviews/2026-06-30_paperjury_compact-review_round1.md`. |
 | 2026-07-07 | **Lit-benchmark R1/R2 ADOPTED (cite GKX RFS'20 + ACM MS'23 in §2); R3/R4 (KMZ/THGNN) DEFERRED; R6 (VW-decile sensitivity) = future work** | 15-paper forensic benchmark (`docs/lit_benchmark_2026-07-03.md`) found GKX/JKP/KMZ/ACM/THGNN uncited; H博士 adopted the two highest-value anchors: GKX (canonical recursive-OOS protocol + shallow-beats-deep supports MLP>GAT) and ACM (MS-scale validation of the cost layer). Page cost absorbed by figure micro-shrink (.73/.73/.76/.81) + 4 zero-content trims; anon 8pp verified. R3/R4 deferred on page budget; R5 forensic table retained as rebuttal material. → progress 2026-07-07-a; analysis 2026-07-03-b. |
+| 2026-07-08 | **Venue REOPENED by H博士 and PIVOTED: ICAIF 2026 → journal (Quantitative Finance = first candidate, final target awaits Lv 推荐)** | ICAIF 2026 官方 CFP 复核（icaif2026.org, Milan 11/14–17）确认纯线下："at least one author ... attend in person" + "No pre-recorded videos"；且禁止一稿多投（审稿期不能同时投期刊）。H博士 不愿到场，明确偏好期刊 → 撤销 5/27 "ICAIF LOCKED" 决策（原决策即保留 QF backup）。后果：8/2 截稿压力消失；CMT/匿名 8pp 路径 CANCELLED；main.tex:41 页脚 "Under review at ICAIF 2026" → "Preprint." 并重编译（9pp 不变）；导师邮件改为无硬期限版并在末段请 Lv 推荐期刊。arXiv 预印本计划不变（仍等 endorsement+署名确认）。→ progress 2026-07-08-a/-b。 |
+| 2026-07-09 | **Venue FINAL（本轮）: → ICLR 2027（Lv 教授提议，H博士 接受）；arXiv 推迟到 acceptance 后** | Lv 2026-07-09 回信：愿细读给详细意见（署名事实上确认，"we may try out"）；提议 ICLR + 官网模板；主张中稿后再挂 arXiv（"otherwise easy rejection"）。查证：ICLR 政策实际允许审稿期挂 arXiv（iclr.cc CFP 明文"submission to arXiv allowed during review"），但 H博士 决定尊重导师偏好不争辩（de-anonymization 偏见顾虑在实践中有理）。ICLR 2027 = 北美西海岸（iclr.cc/FutureMeetings；到场负担远低于米兰/巴西，H博士 在 USC）；CFP 未发布，预计截稿 ~9 月下旬 2026、通知 ~2027/1（往年惯例）。ICLR 主会风险（empirical/negative-result 论文 "limited novelty" 概率）由 Lv 详细意见 + 附录扩容对冲；被拒则期刊 fallback。→ progress 2026-07-09-a。 |
 
 → progress: 2026-05-28-a..f | analysis: N/A
 → progress: 2026-06-10-a/c, 2026-06-11-a/b | analysis: 2026-06-11-a
 → progress: 2026-06-21-a | analysis: 2026-06-21-a
 → progress: 2026-06-26-a | analysis: 2026-06-26-a
 
-*Last updated: 2026-07-07 (R1/R2 补引落地 + closeout PASS；上一版：2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*
+*Last updated: 2026-07-09 (Lv 回信 → venue 定 ICLR 2027，arXiv 推迟至中稿后，主线 = ICLR 模板改稿 + 等详细意见；上一版：2026-07-08 (venue pivot ICAIF→期刊 + 导师邮件起草)；上一版：2026-07-07 (R1/R2 补引落地 + closeout PASS)；上一版：2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*

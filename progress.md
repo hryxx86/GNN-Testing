@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-09-06-a: ICLR 2027 模板改稿完成 — 9pp 正文 + 附录 A–D 回填，82 项数字审计通过；署名变更已 push（cfac65d）
+
+- **背景**：H博士 2026-09-01 确认署名变更 commit + 指示"截稿 9/18，今天写完给人看"→ ICLR 转换启动
+- **产出**：`paper/iclr2027/`（main.tex 单文件 + 官方 kit + references.bib 30 条 + README）。正文压入 **9 页硬限**（AI use statement 起于 p10 顶），总 23pp；双盲提交版默认（`\iclrfinalcopy` 一行切署名版，已双模式编译验证）
+- **附录回填**（plan 2026-07-09-a 预定项全落地）：A=ST1 fold 日历+HP 网格+冻结超参表（n_trials 25/29 偏差披露）+DM/HLN 公式；B=8 系统协议法证矩阵（R5）+THGNN/KMZ/JKP 定位（R3/R4）；C=M14 全表+per-seed/LOSO 表+BH/BY 网格+planted 阳性对照全表；D=L8/m10 全审计表+C/L5s+探索图 3 张。**R6 VW-decile：无数据，未写**（agent 确认 artifacts 无 VW 结果，按不编造原则跳过）
+- **执行记录（如实）**：Workflow 5 agent 并行；主转换 agent 在收尾时撞**账号月度用量限额**中断（main.tex 已写完，null 返回）；4 个附录片段文件遭 /tmp 定期清理删除 → 从 workflow transcript 的 Write 调用中完整恢复；汇编+7 轮压页+验证由主 session 亲自完成（限额期间不再 spawn subagent）
+- **压页方式**（内容保留式）：重复段指针化（正控/Power/MDE/regime/L8 全文均在附录）+ 3 图缩尺 + abstract 合并单段（模板要求）+ 散文紧缩；**修复主转换 agent 的 2 个失效附录指针**（cost CI 回填正文、news-graph 误指 app:setup 移除）
+- **验证（亲自跑，非口头）**：82 项数字抽查 PASS（frozen_hparams JSON / paper_eval_robustness.csv / m10_universe_gap.md / analysis.md M14+planted+perfold / lit_benchmark 数字逐一比对源文件）；正文相对 acmart 无新增数字；0 未解析引用；无 acmart 残留；红线 grep 通过；新增 4 条 bib 含 DOI（agent 对 ACM DL/Wiley 验证）
+- **Rule 9 说明**：本轮为论文格式转换+既有内容重组（无新实验/新分析代码），未触发 TP1-3;**session closeout 3-agent 审计因月度限额无法 spawn，顺延至限额恢复后首个 session 补跑**（不掩盖:此为强制项的延期执行）
+- 待办：H博士 通读 → 送同行反馈 → 9/18 前提交（CFP 官方要求以 OpenReview 页为准，提交前需注册）
+
+→ progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A
+
 ## 2026-08-29-a: Paper 作者署名变更（H博士 指示）— 独立作者 Ruixi (Tracy) He，Lv 教授移至致谢
 
 - H博士 明确指示（5 项）：①作者块仅保留本人并更名 "Ruixi (Tracy) He"（单位/邮箱不变）；②全项目 grep 清除作者元数据中的 Lv；③Lv 教授移入致谢；④稿件日期 August 2026；⑤重编译验证

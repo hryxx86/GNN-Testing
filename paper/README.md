@@ -1,4 +1,6 @@
-# paper/ — ICAIF 2026 LaTeX submission source
+# paper/ — LaTeX submission sources (acmart + ICLR 2027)
+
+> **2026-09-06 起主线投稿源 = `iclr2027/`**（ICLR 2027 单栏版，截稿 9/18，见 `iclr2027/README.md`）。本目录根部的 acmart 版保留为 arXiv/期刊备用源。
 
 > **作用**: Story A 论文「When Do GNNs Help in Cross-Sectional Stock Ranking?」的 **ACM SIGCONF (acmart)** 提交版 LaTeX 源。由 `docs/storya_paper_draft_v2.md`（confirmatory 工作草稿，已过 Codex T3 四轮）转换而来——**提交版去掉了工作草稿的 provenance 括注 / editor 清单 / 红线框 / verbose plain-English 框**；每个数字仍可溯源到草稿与其源 CSV。
 
@@ -36,6 +38,7 @@ cd paper && tectonic -X compile main.tex     # 产出 main.pdf（8pp）
 
 ## 变更日志
 
+- 2026-09-06: **新增 `iclr2027/` 子目录**——ICLR 2027 单栏投稿版（9pp 正文 + 附录 A–D 回填 R3/R4/R5/M14/ST1/L8 全审计等），官方 kit + tectonic 23pp 编译验证 + 82 项数字忠实性审计；主线投稿源移交至该目录（→ progress: 2026-09-06-a）
 - 2026-08-29: **作者署名变更（H博士 指示）**——独立作者 Ruixi (Tracy) He；Jinchi Lv 从作者块移除、移入 `acks` Acknowledgments 致谢（"supervision and guidance…All errors are my own"）；`\shortauthors{He}`；标题脚注 "Preprint—August 2026."（nonacm 下页脚不渲染，改用 `\titlenote`）+ `\acmConference` 日期字段同步。tectonic 重编译 9pp / 0 error 验证：标题页仅 1 作者，全文 "Lv" 仅剩致谢 1 处（→ progress: 2026-08-29-a）
 - 2026-07-07: **R1/R2 补引落地**——§2 方法论段 +GKX（RFS'20，"no gain beyond shallow networks"）+ACM（MS'23，成本层外部验证）两句 + bib 2 条（DOI 级审计验证）。**排版（无内容变化）**：四图微缩至 .73/.73/.76/.81 + Repro 段冗余括号/§5.2 重复引用/Qlib bib 字段等 4 处零内容 trim → 匿名 8pp 恢复 / 非匿名 9pp。4-agent closeout 审计全 PASS（→ progress: 2026-07-07-a/-b）
 - 2026-07-03: **M14 trials-sensitivity 两句入纸**——§4 "left for future work"→3×-budget sweep 结果句（B 存活 p=0.002 BH-reject / C 掉出 p=0.059 方向不变）、§6 under-search 备选解读→"narrows but does not close"限定句；摘要/§1 保留预注册口径；四图再微缩（.75/.75/.78/.83）保住**匿名 8pp**（非匿名 9pp）；措辞 Codex TP3 批准 + H博士 签核（→ progress: 2026-07-03-c）
