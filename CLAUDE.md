@@ -118,6 +118,8 @@ Entry IDs are date-based: `## YYYY-MM-DD-x: Title`. Tri-doc cross-reference is m
 
 Codex 是项目的批判性研究顾问。**每个关键节点必须触发讨论，不可跳过。**
 
+**Codex 运行时（2026-09-08 起，H博士 批准切换）**：本机 Codex CLI（brew 安装，≥0.153.4），`~/.codex/config.toml` 固定 `model = "gpt-6-astra"`（GPT-6 Astra）+ `model_reasoning_effort = "xhigh"`。**调用铁律：非交互 shell 中 `codex exec` 必须以 `< /dev/null` 关闭 stdin**，否则无限挂起（non-TTY 等待 stdin EOF 的已知 bug，openai/codex #20919/#27019）。模型/档位变更需 H博士 批准，变更后必须：改 config → `codex exec` 冒烟验证 → 更新本行 → progress.md 记录。（历史：2026-07-28→2026-09-08 为 gpt-5.6-sol xhigh；≤2026-07-28 为 gpt-5.5 xhigh。）
+
 ### 三个强制触发点
 
 #### 触发点 1：Plan 写完后

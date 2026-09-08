@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-09-08-a: Codex 挂起根因修复（non-TTY stdin bug）+ CLI 升级 + 模型切换 gpt-5.6-sol → gpt-6-astra（H博士 批准）
+
+- **挂起根因**：`codex exec` 在非交互 shell（non-TTY）下无限等待 stdin EOF——openai/codex 已知 bug（#20919/#27019）。证据：9/6-9/7 探针 24h 零输出、僵尸进程存活；与模型无关（gpt-6 与 gpt-5.6-sol 对照组同样挂）。**修复：调用尾加 `< /dev/null`**，加后秒回（4,4xx tokens）
+- **CLI 升级**：brew cask 0.145.0 → 0.153.4（2026-09-07；此前"没更新"属实但非挂起主因）
+- **模型探测**：裸 `gpt-6` 与 `gpt-6-codex` 均报 "not supported when using Codex with a ChatGPT account"（400）；web 查证（releasebot/OpenAI release notes）：GPT-6 Astra 2026-09-03 发布、分批推送、官方推荐 Codex 模型，slug = **`gpt-6-astra`** → 冒烟通过（"OK, I'm Codex, based on GPT-6"）
+- **切换执行**（Rule 9 流程）：config.toml `model = "gpt-6-astra"`（effort 保持 xhigh，无警告）→ 新配置无 -m 冒烟通过 → CLAUDE.md Rule 9 运行时行更新（含 stdin 铁律）→ 本条记录。历史口径：2026-07-28→09-08 评审为 gpt-5.6-sol xhigh
+- 影响：后续 Rule 9 三触发点评审全部走 gpt-6-astra xhigh；`< /dev/null` 已写入 CLAUDE.md 为调用铁律
+
+→ progress: 2026-09-08-a | plan: N/A | analysis: N/A
+
 ## 2026-09-07-a: paper/iclr2027 自包含化 — figures/ 本地副本子目录 + 隔离编译验证
 
 - H博士 指示：论文用图整理复制到 iclr2027 子文件夹，确保整个文件夹拷到其他设备可编译
