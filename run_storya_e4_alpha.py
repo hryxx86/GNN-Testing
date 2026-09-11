@@ -114,21 +114,30 @@ MANIFEST_COLUMNS = ['cell_id', 'edge_config', 'fold', 'seed',
                     'status', 'start_ts', 'end_ts', 'wall_time_sec', 'err']
 
 
+_N_FOLDS_E4 = len(WALK_FORWARD_FOLDS)  # 12 after window extension
+
+
 def cell_id_e4(config_idx: int, fold_idx: int, seed_idx: int) -> int:
-    """E4 cell_id: range [0, 99]. Injective by radix (2 configs × 5 folds × 10 seeds = 100)."""
-    return config_idx * 50 + fold_idx * 10 + seed_idx
+    """E4 cell_id: range [0, 2*N_FOLDS*10-1]. Injective by radix
+    (2 configs × N_FOLDS folds × 10 seeds). The config stride MUST be N_FOLDS*10
+    (=120 for 12 folds), not the old hardcoded 50 — with 12 folds a stride of 50
+    would alias config-0/fold-5 (50) onto config-1/fold-0 (50). Existing 5-fold rows
+    were written with stride 50 and are deterministically backfilled to this formula."""
+    return config_idx * (_N_FOLDS_E4 * 10) + fold_idx * 10 + seed_idx
 
 
 def assert_cell_id_e4_injective() -> None:
+    n_folds = _N_FOLDS_E4
+    expected_n = 2 * n_folds * 10
     seen = set()
     for c in range(2):
-        for f in range(5):
+        for f in range(n_folds):
             for s in range(10):
                 cid = cell_id_e4(c, f, s)
                 assert cid not in seen, f"cell_id collision at c={c},f={f},s={s}"
                 seen.add(cid)
-    assert max(seen) == 99 and min(seen) == 0 and len(seen) == 100
-    print(f"✓ E4 cell_id formula injective, range [0, 99], n=100 cells")
+    assert max(seen) == expected_n - 1 and min(seen) == 0 and len(seen) == expected_n
+    print(f"✓ E4 cell_id formula injective, range [0, {expected_n - 1}], n={expected_n} cells")
 
 
 # ══════════════════════════════════════════════════════════════

@@ -15,13 +15,16 @@ Methodology (LOCKED per plan §1.4):
   - SPA candidates seed-AVERAGED per (model, universe, date, fold) (M=3 per universe, M=6 joint)
     per Codex Round D D-04 fix. Benchmark = LightGBM.
   - DM/HLN family = 5 pairwise tests: {GAT,SAGE-Mean,MLP} vs LightGBM + {GAT,SAGE-Mean} vs MLP
-    on seed-aggregated per-day IC series (T=313 not T=3130).
-    HLN small-sample correction at T=313, h=HORIZON=21 → factor ≈ 0.935.
+    on seed-aggregated per-day IC series (T = pooled test days, NOT T × n_seeds).
+    T ≈ 313 for the 5-fold window, ≈ 745 for the 12-fold window; HLN small-sample
+    correction (h=HORIZON=21) → factor ≈ 0.935 at T=313, closer to 1 as T grows.
     BH-FDR at q=0.05.
   - Stationary block bootstrap CI: block_size=21 (= horizon, captures intra-label autocorr),
-    n_boot=5000, two-sided 95%. IC CI uses pooled per-day IC across 10 seeds × 5 folds.
+    n_boot=5000, two-sided 95%. IC CI uses pooled per-day IC across 10 seeds × all folds
+    (fold count is data-driven from results.csv: 5-fold legacy or 12-fold window extension).
   - Cost ladder Sharpe: per-cell Sharpe_net_{c}bps already in results.csv (turnover_L1 convention,
-    annualization sqrt(252/HORIZON); plan §1.4(d) D-05). CI from 50 cell-level Sharpe values.
+    annualization sqrt(252/HORIZON); plan §1.4(d) D-05). CI from n_seeds × n_folds
+    cell-level Sharpe values (50 for 5-fold, 120 for 12-fold).
   - Multi-testing ledger: SPA M=3/3/6, DM family=5, BH-FDR q=0.05.
 
 Usage (from project root):
@@ -61,6 +64,9 @@ EXPECTED_UNIVERSES = ['B', 'C']
 BASELINE = 'LightGBM'
 SECONDARY_BASELINE = 'MLP'
 CANONICAL_SEEDS = [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026]
+# DEFAULT only; main() overrides this module global at runtime from the actual fold
+# count in results.csv (5-fold legacy → 12-fold window extension). The loaders below read
+# this global at CALL time (after main() has set it), so detection-before-aggregate works.
 N_FOLDS = 5
 
 HORIZON = 21
@@ -169,8 +175,9 @@ def seed_aggregate_pooled(per_day_ic_dict: dict) -> np.ndarray:
 def pool_per_day_ic_full(per_day_ic_dict: dict) -> np.ndarray:
     """For bootstrap CI: flatten ALL (seed, fold, day) per-day IC into one long series.
 
-    Length ≈ N_SEEDS × T_pooled (T_pooled ≈ 313). Block bootstrap on this captures both
-    seed AND day-to-day variation as the noise sources for the headline CI.
+    Length ≈ N_SEEDS × T_pooled, where T_pooled = total test days across all folds
+    (~313 for the 5-fold window, ~745 for the 12-fold window). Block bootstrap on this
+    captures both seed AND day-to-day variation as the noise sources for the headline CI.
     """
     out = []
     for fold in range(N_FOLDS):
@@ -219,15 +226,16 @@ def nw_hac_variance(x: np.ndarray, L: int) -> float:
     return max(var, 0.0)  # truncate at zero (occasional negative under small T)
 
 
-def dm_test(d: np.ndarray) -> tuple[float, float, int]:
+def dm_test(d: np.ndarray, lag: Optional[int] = None) -> tuple[float, float, int]:
     """Standard Diebold-Mariano test on loss-difference series d_t.
 
     Returns (DM_stat, p_two_sided_normal, T). p uses N(0,1) — to be REPLACED by HLN-t below.
+    `lag` overrides the Newey-West auto lag (used for the R9-A-09 HAC lag=21 sensitivity).
     """
     T = len(d)
     if T < 5:
         return np.nan, np.nan, T
-    L = nw_lag(T)
+    L = nw_lag(T) if lag is None else min(int(lag), T - 1)
     nw_var = nw_hac_variance(d, L)
     if nw_var <= 0:
         return np.nan, np.nan, T
@@ -236,13 +244,14 @@ def dm_test(d: np.ndarray) -> tuple[float, float, int]:
     return float(dm_stat), float(p), T
 
 
-def hln_test(d: np.ndarray, h: int = HORIZON) -> tuple[float, float, int]:
+def hln_test(d: np.ndarray, h: int = HORIZON, lag: Optional[int] = None) -> tuple[float, float, int]:
     """Harvey-Leybourne-Newbold small-sample-corrected DM.
 
     HLN_stat = DM × sqrt((T + 1 - 2h + h(h-1)/T) / T)
-    p-value from t_{T-1} distribution (two-sided).
+    p-value from t_{T-1} distribution (two-sided). `lag` is forwarded to dm_test for the
+    R9-A-09 HAC lag sensitivity (default None → Newey-West auto lag).
     """
-    dm_stat, _, T = dm_test(d)
+    dm_stat, _, T = dm_test(d, lag=lag)
     if np.isnan(dm_stat) or T < 5:
         return np.nan, np.nan, T
     factor = np.sqrt(max((T + 1 - 2 * h + h * (h - 1) / T) / T, 1e-12))
@@ -382,6 +391,7 @@ def run_spa_per_universe(agg: dict, out_dir: str) -> pd.DataFrame:
         res = run_spa(bench_losses, cand_losses)
         rows.append({
             'universe': universe,
+            'role': 'primary',
             'benchmark': BASELINE,
             'candidates': '|'.join(candidates),
             'M': res['M'],
@@ -427,6 +437,7 @@ def run_spa_per_universe(agg: dict, out_dir: str) -> pd.DataFrame:
         res = run_spa(bench_pool, cand_trimmed)
         rows.append({
             'universe': 'JOINT(B+C)',
+            'role': 'supplementary',  # R9-A-03: pooled-benchmark construction is not a clean matched test
             'benchmark': f'{BASELINE}_pooled',
             'candidates': '|'.join(cand_labels),
             'M': res['M'],
@@ -457,6 +468,10 @@ def run_dm_hln_pairwise(agg: dict, out_dir: str) -> pd.DataFrame:
             d = (-ic_a[:n]) - (-ic_b[:n])  # loss_A - loss_B = -(IC_A - IC_B)
             dm_stat, dm_p, T = dm_test(d)
             hln_stat, hln_p, _ = hln_test(d)
+            # R9-A-09 sensitivity: HLN p with HAC lag fixed at the forecast horizon (21),
+            # not the Newey-West auto lag (≈6 at T=749). Reviewer-standard robustness for
+            # overlapping multi-period forecasts.
+            _, hln_p_lag21, _ = hln_test(d, lag=HORIZON)
             rows.append({
                 'universe': universe,
                 'model_A': a,
@@ -468,6 +483,7 @@ def run_dm_hln_pairwise(agg: dict, out_dir: str) -> pd.DataFrame:
                 'DM_p_normal': dm_p,
                 'HLN_stat': hln_stat,
                 'HLN_p_t': hln_p,
+                'HLN_p_t_lag21': hln_p_lag21,
             })
     df = pd.DataFrame(rows)
     if len(df):
@@ -619,12 +635,37 @@ def write_summary(out_dir: str, spa_df: pd.DataFrame, dm_df: pd.DataFrame,
                   ci_df: pd.DataFrame, cost_df: pd.DataFrame) -> None:
     lines = ["# E6 Story A statistical summary\n", f"_generated {time.strftime('%Y-%m-%d %H:%M:%S')}_\n"]
     lines.append("## Hansen SPA (multi-comparison cherry-pick defense)\n")
+    lines.append("_Per-universe rows are PRIMARY; JOINT(B+C) is SUPPLEMENTARY (R9-A-03: pooled-benchmark "
+                 "construction is not a clean matched test)._\n")
     if len(spa_df):
-        lines.append(spa_df[['universe', 'M', 'T', 'p_consistent', 'reject_h0_at_5pct']].to_markdown(index=False))
-    lines.append("\n## DM/HLN pairwise (paired ΔIC, seed-aggregated T=313)\n")
+        spa_cols = ['universe', 'role', 'M', 'T', 'p_consistent', 'reject_h0_at_5pct'] \
+            if 'role' in spa_df.columns else ['universe', 'M', 'T', 'p_consistent', 'reject_h0_at_5pct']
+        lines.append(spa_df[spa_cols].to_markdown(index=False))
+    lines.append("\n## DM/HLN pairwise (paired ΔIC, seed-averaged per (date, fold), pooled across all folds; T per row)\n")
+    lines.append("_`HLN_p_t_lag21` = HAC lag fixed at horizon=21 (R9-A-09 robustness vs the Newey-West auto lag)._\n")
     if len(dm_df):
-        lines.append(dm_df[['universe', 'model_A', 'model_B', 'mean_delta_IC', 'HLN_p_t', 'BH_FDR_reject']].to_markdown(index=False))
-    lines.append("\n## IC + Sharpe with block-bootstrap CI\n")
+        dm_cols = ['universe', 'model_A', 'model_B', 'mean_delta_IC', 'HLN_p_t']
+        if 'HLN_p_t_lag21' in dm_df.columns:
+            dm_cols.append('HLN_p_t_lag21')
+        dm_cols.append('BH_FDR_reject')
+        lines.append(dm_df[dm_cols].to_markdown(index=False))
+
+    # HEADLINE seed-averaged IC CIs (R9-A-04). The seed-stacked CI below is DIAGNOSTIC only.
+    havg = os.path.join(out_dir, 'headline_ic_ci_seedavg.csv')
+    if os.path.exists(havg):
+        lines.append("\n## HEADLINE IC CI — seed-AVERAGED (T≈749, matches SPA/DM estimand) [R9-A-04]\n")
+        lines.append(pd.read_csv(havg).to_markdown(index=False))
+    ppath = os.path.join(out_dir, 'pairwise_power_mde.csv')
+    if os.path.exists(ppath):
+        lines.append("\n## Power / MDE per pairwise comparison (paired ΔIC; `is_edge_test`=GAT/SAGE vs non-graph MLP) [R9-A-05/02]\n")
+        lines.append("_`power_at_delta_0.01` = two-sided α=0.05 power to detect a true +0.01 IC edge; "
+                     "`MDE_80pct_power` = smallest IC effect detectable at 80% power. Non-rejection with low "
+                     "power = UNRESOLVED, not 'no effect'._\n")
+        lines.append(pd.read_csv(ppath).to_markdown(index=False))
+
+    lines.append("\n## IC block-bootstrap CI — seed-STACKED (N≈7490) — DIAGNOSTIC ONLY (anti-conservative, R9-A-04)\n")
+    lines.append("_Treats 10 non-independent seeds as independent days → understates width ~3x. "
+                 "Use the seed-averaged headline CI above for inference._\n")
     if len(ci_df):
         lines.append(ci_df.to_markdown(index=False))
     lines.append("\n## Cost ladder (Net Sharpe per cost level)\n")
@@ -635,6 +676,86 @@ def write_summary(out_dir: str, spa_df: pd.DataFrame, dm_df: pd.DataFrame,
         lines.append(pivot.to_markdown())
     with open(os.path.join(out_dir, 'summary.md'), 'w') as f:
         f.write('\n'.join(lines))
+
+
+# ══════════════════════════════════════════════════════════════
+# HEADLINE seed-averaged CI + paired-difference CI + power/MDE (Codex T3 R9-A-04/05)
+# ══════════════════════════════════════════════════════════════
+
+# z_{0.975} and z_{0.80} for two-sided α=0.05 power / MDE
+_Z_975 = float(stats.norm.ppf(0.975))   # 1.95996
+_Z_80 = float(stats.norm.ppf(0.80))     # 0.84162
+DELTA_REF = 0.01  # the candidate IC edge we ask "could we have detected it?"
+
+
+def two_sided_power(delta: float, se: float, z: float = _Z_975) -> float:
+    """Two-sided power at α=0.05 to detect a true mean effect `delta` given standard error `se`."""
+    if se <= 0:
+        return float('nan')
+    ncp = delta / se
+    return float(stats.norm.cdf(ncp - z) + stats.norm.cdf(-ncp - z))
+
+
+def run_headline_seedavg_ci_and_power(agg: dict, out_dir: str) -> None:
+    """Codex T3 R9-A-04/05 fixes.
+
+    (1) Marginal IC CIs on the SEED-AVERAGED daily series (T≈749) — the same estimand as SPA/DM,
+        NOT the anti-conservative seed-stacked N≈7490 pooled series (which treats 10 non-independent
+        seeds as independent days and understates CI width ~3x).
+    (2) Paired-difference CIs on daily ΔIC for the 5-test family per universe, flagging the
+        edge-specific contrasts (GAT/SAGE vs the non-graph MLP) per R9-A-02.
+    (3) Power at the candidate +0.01 effect and the minimum detectable effect (MDE) at 80% power,
+        per pairwise comparison, so non-rejection is reported as 'underpowered / unresolved' rather
+        than 'no effect'.
+    """
+    # (1) Marginal seed-averaged IC CIs
+    ci_rows = []
+    for universe in EXPECTED_UNIVERSES:
+        for model in EXPECTED_MODELS:
+            s = agg[(universe, model)]['seed_avg_pooled']
+            if len(s) < 2:
+                continue
+            mean, lo, hi = stationary_bootstrap_ci(s, lambda a: float(np.mean(a)))
+            ci_rows.append({
+                'universe': universe, 'model': model, 'T': int(len(s)),
+                'IC_mean': round(mean, 4), 'IC_ci_lo': round(lo, 4), 'IC_ci_hi': round(hi, 4),
+                'ci_excludes_0': bool(lo > 0 or hi < 0),
+            })
+    pd.DataFrame(ci_rows).to_csv(os.path.join(out_dir, 'headline_ic_ci_seedavg.csv'), index=False)
+
+    # (2)+(3) Paired-difference CIs + power/MDE for the 5-test family per universe
+    pw_rows = []
+    for universe in EXPECTED_UNIVERSES:
+        pairs = [(m, BASELINE) for m in EXPECTED_MODELS if m != BASELINE] + \
+                [(m, SECONDARY_BASELINE) for m in ['GAT', 'SAGE-Mean']]
+        for a, b in pairs:
+            ic_a = agg[(universe, a)]['seed_avg_pooled']
+            ic_b = agg[(universe, b)]['seed_avg_pooled']
+            n = min(len(ic_a), len(ic_b))
+            if n < 5:
+                continue
+            d = ic_a[:n] - ic_b[:n]  # paired daily ΔIC (A − B)
+            mean_d = float(d.mean())
+            _, lo, hi = stationary_bootstrap_ci(d, lambda x: float(np.mean(x)))
+            se = float(np.sqrt(nw_hac_variance(d, nw_lag(n)) / n))            # NW-HAC SE, auto lag
+            se_lag21 = float(np.sqrt(nw_hac_variance(d, min(HORIZON, n - 1)) / n))  # HAC lag=21 (R9-B-02)
+            pw_rows.append({
+                'universe': universe, 'pair': f'{a}-{b}',
+                'is_edge_test': bool(b == SECONDARY_BASELINE),  # GAT/SAGE vs non-graph MLP
+                'T': int(n), 'mean_delta_IC': round(mean_d, 4),
+                'delta_ci_lo': round(lo, 4), 'delta_ci_hi': round(hi, 4),
+                'ci_excludes_0': bool(lo > 0 or hi < 0),
+                'SE': round(se, 4),
+                f'power_at_delta_{DELTA_REF}': round(two_sided_power(DELTA_REF, se), 3),
+                'MDE_80pct_power': round((_Z_975 + _Z_80) * se, 4),
+                # R9-B-02: same metrics under the more conservative HAC lag=21 (consistency with R9-A-09)
+                'SE_lag21': round(se_lag21, 4),
+                f'power_at_delta_{DELTA_REF}_lag21': round(two_sided_power(DELTA_REF, se_lag21), 3),
+                'MDE_80pct_power_lag21': round((_Z_975 + _Z_80) * se_lag21, 4),
+            })
+    pd.DataFrame(pw_rows).to_csv(os.path.join(out_dir, 'pairwise_power_mde.csv'), index=False)
+    print("  [headline] wrote headline_ic_ci_seedavg.csv (seed-averaged T≈749 IC CIs) "
+          "+ pairwise_power_mde.csv (paired ΔIC CI + power@0.01 + MDE@80%)")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -657,6 +778,16 @@ def main() -> int:
     print(f"[E6]   {len(results_df)} cells; converged={int(results_df['converged_flag'].sum())}; "
           f"universes={sorted(results_df['universe'].unique())}; "
           f"models={sorted(results_df['model'].unique())}")
+
+    # Data-driven fold count (5-fold legacy → 12-fold window extension). Detected from the
+    # anchor results BEFORE any E3/E4 merge, since per_day_ic aggregation reads the anchor dir.
+    e1_n_cells = len(results_df)
+    global N_FOLDS
+    _folds_present = sorted(int(f) for f in results_df['fold'].unique())
+    N_FOLDS = max(_folds_present) + 1
+    assert _folds_present == list(range(N_FOLDS)), (
+        f"compute_e6 expects contiguous fold ids 0..N-1; got {_folds_present}")
+    print(f"[E6]   detected N_FOLDS={N_FOLDS} from results (folds {_folds_present})")
 
     e3_n = 0
     e4_n = 0
@@ -684,11 +815,14 @@ def main() -> int:
         print(dm_df[['universe', 'model_A', 'model_B', 'mean_delta_IC',
                      'HLN_p_t', 'BH_FDR_reject']].to_string(index=False))
 
-    print(f"\n[E6] running block-bootstrap CI ...")
+    print(f"\n[E6] running block-bootstrap CI (seed-stacked; diagnostic only per R9-A-04) ...")
     ci_df = run_bootstrap_ci(agg, results_df, args.output_dir)
     if len(ci_df):
         print(ci_df[['universe', 'model', 'n_per_day_obs', 'IC_mean',
                      'IC_mean_ci_lo', 'IC_mean_ci_hi']].to_string(index=False))
+
+    print(f"\n[E6] running HEADLINE seed-averaged CI + paired-difference CI + power/MDE (R9-A-04/05) ...")
+    run_headline_seedavg_ci_and_power(agg, args.output_dir)
 
     print(f"\n[E6] running cost-ladder Net Sharpe aggregation ...")
     cost_df = run_cost_ladder(results_df, args.output_dir)
@@ -698,7 +832,7 @@ def main() -> int:
         print(pivot.round(3))
 
     print(f"\n[E6] writing multi-testing ledger ...")
-    write_multiple_testing_ledger(args.output_dir, e1_n_cells=400, e3_n_cells=e3_n, e4_n_cells=e4_n)
+    write_multiple_testing_ledger(args.output_dir, e1_n_cells=e1_n_cells, e3_n_cells=e3_n, e4_n_cells=e4_n)
 
     print(f"\n[E6] writing summary.md ...")
     write_summary(args.output_dir, spa_df, dm_df, ci_df, cost_df)

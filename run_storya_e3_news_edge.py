@@ -117,19 +117,23 @@ MANIFEST_COLUMNS = ['cell_id', 'fold', 'seed', 'status', 'start_ts', 'end_ts', '
 
 
 def cell_id_e3(fold_idx: int, seed_idx: int) -> int:
-    """E3 cell_id: range [0, 49]. Injective by radix construction."""
+    """E3 cell_id: range [0, N_FOLDS*10-1]. Injective by radix construction.
+    fold*10+seed stays injective for the 12-fold window extension (max 11*10+9=119)
+    and is back-compatible with the old 5-fold ids (folds 0-4 → 0-49, no collision)."""
     return fold_idx * 10 + seed_idx
 
 
 def assert_cell_id_e3_injective() -> None:
+    n_folds = len(WALK_FORWARD_FOLDS)
+    expected_n = n_folds * 10
     seen = set()
-    for f in range(5):
+    for f in range(n_folds):
         for s in range(10):
             cid = cell_id_e3(f, s)
             assert cid not in seen, f"cell_id collision at f={f}, s={s}"
             seen.add(cid)
-    assert max(seen) == 49 and min(seen) == 0 and len(seen) == 50
-    print(f"✓ E3 cell_id formula injective, range [0, 49], n=50 cells")
+    assert max(seen) == expected_n - 1 and min(seen) == 0 and len(seen) == expected_n
+    print(f"✓ E3 cell_id formula injective, range [0, {expected_n - 1}], n={expected_n} cells")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -464,7 +468,9 @@ def write_meta_json() -> None:
         'news_lookback_calendar_days': NEWS_LOOKBACK_CALENDAR_DAYS,
         'pit_cutoff_spec': 'NYSE session_close(t-1) in UTC, DST-aware (pandas_market_calendars)',
         'pit_schema_ref': 'experiments/storya_e3_news_edge/news_edge_source_schema.md (v2, Codex D-03 fix)',
-        'baseline_cells_reused_from': 'experiments/storya_e1_anchor/results.csv (Universe B, SAGE-Mean — 50 cells)',
+        'baseline_cells_reused_from': (
+            f'experiments/storya_e1_anchor/results.csv (Universe B, SAGE-Mean — '
+            f'{len(WALK_FORWARD_FOLDS) * len(CANONICAL_SEEDS)} cells)'),
         'cost_ladder': {
             'levels_bps': list(COST_LEVELS_BPS),
             'convention': COST_CONVENTION,
