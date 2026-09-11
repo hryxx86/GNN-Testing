@@ -108,24 +108,33 @@ def run_pool(studies, concurrency: int, python_exe: str, n_trials, top_k):
     return results
 
 
-def merge(allow_partial: bool = False):
-    """Collect per-study {univ}_{arm}.json into frozen_hparams.json (winner per arm×universe).
+def merge(allow_partial: bool = False, universes=('B', 'C'), arms=None, out_name: str = None):
+    """Collect per-study {univ}_{arm}.json into a frozen HP file (winner per arm×universe).
 
-    CODEX-A-01 (fail closed): unless all 20 studies are present (or --allow-partial), do NOT write
-    frozen_hparams.json and exit nonzero — downstream must never silently consume a partial main-table
-    HP set (e.g. an L7 crash → 18/20). --allow-partial emits frozen_hparams.PARTIAL.json (complete:false).
-    CODEX-A-02: smoke artifacts (_smoke_*.json or smoke==True) are excluded."""
+    CODEX-A-01 (fail closed): unless all expected studies are present (or --allow-partial), do NOT write
+    the frozen file and exit nonzero — downstream must never silently consume a partial main-table
+    HP set (e.g. an L7 crash → 18/20). --allow-partial emits <stem>.PARTIAL.json (complete:false).
+    CODEX-A-02: smoke artifacts (_smoke_*.json or smoke==True) are excluded.
+    Default = the confirmatory set (B,C × 10 arms = 20 → frozen_hparams.json), unchanged.
+    2026-09-10: `universes` / `arms` / `out_name` let a sensitivity subset merge on its own
+    (C5 × {L0,L1} → frozen_hparams_c5.json, expected=2). JSONs outside the requested universes×arms
+    are ignored, so the confirmatory merge stays 20/20 even with C5_*.json present in OUT_DIR."""
+    universes = list(universes)
+    arms = list(arms) if arms else (MAC_ARMS + T4_ARMS)
+    expected = len(universes) * len(arms)
     rows = {}
-    skipped_smoke = []
+    skipped_smoke, skipped_other = [], []
     for fp in sorted(glob.glob(f'{OUT_DIR}/*_*.json')):
         base = os.path.basename(fp)
-        if base in ('frozen_hparams.json', 'frozen_hparams.PARTIAL.json'):
+        if base.startswith('frozen_hparams'):
             continue
         if base.startswith('_smoke'):
             skipped_smoke.append(base); continue
         r = json.load(open(fp))
         if r.get('smoke'):                       # belt-and-suspenders vs a mislabeled smoke file
             skipped_smoke.append(base); continue
+        if r['universe'] not in universes or r['arm'] not in arms:
+            skipped_other.append(base); continue
         key = f"{r['universe']}_{r['arm']}"
         rows[key] = {
             'universe': r['universe'], 'arm': r['arm'], 'model': r['model'],
@@ -135,24 +144,31 @@ def merge(allow_partial: bool = False):
         }
     if skipped_smoke:
         print(f'[merge] skipped {len(skipped_smoke)} smoke JSON(s): {skipped_smoke}')
+    if skipped_other:
+        print(f'[merge] ignored {len(skipped_other)} JSON(s) outside {universes}×{arms}: {skipped_other}')
     n = len(rows)
-    missing = [f'{u}_{a}' for u in ['B', 'C']
-               for a in (MAC_ARMS + T4_ARMS) if f'{u}_{a}' not in rows]
-    if n != 20 and not allow_partial:
-        print(f'[merge] ERROR incomplete: {n}/20 studies present; missing {missing}. '
-              f'NOT writing frozen_hparams.json — re-run the missing studies, or pass --allow-partial '
+    missing = [f'{u}_{a}' for u in universes for a in arms if f'{u}_{a}' not in rows]
+    stem = out_name or 'frozen_hparams.json'
+    assert stem.endswith('.json') and '/' not in stem, f'--merge-out must be a bare .json name, got {stem}'
+    if n != expected and not allow_partial:
+        print(f'[merge] ERROR incomplete: {n}/{expected} studies present; missing {missing}. '
+              f'NOT writing {stem} — re-run the missing studies, or pass --allow-partial '
               f'to emit a clearly-marked partial artifact.')
         sys.exit(1)
+    default_scope = (universes == ['B', 'C'] and arms == MAC_ARMS + T4_ARMS and out_name is None)
     frozen = {
         'source': 'run_storya_v21_tune.py per-study outputs',
         'search_space_ref': 'docs/protocol_v2_freeze.md v2.2 §4',
-        'n_studies': n, 'expected': 20, 'complete': n == 20, 'missing': missing,
+        # CODEX-TP2-A-01 (2026-09-10): the default confirmatory merge must serialize BYTE-IDENTICALLY to the
+        # historical frozen_hparams.json (md5 59ddd0a2… is gated by main12); scope keys only for subset merges.
+        **({} if default_scope else {'universes': universes, 'arms': arms}),
+        'n_studies': n, 'expected': expected, 'complete': n == expected, 'missing': missing,
         'studies': rows,
     }
-    out = f'{OUT_DIR}/frozen_hparams.json' if n == 20 else f'{OUT_DIR}/frozen_hparams.PARTIAL.json'
+    out = f'{OUT_DIR}/{stem}' if n == expected else f'{OUT_DIR}/{stem[:-5]}.PARTIAL.json'
     with open(out, 'w') as f:
         json.dump(frozen, f, indent=2)
-    print(f'[merge] {n}/20 studies → {out}' + ('' if n == 20 else f'  (PARTIAL; missing {missing})'))
+    print(f'[merge] {n}/{expected} studies → {out}' + ('' if n == expected else f'  (PARTIAL; missing {missing})'))
 
 
 def main():
@@ -165,12 +181,21 @@ def main():
     ap.add_argument('--top-k', type=int, default=5)
     ap.add_argument('--merge', action='store_true')
     ap.add_argument('--allow-partial', action='store_true',
-                    help='merge: emit frozen_hparams.PARTIAL.json instead of failing closed on <20 studies')
+                    help='merge: emit <stem>.PARTIAL.json instead of failing closed on missing studies')
+    ap.add_argument('--merge-universes', default='B,C',
+                    help='merge: comma list of universes (default B,C = confirmatory 20-study set)')
+    ap.add_argument('--merge-arms', default=None,
+                    help='merge: comma list of arms (default all 10); e.g. L0,L1 for the C5 sensitivity')
+    ap.add_argument('--merge-out', default=None,
+                    help='merge: bare output file name inside OUT_DIR (default frozen_hparams.json)')
     args = ap.parse_args()
 
     os.makedirs(OUT_DIR, exist_ok=True)
     if args.merge:
-        merge(allow_partial=args.allow_partial)
+        merge(allow_partial=args.allow_partial,
+              universes=[u for u in args.merge_universes.split(',') if u],
+              arms=[a for a in args.merge_arms.split(',') if a] if args.merge_arms else None,
+              out_name=args.merge_out)
         return
     if args.studies:
         studies = parse_studies(args.studies)

@@ -75,6 +75,10 @@ warnings.filterwarnings('ignore')
 CANONICAL_SEEDS = [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026]
 ALL_MODELS = ['GAT', 'SAGE-Mean', 'MLP', 'LightGBM']
 ALL_UNIVERSES = ['B', 'C']
+# Post-hoc sensitivity universes (2026-09-10 C5 leak-free re-selection check). Deliberately NOT in
+# ALL_UNIVERSES: `--universe both`, the confirmatory meta and every default stay strictly B,C;
+# C5 must be requested explicitly (docs/c5_rerun_brief_2026-09-10.md §9.2).
+SENSITIVITY_UNIVERSES = ['C5']
 HORIZON = 21  # locked per CLAUDE.md Rule 8
 
 # Walk-forward folds (port from archived/scripts/run_horizon_ablation.py:72-83)
@@ -174,6 +178,21 @@ UNIVERSE_C_ALPHA158_NAMES = [
 ]
 # +3 hc_ features (mom12m from phase5; ret_std_5d / ret_std_10d computed)
 UNIVERSE_C_EXTRA_NAMES = ['hc_mom12m', 'hc_ret_std_5d', 'hc_ret_std_10d']
+
+# ── Universe C5 (post-hoc sensitivity, 2026-09-10) ──
+# The 5 Plan-AAA top-15 factor groups that SURVIVE the T-1 re-rank
+# (artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv, proxy_rank_t1 <= 15:
+# ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60). Members are verbatim from
+# artifacts/plan_aaa/ranking.csv `group_members`. 20 columns, all inside UNIVERSE_C_ALPHA158_NAMES;
+# the 3 hc_ columns are NOT included (paper §Limitations L1 wording = "five surviving factor groups").
+UNIVERSE_C5_GROUPS = {
+    'ROC30+5':  ['ROC30', 'MA60', 'MAX60', 'MIN60', 'QTLU60', 'QTLD60'],
+    'KMID+6':   ['KMID', 'KMID2', 'KSFT', 'KSFT2', 'OPEN0', 'HIGH0', 'VWAP0'],
+    'KUP+1':    ['KUP', 'KUP2'],
+    'CNTP20+3': ['CNTP20', 'CNTD20', 'CNTP30', 'CNTD30'],
+    'CORR60':   ['CORR60'],
+}
+UNIVERSE_C5_NAMES = [n for members in UNIVERSE_C5_GROUPS.values() for n in members]
 
 
 # ══════════════════════════════════════════════════════════════
@@ -416,6 +435,32 @@ def build_universe_C(prices: pd.DataFrame, returns: pd.DataFrame):
     features = np.nan_to_num(features, 0.0)
     names = list(UNIVERSE_C_ALPHA158_NAMES) + list(UNIVERSE_C_EXTRA_NAMES)
     assert features.shape[2] == 51, f"Universe C expected 51 features, got {features.shape[2]}"
+    return features, names
+
+
+def build_universe_C5(prices: pd.DataFrame, returns: pd.DataFrame):
+    """Universe C5 (post-hoc sensitivity): the 20-column leak-free re-selection subset of Universe C.
+
+    Built by calling build_universe_C and selecting columns BY NAME — nothing is recomputed, so every
+    C5 column is numerically identical to the same-named Universe C column (same T-1 shift, same
+    nan_to_num). Column order follows UNIVERSE_C5_GROUPS (group by group). Per-fold train-only
+    winsorize/standardize happen downstream exactly as for B and C."""
+    features_c, names_c = build_universe_C(prices, returns)
+    name_to_idx = {n: i for i, n in enumerate(names_c)}
+    assert len(UNIVERSE_C5_NAMES) == len(set(UNIVERSE_C5_NAMES)) == 20, \
+        f"Universe C5 expected 20 unique names, got {len(UNIVERSE_C5_NAMES)}"
+    for n in UNIVERSE_C5_NAMES:
+        assert n in UNIVERSE_C_ALPHA158_NAMES, f"Universe C5 feature {n} is not a Universe C alpha158 column"
+        assert n not in UNIVERSE_C_EXTRA_NAMES, f"Universe C5 must not include hc_ column {n}"
+    cols = [name_to_idx[n] for n in UNIVERSE_C5_NAMES]
+    features = np.ascontiguousarray(features_c[:, :, cols], dtype=np.float32)
+    # contract: C5 column j == Universe C column named UNIVERSE_C5_NAMES[j], elementwise (pure selection)
+    for j, n in enumerate(UNIVERSE_C5_NAMES):
+        assert np.array_equal(features[:, :, j], features_c[:, :, name_to_idx[n]]), \
+            f"Universe C5 column {n} differs from Universe C"
+    assert np.all(features[0] == 0.0), "Universe C5 T-1 contract broken: row 0 not zeroed"
+    assert features.shape[2] == 20, f"Universe C5 expected 20 features, got {features.shape[2]}"
+    names = list(UNIVERSE_C5_NAMES)
     return features, names
 
 

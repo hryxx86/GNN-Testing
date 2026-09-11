@@ -9,8 +9,16 @@
 ### Tri-Doc
 - `analysis.md` — 分析发现总表（Quad-Doc Rule 5 强制更新）
 
+### C5 sensitivity（2026-09-10）
+- `c5_rerun_brief_2026-09-10.md` — H博士 C5 任务简报（§0–§8 原文）+ 实施注记 §9（偏离清单、TP1 处置 §9.9、C-pre 提案 §9.10）（→ progress: 2026-09-10-a/-b）
+
 ### 文献对照
 - `lit_benchmark_2026-07-03.md` — 15 篇顶会/顶刊文献对照评估（逐篇总结 + 法证对照矩阵 + 我方论文评估；→ progress: 2026-07-03-d）
+- `lit_scan_2026-07-26.md` — 近半年（2026-01→07）金融 ML 六切面扫描（~70 篇 + 空白 G1–G9 + idea 候选 A–N；→ progress: 2026-07-26-a）
+
+### 下一篇论文 Ideation 工作流（2026-07-26 起）
+- `next_paper_ideation_index.md` — **工作流唯一入口/文件索引（专门管理，新 session 从这里进）**
+- `idea_expansions_2026-07-28.md` — A/J/K/M 四候选完整设计稿 + Codex Round A 修正 §Rev-1..11（→ progress: 2026-07-28-a/-b）
 
 ### 项目概览
 - `project_findings_overview_2026-04-20.md` — 最新项目总结
@@ -51,3 +59,4 @@
 
 - **2026-04-20**: 新增 README；补充 fold4_leakage_diagnostic、project_findings_overview（→ progress: 2026-04-20-d）
 - **2026-04-21**: 新增 `advisor_presentation_2026-04-21.md` + `_en.md`（导师汇报中英双版；图见 `plots/advisor/`）（→ progress: 2026-04-21-a）
+- **2026-07-28**: 新增下一篇论文 ideation 工作流三件套：`next_paper_ideation_index.md`（专门管理索引）+ `lit_scan_2026-07-26.md` + `idea_expansions_2026-07-28.md`；评审存档在 `artifacts/reviews/2026-07-28_codex_plan_A.md`（→ progress: 2026-07-28-c）

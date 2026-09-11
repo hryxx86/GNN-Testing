@@ -53,7 +53,8 @@ from compute_e6_dm_spa import (
 )
 
 # ── CONFIG (LOCKED per protocol §6) ──
-UNIVERSES = ['B', 'C']
+UNIVERSES = ['B', 'C']   # default; overridable ONLY via --universes (2026-09-10 C5 post-hoc sensitivity)
+ALL_ARMS_DEFAULT = ['L0', 'L1', 'L2', 'L2s', 'L3', 'L4', 'L5', 'L5s', 'L6', 'L7']
 CANONICAL_SEEDS = [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026]
 N_FOLDS = 12
 HORIZON = 21
@@ -208,7 +209,7 @@ def l7_contingency(l7_results_csv: str) -> dict:
 # DM-HLN pairwise (20-test pre-registered family) + BH-FDR
 # ══════════════════════════════════════════════════════════════
 
-def run_pairwise(agg: dict, pairs: list, out_dir: str) -> pd.DataFrame:
+def run_pairwise(agg: dict, pairs: list, out_dir: str, apply_bh: bool = True) -> pd.DataFrame:
     """HLN test on seed-averaged daily ΔIC for each (universe, pair). BH-FDR over the FULL family.
 
     NOTE (flag for Touchpoint 2): protocol §6 phrases the family as "10 pairs × 2 universes = 20
@@ -235,7 +236,7 @@ def run_pairwise(agg: dict, pairs: list, out_dir: str) -> pd.DataFrame:
                 'HLN_stat': hln_stat, 'HLN_p_t': hln_p, 'HLN_p_t_lag21': hln_p_lag21,
             })
     df = pd.DataFrame(rows)
-    if len(df):
+    if len(df) and apply_bh:
         # Headline: BH-FDR over the FULL family (all rows present)
         df['BH_FDR_reject_family'] = bh_fdr(df['HLN_p_t'].tolist(), q=BH_FDR_Q)
         # Context: BH-FDR within each universe
@@ -244,6 +245,12 @@ def run_pairwise(agg: dict, pairs: list, out_dir: str) -> pd.DataFrame:
             sub = df[df['universe'] == u]
             df.loc[sub.index, 'BH_FDR_reject_per_univ'] = bh_fdr(sub['HLN_p_t'].tolist(), q=BH_FDR_Q)
         df['bh_fdr_q'] = BH_FDR_Q
+    elif len(df):
+        # POST-HOC SENSITIVITY (2026-09-10 C5): no BH family is opened — raw HLN p only.
+        df['BH_FDR_reject_family'] = None
+        df['BH_FDR_reject_per_univ'] = None
+        df['bh_fdr_q'] = np.nan
+        df['bh_applied'] = False
     df.to_csv(os.path.join(out_dir, 'family1_dm_hln.csv'), index=False)
     return df
 
@@ -379,19 +386,25 @@ def run_ci_and_mde(agg: dict, arms: list, pairs: list, out_dir: str) -> tuple:
 # Stability finding (degeneracy rate) + C/L5s robustness (3 treatments)
 # ══════════════════════════════════════════════════════════════
 
-def degeneracy_report(arms: list, main_dir: str, l7_dir: str, out_dir: str) -> pd.DataFrame:
+def degeneracy_report(arms: list, main_dir: str, l7_dir: str, out_dir: str,
+                      ref_arms: list | None = None) -> pd.DataFrame:
     """Per (universe, arm): count fully-degenerate (len-0) + partial-collapse cells. STABILITY
     FINDING — a constant-prediction collapse is the tuned config losing all ranking ability, not a
-    fill-method footnote. Scans the per-day .npy directly (the ground truth for 'IC undefined')."""
+    fill-method footnote. Scans the per-day .npy directly (the ground truth for 'IC undefined').
+    `ref_arms`: arms whose max per-(universe, fold) length defines the full day count (default ['L2'],
+    the confirmatory healthy reference; sensitivity mode passes the arms actually present —
+    CODEX-TP2-A-02, otherwise an absent L2 makes every cell look 'normal')."""
     rows = []
+    ref_arms = list(ref_arms) if ref_arms else ['L2']
     full_len = {}  # per (universe, fold) reference day count from a healthy arm (L2)
     for u in UNIVERSES:
         for f in range(N_FOLDS):
             ls = []
-            for s in CANONICAL_SEEDS:
-                p = _npy_path(os.path.join(main_dir, 'per_day_ic'), u, 'L2', s, f)
-                if os.path.exists(p):
-                    ls.append(len(np.load(p)))
+            for ra in ref_arms:
+                for s in CANONICAL_SEEDS:
+                    p = _npy_path(arm_per_day_dir(ra, main_dir, l7_dir), u, ra, s, f)
+                    if os.path.exists(p):
+                        ls.append(len(np.load(p)))
             full_len[(u, f)] = max(ls) if ls else 0
     for u in UNIVERSES:
         for arm in arms:
@@ -500,7 +513,33 @@ def cl5s_robustness(agg: dict, main_dir: str, spa_candidates: list, out_dir: str
 # Ledger + summary
 # ══════════════════════════════════════════════════════════════
 
-def write_ledger(out_dir: str, l7: dict, spa_M: int) -> None:
+def write_ledger(out_dir: str, l7: dict, spa_M: int, sensitivity: bool = False,
+                 pairs_run: list | None = None, arms_run: list | None = None) -> None:
+    if sensitivity:
+        # CODEX-TP2-A-05: record what was ACTUALLY executed (restricted pairs, no BH, no SPA, no L7 gate)
+        pairs_run = list(pairs_run or [])
+        ledger = {
+            'family': 'Family-1 machinery re-used for a POST-HOC SENSITIVITY run',
+            'role': ('POST-HOC SENSITIVITY (NOT confirmatory; no BH family opened; raw HLN p only; '
+                     'docs/c5_rerun_brief_2026-09-10.md)'),
+            'sensitivity_scope': {'universes': list(UNIVERSES), 'arms': list(arms_run or []),
+                                  'pairs_tested': [f'{a}-{b}' for a, b in pairs_run],
+                                  'n_tests_total': len(pairs_run) * len(UNIVERSES),
+                                  'note': 'pre-registered LADDER_PAIRS/EDGE_PAIRS restricted to arms present; no pair added'},
+            'bh_fdr': 'NOT APPLIED (raw, unadjusted HLN p; no family opened)',
+            'spa': 'NOT RUN',
+            'l7_contingency': 'SKIPPED (L7 not part of this run)',
+            'degenerate_cell_treatment': {'primary': 'EXCLUDE (as confirmatory)',
+                                          'reference_for_partial_collapse': 'max length over arms present'},
+            'block_bootstrap': {'n_boot': N_BOOT, 'block_size_days': BLOCK_SIZE},
+            'mde_rule': f'MDE ≈ {MDE_FACTOR} x SE_block-bootstrap(mean delta-IC) (approximate nominal)',
+            'horizon_days': HORIZON,
+            'seed_avg_note': 'Seeds averaged per (arm, universe, date, fold) BEFORE HLN (as confirmatory).',
+            'tuning_val_ic_note': 'The §4 tuning val-IC is a SELECTION metric, NEVER entered as a result.',
+        }
+        with open(os.path.join(out_dir, 'family1_ledger.json'), 'w') as f:
+            json.dump(ledger, f, indent=2)
+        return
     ledger = {
         'family': 'Family-1 (predictive / model-selection; tuned 12-fold ladder)',
         'role': 'CONFIRMATORY (the only confirmatory family; protocol §6)',
@@ -535,11 +574,18 @@ def write_ledger(out_dir: str, l7: dict, spa_M: int) -> None:
         json.dump(ledger, f, indent=2)
 
 
-def write_summary(out_dir: str, l7: dict, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df) -> None:
-    L = [f"# Family-1 §2a confirmatory summary  (_generated {time.strftime('%Y-%m-%d %H:%M:%S')}_)\n",
-         f"**L7/Cn5 contingency**: {l7['reason']}  "
-         f"(diverge_frac={l7['diverge_frac']:.3f}, collapse_frac={l7['collapse_frac']:.3f}, "
-         f"n={l7['n_cells']}) → L7 {'DEMOTED to exploratory (M=8)' if l7['demote'] else 'KEPT (M=9)'}\n"]
+def write_summary(out_dir: str, l7: dict, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df,
+                  sensitivity: bool = False) -> None:
+    title = ('Family-1 machinery — POST-HOC SENSITIVITY (NOT confirmatory; raw HLN p, no BH)'
+             if sensitivity else 'Family-1 §2a confirmatory summary')
+    L = [f"# {title}  (_generated {time.strftime('%Y-%m-%d %H:%M:%S')}_)\n"]
+    if sensitivity:
+        L.append("**L7/Cn5 contingency**: SKIPPED (sensitivity mode; L7 not part of this run). "
+                 "**SPA**: not run. **BH-FDR**: not applied (raw HLN p).\n")
+    else:
+        L.append(f"**L7/Cn5 contingency**: {l7['reason']}  "
+                 f"(diverge_frac={l7['diverge_frac']:.3f}, collapse_frac={l7['collapse_frac']:.3f}, "
+                 f"n={l7['n_cells']}) → L7 {'DEMOTED to exploratory (M=8)' if l7['demote'] else 'KEPT (M=9)'}\n")
     # STABILITY FINDING (C/L5s constant-collapse) — surfaced before the headline stats
     deg = stab_df[stab_df['collapse_rate'] > 0] if len(stab_df) else stab_df
     if len(deg):
@@ -561,7 +607,8 @@ def write_summary(out_dir: str, l7: dict, spa_df, dm_df, ci_df, mde_df, lofo_df,
     L.append("\n## Hansen SPA (per universe; benchmark L0)\n")
     if len(spa_df):
         L.append(spa_df[['universe', 'M', 'T', 'p_consistent', 'reject_h0_at_5pct']].to_markdown(index=False))
-    L.append("\n## DM/HLN pairwise (seed-avg daily ΔIC; BH-FDR over 20-test family)\n")
+    L.append("\n## DM/HLN pairwise (seed-avg daily ΔIC; "
+             + ("raw HLN p — NO BH, sensitivity)\n" if sensitivity else "BH-FDR over 20-test family)\n"))
     if len(dm_df):
         L.append(dm_df[['universe', 'arm_A', 'arm_B', 'mean_delta_IC', 'HLN_p_t',
                         'HLN_p_t_lag21', 'BH_FDR_reject_family', 'BH_FDR_reject_per_univ']].to_markdown(index=False))
@@ -587,30 +634,48 @@ def write_summary(out_dir: str, l7: dict, spa_df, dm_df, ci_df, mde_df, lofo_df,
 # ══════════════════════════════════════════════════════════════
 
 def main() -> int:
+    global N_BOOT, UNIVERSES
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('--main-dir', default='experiments/storya_v21_main12_tuned')
     p.add_argument('--l7-dir', default='experiments/_rerun_colab_staging/storya_v21_l7_hats_tuned')
     p.add_argument('--output-dir', default='artifacts/storya_v21_family1')
     p.add_argument('--smoke', action='store_true', help='reduce n_boot for a fast wiring check')
+    # 2026-09-10 post-hoc sensitivity overrides (defaults reproduce the confirmatory run exactly)
+    p.add_argument('--universes', default=','.join(UNIVERSES),
+                   help='comma list of universes to aggregate (default B,C = confirmatory)')
+    p.add_argument('--arms', default=','.join(ALL_ARMS_DEFAULT),
+                   help='comma subset of arms present in --main-dir; pre-registered pairs / SPA '
+                        'candidates are RESTRICTED to it (never extended)')
+    p.add_argument('--sensitivity', action='store_true',
+                   help='POST-HOC SENSITIVITY mode: no L7 contingency, no SPA, no C/L5s robustness, '
+                        'NO BH-FDR (raw HLN p only); ledger/summary marked non-confirmatory')
     args = p.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
 
     if args.smoke:
-        global N_BOOT
         N_BOOT = 200
+    UNIVERSES = [u for u in args.universes.split(',') if u]
+    arms = [a for a in args.arms.split(',') if a]
+    for a in arms:
+        assert a in ALL_ARMS_DEFAULT, f'unknown arm {a}; valid: {ALL_ARMS_DEFAULT}'
 
     # Set the shared module's fold count so reused helpers behave consistently
     e6.N_FOLDS = N_FOLDS
     e6.CANONICAL_SEEDS = CANONICAL_SEEDS
 
-    # L7 contingency FIRST (decides M=9 vs 8 + whether L7-L2 pair stays)
-    l7_results = os.path.join(args.l7_dir, 'results.csv')
-    l7 = l7_contingency(l7_results)
-    print(f"[F1] L7 contingency: demote={l7['demote']} | {l7['reason']}")
+    if args.sensitivity:
+        print(f"[F1] POST-HOC SENSITIVITY mode: universes={UNIVERSES} arms={arms} "
+              f"(no L7 contingency / SPA / BH; LADDER_PAIRS unchanged, restricted to arms present)")
+        l7 = {'demote': False, 'diverge_frac': 0.0, 'collapse_frac': 0.0, 'n_cells': 0,
+              'reason': 'N/A (sensitivity mode: L7 not part of this run)'}
+    else:
+        # L7 contingency FIRST (decides M=9 vs 8 + whether L7-L2 pair stays)
+        l7_results = os.path.join(args.l7_dir, 'results.csv')
+        l7 = l7_contingency(l7_results)
+        print(f"[F1] L7 contingency: demote={l7['demote']} | {l7['reason']}")
 
-    arms = ['L0', 'L1', 'L2', 'L2s', 'L3', 'L4', 'L5', 'L5s', 'L6', 'L7']
-    spa_candidates = list(SPA_CANDIDATES_FULL)
-    pairs = list(ALL_PAIRS)
+    spa_candidates = [m for m in SPA_CANDIDATES_FULL if m in arms]
+    pairs = [pr for pr in ALL_PAIRS if pr[0] in arms and pr[1] in arms]   # pre-registered pairs only
     if l7['demote']:
         spa_candidates = [m for m in spa_candidates if m != 'L7']    # M=9 → 8
         pairs = [pr for pr in pairs if 'L7' not in pr]               # drop L7-L2
@@ -620,12 +685,17 @@ def main() -> int:
     print("[F1] aggregating per-day IC matrices ...")
     agg = build_aggregate(arms, args.main_dir, args.l7_dir)
 
-    print("[F1] Hansen SPA ...")
-    spa_df = run_spa_ladder(agg, spa_candidates, args.output_dir)
-    print(spa_df.to_string(index=False))
+    if args.sensitivity:
+        spa_df = pd.DataFrame()
+        print("[F1] Hansen SPA skipped (sensitivity mode)")
+    else:
+        print("[F1] Hansen SPA ...")
+        spa_df = run_spa_ladder(agg, spa_candidates, args.output_dir)
+        print(spa_df.to_string(index=False))
 
-    print("[F1] DM/HLN pairwise + BH-FDR ...")
-    dm_df = run_pairwise(agg, pairs, args.output_dir)
+    print("[F1] DM/HLN pairwise" + (" (raw HLN p, NO BH — sensitivity) ..." if args.sensitivity
+                                    else " + BH-FDR ..."))
+    dm_df = run_pairwise(agg, pairs, args.output_dir, apply_bh=not args.sensitivity)
     if len(dm_df):
         print(dm_df[['universe', 'arm_A', 'arm_B', 'mean_delta_IC', 'HLN_p_t',
                      'BH_FDR_reject_family']].to_string(index=False))
@@ -634,15 +704,21 @@ def main() -> int:
     ci_df, mde_df, lofo_df = run_ci_and_mde(agg, arms, pairs, args.output_dir)
 
     print("[F1] stability (degeneracy rate) + C/L5s robustness (3 treatments) ...")
-    stab_df = degeneracy_report(arms, args.main_dir, args.l7_dir, args.output_dir)
-    print(stab_df[stab_df['collapse_rate'] > 0].to_string(index=False) if (stab_df['collapse_rate'] > 0).any()
-          else "  (no degeneracy in any arm)")
-    rob_df = cl5s_robustness(agg, args.main_dir, spa_candidates, args.output_dir)
-    print(rob_df.to_string(index=False))
+    stab_df = degeneracy_report(arms, args.main_dir, args.l7_dir, args.output_dir,
+                                ref_arms=(arms if args.sensitivity else None))
+    print(stab_df[stab_df['collapse_rate'] > 0].to_string(index=False)
+          if len(stab_df) and (stab_df['collapse_rate'] > 0).any() else "  (no degeneracy in any arm)")
+    if args.sensitivity or ('C', 'L5s') not in agg:
+        rob_df = pd.DataFrame()
+        print("[F1] C/L5s robustness skipped (sensitivity mode or C/L5s not in this run)")
+    else:
+        rob_df = cl5s_robustness(agg, args.main_dir, spa_candidates, args.output_dir)
+        print(rob_df.to_string(index=False))
 
     spa_M = int(spa_df['M'].iloc[0]) if len(spa_df) else len(spa_candidates)
-    write_ledger(args.output_dir, l7, spa_M)
-    write_summary(args.output_dir, l7, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df)
+    write_ledger(args.output_dir, l7, spa_M, sensitivity=args.sensitivity, pairs_run=pairs, arms_run=arms)
+    write_summary(args.output_dir, l7, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df,
+                  sensitivity=args.sensitivity)
     print(f"[F1] DONE → {args.output_dir}")
     return 0
 

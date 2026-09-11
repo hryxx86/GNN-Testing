@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-09-10-b: Codex Review — Plan (Touchpoint 1, Round A) on C5 简报 → BLOCK-EXECUTION；两项核心指控亲自核实成立，运行重新定性为 "test-informed subset sensitivity"
+
+- Target: `docs/c5_rerun_brief_2026-09-10.md`（H博士 简报 §0–§8 + 实施注记 §9）
+- Reviewer: codex @ gpt-6-astra xhigh（`codex exec … < /dev/null` 主 shell 直调；`codex:codex-rescue` 子代理沙盒内 app-server 初始化 "Operation not permitted" 失败，非 15 min 超时，未启用 fallback）
+- Full review: `artifacts/reviews/2026-09-10_codex_plan_A.md`
+- Summary: 1 CRITICAL + 3 MAJOR + 2 CONCERN；Verdict: **BLOCK-EXECUTION**
+- **A-01 CRITICAL（ACCEPTED，亲自核实）**：`analyze_plan_aaa_t1_diagnostic.py:86-99` 用面板最后 313 个有效标签日打分 = 本机重建 **2024-09-27→2025-12-26**；Plan AAA 原排名本身在 5 折测试季 **2024-04-01→2025-06-30**（`data/reference/fold_manifest_expanding.json`，313 天）打分。两者都在 12 折 confirmatory 测试期内 → **C 与 C5 的列选择都用了测试期标签，C5 不是 leak-free re-selection，不能兑现论文 L1 "definitive check" 承诺**。处置：按 Codex option (1) 照跑但定性为 test-informed feature-subset sensitivity（措辞约束见简报 §9.9）；option (2) pre-test 选择器 "C-pre" 写成提案（§9.10）待 H博士 批准。
+- **A-02 MAJOR（ACCEPTED，亲自核实）**：`group_ranking_comparison.csv` 中 `proxy_rank_raw<=15` 与 `proxy_rank_t1<=15` 集合**完全相同**，orig∩raw = orig∩t1 = 同 5 组 → T−1 shift 一组未除；5/15 = Plan AAA permutation top-15 ∩ 单特征 |IC| proxy top-15（度量方法之差）。**论文 main.tex:290/:998/:1012 "only 5 of the 15 groups survive strict T−1 re-ranking" 为误表述 → 报 H博士 改口径。**
+- A-03/A-04 MAJOR FIXED（代码）：paired 日度对比 g_t = ΔIC_C − ΔIC_C5（HLN + 21d block bootstrap）、两档 HAC lag、L1−L0 CI、MDE 标 approximate nominal（`analyze_c5_sensitivity.py`）。A-05 ACCEPTED-AS-CONCERN（冠军超参 + MLP 参数量报告；C5h 预先指定、只按 H博士 要求跑）。A-06 FIXED（main12 C5 分支写 `_run_provenance.json`：git rev/平台/版本/device/有序特征表/selector 输入 md5/选择窗/调参窗/12 折日历/frozen md5）。
+- Round B 已发出（cross-round diffing + §9.10 提案意见）；**Round B 返回前不启动调参/主评估**。
+
+→ progress: 2026-09-10-b | plan: 2026-09-10-a | analysis: N/A
+
+## 2026-09-10-a: C5 sensitivity 任务启动 — 代码落地（5 改 + 1 新）+ 本地 smoke 全链路通过 + Colab T4 就绪
+
+- 任务来源：H博士 简报（存为 `docs/c5_rerun_brief_2026-09-10.md`）。**C5 列清单核对**（`artifacts/plan_aaa/ranking.csv` `group_members` 逐组）：ROC30+5 → ROC30, MA60, MAX60, MIN60, QTLU60, QTLD60；KMID+6 → KMID, KMID2, KSFT, KSFT2, OPEN0, HIGH0, VWAP0；KUP+1 → KUP, KUP2；CNTP20+3 → CNTP20, CNTD20, CNTP30, CNTD30；CORR60 → CORR60。合计 **20 列**，与简报 §1 逐列一致，全部 ⊂ `UNIVERSE_C_ALPHA158_NAMES`，不含 hc 列。
+- 代码（偏离简报处见简报 §9.2–§9.5，plan.md Decision Log 2026-09-10）：`run_storya_e1_anchor.py` +`SENSITIVITY_UNIVERSES`/`UNIVERSE_C5_GROUPS`/`build_universe_C5`（按名列选择，逐列 `array_equal` 断言 == C，row-0 零，20 列）；`run_storya_v21_main12.py` `KNOWN_UNIVERSES`/`UNIVERSE_IDX`（C5=2 → cell_id [2400,3599]，启动断言 3600 空间 + confirmatory 块 [0,2399] 不变 + 区间不交）、`--universe C5` 显式（`both` 仍= B,C）、C5 分支写 `_universe_c5.json`；`run_storya_v21_tune.py` C5 分发 + choices；`run_v21_tune_launcher.py` 子集 merge（`--merge-universes/--merge-arms/--merge-out`，按 universe 过滤，默认 20/20 不变——已验证默认仍数 20、C5 缺 json 时 fail-closed）；`compute_family1_ladder.py` `--universes/--arms/--sensitivity`（默认路径字节一致：`--universes C --arms L0,L1 --sensitivity` 复现 confirmatory C L1−L0 的 dm_hln/ic_ci/mde 行 **IDENTICAL**，p=0.010852）；新 `analyze_c5_sensitivity.py`（k/10、m/10 估计量 = `analyze_paper_eval_robustness.seed_pooled`，复现 audit 行 C L1−L0 +0.01477、10/10、0 flips；paired 对比；并列表；完整性检查）。
+- **Smoke（Mac M4）**：tune `--smoke` C5 L0（4 s）/ L1（134 s）→ smoke frozen（2 study）→ main12 `--universe C5 --arms L0,L1 --seeds 86 --folds 11`（cid 2510 L0 IC=+0.082 1 s；cid 2630 L1 IC=+0.075 114 s；`_universe_c5.json` n_features=20；provenance mode/md5 校验通过）→ family1 `--sensitivity --smoke` 7 个产物 → analyze_c5 `--smoke` 产物齐全。
+- Colab T4（degrees-competitions-medical-earrings）：`pip install torch_geometric pandas_market_calendars optuna` 完成；repo @ eb8314e；留给可选 L2 层。
+- 设备决策：C5 L0/L1 在 Mac 跑（confirmatory C/L0、C/L1 全在 `experiments/storya_v21_main12_tuned_macC/`，L1 61 s/cell）。
+
+→ progress: 2026-09-10-a | plan: 2026-09-10-a | analysis: N/A
+
 ## 2026-09-08-a: Codex 挂起根因修复（non-TTY stdin bug）+ CLI 升级 + 模型切换 gpt-5.6-sol → gpt-6-astra（H博士 批准）
 
 - **挂起根因**：`codex exec` 在非交互 shell（non-TTY）下无限等待 stdin EOF——openai/codex 已知 bug（#20919/#27019）。证据：9/6-9/7 探针 24h 零输出、僵尸进程存活；与模型无关（gpt-6 与 gpt-5.6-sol 对照组同样挂）。**修复：调用尾加 `< /dev/null`**，加后秒回（4,4xx tokens）

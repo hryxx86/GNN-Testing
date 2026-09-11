@@ -70,7 +70,8 @@ import torch.nn.functional as F  # used by train_gnn_per_day_edges (per-day MSE 
 import run_storya_e1_anchor as anchor
 from run_storya_e1_anchor import (
     CANONICAL_SEEDS, HORIZON, TRAIN_START, COST_LEVELS_BPS, COST_CONVENTION,
-    load_core_data, build_universe_B, build_universe_C, build_labels,
+    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_labels,
+    SENSITIVITY_UNIVERSES,
     build_correlation_snapshots, get_frozen_snapshot_idx, create_fold_masks,
     winsorize_train_only, standardize_train_only, train_nn, train_lightgbm,
     compute_daily_ic, compute_cost_ladder_sharpe, get_device, set_seed,
@@ -123,7 +124,9 @@ ARM_SPEC = {
 IMPLEMENTED_ARMS = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L2s', 'L5s', 'L6']
 EDGE_CONFIGS_NEWS = {'corr_news', 'corr_sector_news'}        # arms needing per-day news edges
 EDGE_CONFIGS_SECTOR = {'corr_sector', 'corr_sector_news'}    # arms needing sector edges
-ALL_UNIVERSES = ['B', 'C']
+ALL_UNIVERSES = ['B', 'C']                              # confirmatory; `--universe both` == exactly this
+KNOWN_UNIVERSES = ALL_UNIVERSES + SENSITIVITY_UNIVERSES  # + 'C5' post-hoc sensitivity (explicit only)
+UNIVERSE_IDX = {'B': 0, 'C': 1, 'C5': 2}                # cell_id radix; C5 → [2400, 3599] ∩ [0, 2399] = ∅
 
 OUT_DIR = 'experiments/storya_v21_main12'
 RESULTS_CSV = f'{OUT_DIR}/results.csv'
@@ -177,26 +180,33 @@ MANIFEST_COLUMNS = ['cell_id', 'universe', 'arm', 'model', 'seed', 'fold',
 # ══════════════════════════════════════════════════════════════
 
 def cell_id(universe_idx: int, arm: str, fold_idx: int, seed_idx: int) -> int:
-    """universe*1200 + arm_idx*120 + fold*10 + seed. Range [0, 2399], injective by radix
-    (seed<10, fold<12<12→fold*10+seed<120, arm<10→arm*120<1200, universe<2)."""
+    """universe*1200 + arm_idx*120 + fold*10 + seed. Confirmatory (B=0, C=1) range [0, 2399];
+    sensitivity C5 (=2) range [2400, 3599]. Injective by radix (seed<10, fold<12→fold*10+seed<120,
+    arm<10→arm*120<1200, universe<3)."""
     arm_idx = ARM_ORDER.index(arm)
     return universe_idx * 1200 + arm_idx * 120 + fold_idx * 10 + seed_idx
 
 
 def assert_cell_id_injective() -> None:
-    """Enumerate the FULL (2 universe × 10 arm × 12 fold × 10 seed) space; confirm injective
-    and range [0, 2399] — validates the formula regardless of which arms run this session."""
-    seen = set()
-    for u in range(2):
+    """Enumerate the FULL (3 universe × 10 arm × 12 fold × 10 seed) space; confirm injective and
+    range [0, 3599]; confirm the confirmatory block is still exactly [0, 2399] and the sensitivity
+    (C5) block lies strictly above it — validates the formula regardless of which arms run."""
+    seen, conf, sens = set(), set(), set()
+    for u_name, u in UNIVERSE_IDX.items():
         for arm in ARM_ORDER:
             for f in range(N_FOLDS):
                 for s in range(10):
                     cid = cell_id(u, arm, f, s)
                     assert cid not in seen, f"cell_id collision u={u} arm={arm} f={f} s={s}"
                     seen.add(cid)
-    assert min(seen) == 0 and max(seen) == 2399 and len(seen) == 2400, \
+                    (conf if u_name in ALL_UNIVERSES else sens).add(cid)
+    n_u = len(UNIVERSE_IDX)
+    assert min(seen) == 0 and max(seen) == n_u * 1200 - 1 and len(seen) == n_u * 1200, \
         f"cell_id range broken: min={min(seen)} max={max(seen)} n={len(seen)}"
-    print(f'✓ cell_id injective over 2×10×12×10=2400 space, range [0, 2399]')
+    assert min(conf) == 0 and max(conf) == 2399 and len(conf) == 2400, "confirmatory cell_id block moved"
+    assert min(sens) > max(conf), f"sensitivity cell_id block {min(sens)} overlaps confirmatory max {max(conf)}"
+    print(f'✓ cell_id injective over {n_u}×10×12×10={n_u * 1200} space, range [0, {n_u * 1200 - 1}]; '
+          f'confirmatory [0, 2399] ∩ sensitivity [{min(sens)}, {max(sens)}] = ∅')
 
 
 # ══════════════════════════════════════════════════════════════
@@ -541,7 +551,8 @@ def run_arm_cell(arm, feats_winz, feats_std_t, labels_np, labels_t, label_valid_
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--universe', choices=['B', 'C', 'both'], default='both')
+    parser.add_argument('--universe', choices=KNOWN_UNIVERSES + ['both'], default='both',
+                        help="B | C | both (= B,C confirmatory) | C5 (post-hoc sensitivity, explicit only)")
     parser.add_argument('--arms', type=str, default=','.join(IMPLEMENTED_ARMS),
                         help=f'Comma-separated subset of {IMPLEMENTED_ARMS}')
     parser.add_argument('--seeds', type=str, default=','.join(str(s) for s in CANONICAL_SEEDS))
@@ -622,7 +633,7 @@ def main():
 
     init_csv_files()
     write_meta_json()
-    universe_idx_map = {'B': 0, 'C': 1}
+    universe_idx_map = UNIVERSE_IDX
     seed_idx_map = {s: i for i, s in enumerate(CANONICAL_SEEDS)}
     done_cells = load_manifest_done(MANIFEST_CSV) if args.resume else set()
     print(f'Resume {"ON" if args.resume else "OFF"}: {len(done_cells)} cells already done')
@@ -673,6 +684,74 @@ def main():
         assert_univ_c_t1_contract(fC)               # §5 per-run re-confirmation
         features_raw['C'] = fC
         print(f'Universe C features: {fC.shape}')
+    if 'C5' in universes_run:                        # post-hoc sensitivity (explicit --universe C5 only)
+        fC5, names_c5 = build_universe_C5(prices, returns)   # pure name-selection of Universe C columns
+        assert_univ_c_t1_contract(fC5)
+        features_raw['C5'] = fC5
+        with open(f'{OUT_DIR}/_universe_c5.json', 'w') as f:
+            json.dump({'universe': 'C5', 'n_features': int(fC5.shape[2]), 'feature_names': names_c5,
+                       'groups': anchor.UNIVERSE_C5_GROUPS,
+                       'source': 'docs/c5_rerun_brief_2026-09-10.md §1 / §9.1'}, f, indent=2)
+        print(f'Universe C5 features: {fC5.shape} (names: {names_c5})')
+        # CODEX-A-06 (TP1 2026-09-10): execution/selection provenance beyond the frozen-HP md5 gate
+        import platform, subprocess, lightgbm
+        def _md5(p):
+            return hashlib.md5(open(p, 'rb').read()).hexdigest() if os.path.exists(p) else None
+        # source state of EVERY repo module actually imported by this process (blob sha + git status):
+        # the run is reproducible from git_rev only if every entry has git_status == '' (clean).
+        repo = os.getcwd()
+        mods = sorted({os.path.relpath(m.__file__, repo) for m in list(sys.modules.values())
+                       if getattr(m, '__file__', None) and os.path.isabs(m.__file__)
+                       and m.__file__.startswith(repo + os.sep) and 'site-packages' not in m.__file__})
+        try:
+            git_rev = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+            st = subprocess.check_output(['git', 'status', '--porcelain', '--'] + mods, text=True)
+            status = {ln[3:]: ln[:2].strip() for ln in st.splitlines()}
+            shas = subprocess.check_output(['git', 'hash-object'] + mods, text=True).split()
+            src_state = {m: {'blob_sha': sha, 'git_status': status.get(m, '')} for m, sha in zip(mods, shas)}
+        except Exception as e:
+            git_rev, src_state = None, {'error': str(e)}
+        run_prov = {
+            'universe': 'C5', 'role': 'post-hoc TEST-INFORMED feature-subset sensitivity (NOT confirmatory)',
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'), 'git_rev': git_rev,
+            'imported_repo_modules': src_state,      # all git_status == '' ⇒ run == git_rev exactly
+            'source_clean': bool(src_state and all(v.get('git_status') == '' for v in src_state.values()
+                                                  if isinstance(v, dict))),
+            'invocation': {'argv': sys.argv, 'universes': universes_run, 'arms': arms_run,
+                           'seeds': seeds_run, 'folds': folds_run, 'resume': bool(args.resume)},
+            'platform': platform.platform(), 'python': sys.version.split()[0], 'device': str(device),
+            'versions': {'torch': torch.__version__, 'lightgbm': lightgbm.__version__,
+                         'numpy': np.__version__, 'pandas': pd.__version__},
+            'feature_names_ordered': names_c5, 'groups': anchor.UNIVERSE_C5_GROUPS,
+            'selector_inputs_md5': {
+                'artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv':
+                    _md5('artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv'),
+                'artifacts/plan_aaa/ranking.csv': _md5('artifacts/plan_aaa/ranking.csv'),
+                'alpha158_meta': _md5(anchor.PATHS['alpha158_meta']),
+                'alpha158_npy': _md5(anchor.PATHS['alpha158_npy']),
+            },
+            'data_inputs_md5': {   # prices + sectors determine the ticker universe and the labels
+                'prices': _md5(anchor.PATHS['prices']), 'sectors': _md5(anchor.PATHS['sectors']),
+            },
+            'n_stocks': int(num_stocks), 'n_days': int(num_days),
+            'selection_window_note': ('C5 = Plan-AAA permutation top-15 ∩ single-feature-|IC| proxy top-15 '
+                                      '(proxy top-15 identical with/without T-1 shift). Proxy scored the last 313 '
+                                      'valid label days of the panel (2024-09-27..2025-12-26); Plan AAA scored the '
+                                      '5-fold test quarters (2024-04-01..2025-06-30). Both lie inside the 12-fold '
+                                      'test period 2023Q1..2025Q4 -> selection is TEST-INFORMED '
+                                      '(docs/c5_rerun_brief_2026-09-10.md §9.9).'),
+            'tuning_window': 'train TRAIN_START..2022-06-30 / val 2022H2 (run_storya_v21_tune.TUNE_FOLD, seeds [11,22,33])',
+            'eval_calendar_12fold': WALK_FORWARD_FOLDS_12, 'horizon_days': HORIZON,
+            'canonical_seeds': CANONICAL_SEEDS,
+            'frozen_hparams': args.frozen_hparams,
+            'frozen_md5': (hashlib.md5(open(args.frozen_hparams, 'rb').read()).hexdigest()
+                           if args.frozen_hparams else None),
+        }
+        prov_run_path = f'{OUT_DIR}/_run_provenance.json'   # APPEND per invocation (resume keeps history)
+        hist = json.load(open(prov_run_path)) if os.path.exists(prov_run_path) else []
+        hist = hist if isinstance(hist, list) else [hist]
+        with open(prov_run_path, 'w') as f:
+            json.dump(hist + [run_prov], f, indent=2, ensure_ascii=False)
 
     # ── edge-arm setup (once): sector (static) + per-day news edges. build_per_day_news_edges
     #    fires the C1 assert (b) max(pub_ts)<=session_close(t-1) per-day at construction. ──

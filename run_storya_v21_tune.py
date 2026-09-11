@@ -59,7 +59,8 @@ import optuna
 import run_storya_e1_anchor as anchor
 from run_storya_e1_anchor import (
     CANONICAL_SEEDS, HORIZON, TRAIN_START,
-    load_core_data, build_universe_B, build_universe_C, build_labels,
+    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_labels,
+    SENSITIVITY_UNIVERSES,
     build_correlation_snapshots, get_frozen_snapshot_idx, create_fold_masks,
     winsorize_train_only, standardize_train_only, compute_daily_ic,
     get_device, set_seed,
@@ -177,9 +178,14 @@ def build_data_ctx(universe: str, arm: str, device) -> dict:
     # features (build_universe_C fires C1 assert (a) at construction; re-confirm per-run)
     if universe == 'B':
         feats_raw, _ = build_universe_B(prices, returns)
-    else:
+    elif universe == 'C':
         feats_raw, _ = build_universe_C(prices, returns)
         assert_univ_c_t1_contract(feats_raw)
+    elif universe == 'C5':   # post-hoc sensitivity: 20-col name-selected subset of Universe C
+        feats_raw, _ = build_universe_C5(prices, returns)
+        assert_univ_c_t1_contract(feats_raw)
+    else:
+        raise ValueError(f'unknown universe {universe}')
     feats_winz = winsorize_train_only(feats_raw, train_days)
     feats_std = standardize_train_only(feats_winz, train_days)
     feats_std_t = torch.tensor(feats_std, dtype=torch.float32)
@@ -298,7 +304,7 @@ def run_study(arm: str, universe: str, n_trials: int, top_k: int, smoke: bool = 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--arm', required=True, choices=ALL_ARMS)
-    ap.add_argument('--universe', required=True, choices=['B', 'C'])
+    ap.add_argument('--universe', required=True, choices=['B', 'C'] + SENSITIVITY_UNIVERSES)
     ap.add_argument('--n-trials', type=int, default=N_TRIALS_DEFAULT)
     ap.add_argument('--top-k', type=int, default=TOP_K_DEFAULT)
     ap.add_argument('--smoke', action='store_true', help='2 trials + top-1 (wiring check only)')
@@ -313,10 +319,22 @@ def main():
     result = run_study(args.arm, args.universe, n_trials, top_k, smoke=args.smoke)
     result['wall_time_sec'] = round(time.time() - t0, 1)
     result['smoke'] = bool(args.smoke)
+    # execution metadata (CODEX TP1-B A-06 2026-09-10): tuning device/software alongside the winner
+    import platform, subprocess, lightgbm
+    try:
+        _rev = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+    except Exception:
+        _rev = None
+    result['execution'] = {'device': str(get_device()), 'platform': platform.platform(),
+                           'python': sys.version.split()[0], 'torch': torch.__version__,
+                           'lightgbm': lightgbm.__version__, 'optuna': optuna.__version__,
+                           'numpy': np.__version__, 'git_rev': _rev,
+                           'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')}
 
     # CODEX-A-02: smoke artifacts go to _smoke_{u}_{a}.json (+ {u}_{a}_smoke.db) — excluded by the
     # launcher merge — so a wiring check can never enter frozen_hparams.json.
     study_tag = f'{args.universe}_{args.arm}_smoke' if args.smoke else f'{args.universe}_{args.arm}'
+    result['execution']['study_db'] = f'{STUDY_DIR}/{study_tag}.db'
     out = (f'{OUT_DIR}/_smoke_{args.universe}_{args.arm}.json' if args.smoke
            else f'{OUT_DIR}/{args.universe}_{args.arm}.json')
     with open(out, 'w') as f:

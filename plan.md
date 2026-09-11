@@ -6,6 +6,20 @@
 
 ---
 
+## 2026-09-10-a: C5 leak-free re-selection sensitivity（post-hoc）— 审稿意见 2 / Limitation L1 承诺的 re-run
+
+→ progress: 2026-09-10-a | plan: 2026-09-10-a | analysis: PENDING（240 cell 结果 + TP3 后写入）
+
+**任务来源**：H博士 简报 `docs/c5_rerun_brief_2026-09-10.md`（§0–§8 原文；§9 实施注记 = 偏离简报处逐条列出）。目标：宇宙 C 里只保留 T−1 re-rank 存活的 5 个因子组（**C5 = 20 列**：ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60，不含 hc 列），按 confirmatory 冻结协议（12 折 expanding、21d purge、同 label、10 canonical seeds、30-trial/top-5×3 tune seeds、2022H1/2022H2 调参窗）**重调** L0/L1 并评估，报告 C5 上 L1−L0 与 C（+0.0148, HLN p=0.011）/ B（+0.0143, p=0.052）并列。**post-hoc sensitivity：不入 BH 族、报原始 HLN p、不改任何 confirmatory 表。**
+
+**步骤**：
+1. 代码（已落地）：anchor `build_universe_C5`（纯按名列选择，逐列 == C）；main12/tune 显式 `--universe C5`（`both` 仍严格 = B,C）；cell_id C5 ∈ [2400, 3599]（与 [0, 2399] 无交集，启动断言）；launcher 子集 merge（`--merge-universes C5 --merge-arms L0,L1 --merge-out frozen_hparams_c5.json`，默认 20/20 不变）；family1 `--universes/--arms/--sensitivity`（默认路径与 2026-06-21 confirmatory 字节一致——已用 C L1−L0 行复现 p=0.010852 验证）；新 `analyze_c5_sensitivity.py`（k/10、m/10、paired C5−C 日度对比、并列表；估计量与附录 C.2 同源，已复现 audit 行）。
+2. Rule 9 链：TP1（简报 + §9）→ TP2（5 改 + 1 新）→ smoke（tune→main12→family1）→ 调参 C5 L0/L1 → frozen md5 → 240 cell → family1 sensitivity → analyze_c5 → TP3 → analysis.md/progress.md → commit（白名单：frozen json + C5 tune json 入 `artifacts/storya_v21_tune/`，family1_c5 csv/md 入 `artifacts/storya_v21_family1_c5/`）。
+3. **运行设备 = Mac M4**（confirmatory C/L0、C/L1 全部在 Mac 跑，`experiments/storya_v21_main12_tuned_macC/`；C5 vs C 同臂对比消除设备混杂）；Colab T4 已就绪（deps 已装），留给可选 L2 层。
+4. 可选 L2 层（C5 重调 ~5h + 120 cell ~5h，T4）：**主结果出来后由 H博士 决定**，不自动启动。
+
+---
+
 ## 2026-09-06-a: ICLR 2027 改稿完成 → 剩余：H博士 通读 + 同行反馈 + 9/18 前提交
 
 → progress: 2026-09-06-a | plan: 2026-09-06-a | analysis: N/A | README: paper/README.md + paper/iclr2027/README.md 2026-09-06
@@ -2077,6 +2091,7 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-07-07 | **Lit-benchmark R1/R2 ADOPTED (cite GKX RFS'20 + ACM MS'23 in §2); R3/R4 (KMZ/THGNN) DEFERRED; R6 (VW-decile sensitivity) = future work** | 15-paper forensic benchmark (`docs/lit_benchmark_2026-07-03.md`) found GKX/JKP/KMZ/ACM/THGNN uncited; H博士 adopted the two highest-value anchors: GKX (canonical recursive-OOS protocol + shallow-beats-deep supports MLP>GAT) and ACM (MS-scale validation of the cost layer). Page cost absorbed by figure micro-shrink (.73/.73/.76/.81) + 4 zero-content trims; anon 8pp verified. R3/R4 deferred on page budget; R5 forensic table retained as rebuttal material. → progress 2026-07-07-a; analysis 2026-07-03-b. |
 | 2026-07-08 | **Venue REOPENED by H博士 and PIVOTED: ICAIF 2026 → journal (Quantitative Finance = first candidate, final target awaits Lv 推荐)** | ICAIF 2026 官方 CFP 复核（icaif2026.org, Milan 11/14–17）确认纯线下："at least one author ... attend in person" + "No pre-recorded videos"；且禁止一稿多投（审稿期不能同时投期刊）。H博士 不愿到场，明确偏好期刊 → 撤销 5/27 "ICAIF LOCKED" 决策（原决策即保留 QF backup）。后果：8/2 截稿压力消失；CMT/匿名 8pp 路径 CANCELLED；main.tex:41 页脚 "Under review at ICAIF 2026" → "Preprint." 并重编译（9pp 不变）；导师邮件改为无硬期限版并在末段请 Lv 推荐期刊。arXiv 预印本计划不变（仍等 endorsement+署名确认）。→ progress 2026-07-08-a/-b。 |
 | 2026-07-09 | **Venue FINAL（本轮）: → ICLR 2027（Lv 教授提议，H博士 接受）；arXiv 推迟到 acceptance 后** | Lv 2026-07-09 回信：愿细读给详细意见（署名事实上确认，"we may try out"）；提议 ICLR + 官网模板；主张中稿后再挂 arXiv（"otherwise easy rejection"）。查证：ICLR 政策实际允许审稿期挂 arXiv（iclr.cc CFP 明文"submission to arXiv allowed during review"），但 H博士 决定尊重导师偏好不争辩（de-anonymization 偏见顾虑在实践中有理）。ICLR 2027 = 北美西海岸（iclr.cc/FutureMeetings；到场负担远低于米兰/巴西，H博士 在 USC）；CFP 未发布，预计截稿 ~9 月下旬 2026、通知 ~2027/1（往年惯例）。ICLR 主会风险（empirical/negative-result 论文 "limited novelty" 概率）由 Lv 详细意见 + 附录扩容对冲；被拒则期刊 fallback。→ progress 2026-07-09-a。 |
+| 2026-09-10 | **C5 sensitivity 实施口径**：不把 C5 加进 `ALL_UNIVERSES`/`both`（显式 `--universe C5`）；family1 用 CLI 覆盖（`--universes/--arms/--sensitivity`）而非改冻结常量；C5 L0/L1 在 **Mac** 跑（与 confirmatory C/L0,L1 同设备），T4 留给可选 L2；不做 BH、不加 pair、不动 confirmatory 表 | 简报 §3 直接改 `ALL_UNIVERSES`/`UNIVERSES` 会让 confirmatory 默认调用静默多跑一个 universe、让 `cl5s_robustness` KeyError；设备对齐消除 C5 vs C 的混杂（macC 目录证明 C/L0,L1 在 MPS/CPU 跑）。详见 `docs/c5_rerun_brief_2026-09-10.md` §9 |
 
 → progress: 2026-05-28-a..f | analysis: N/A
 → progress: 2026-06-10-a/c, 2026-06-11-a/b | analysis: 2026-06-11-a
