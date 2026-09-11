@@ -64,6 +64,21 @@
     "CNTD30",
     "CORR60"
   ],
+  "inputs": {
+    "c5_main_dir": "experiments/storya_v21_main12_c5_t4",
+    "conf_results_csv": "experiments/storya_v21_main12_tuned/results.csv",
+    "results_csv_md5": "eaa8af1de0e50168b439cb9eb0d7eee7",
+    "manifest_csv_md5": "50986847355c27edb476e791a94d854d",
+    "device": "cuda",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "git_rev": null,
+    "source_clean": null,
+    "code_identity_post_hoc": {
+      "all_modules_match": true,
+      "commit": "9008dbe",
+      "verified_at": "2026-09-11 02:51:56"
+    }
+  },
   "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_c5.json",
   "frozen_present": true,
   "frozen_md5": "cdb4d92314b0d43d3287ea6d403d840d",

@@ -513,12 +513,28 @@ def cl5s_robustness(agg: dict, main_dir: str, spa_candidates: list, out_dir: str
 # Ledger + summary
 # ══════════════════════════════════════════════════════════════
 
+def _run_inputs(main_dir: str) -> dict:
+    """FINGNN-B-02 (TP2-B): identify the result directory the stats were computed from."""
+    import hashlib
+    def _md5(p):
+        return hashlib.md5(open(p, 'rb').read()).hexdigest() if os.path.exists(p) else None
+    prov_p = os.path.join(main_dir, '_run_provenance.json')
+    prov = json.load(open(prov_p)) if os.path.exists(prov_p) else None
+    if isinstance(prov, list):
+        prov = prov[-1] if prov else None
+    return {'main_dir': main_dir, 'results_csv_md5': _md5(os.path.join(main_dir, 'results.csv')),
+            'manifest_csv_md5': _md5(os.path.join(main_dir, 'manifest.csv')),
+            'device': prov.get('device') if prov else None, 'platform': prov.get('platform') if prov else None,
+            'git_rev': prov.get('git_rev') if prov else None, 'source_clean': prov.get('source_clean') if prov else None}
+
+
 def write_ledger(out_dir: str, l7: dict, spa_M: int, sensitivity: bool = False,
-                 pairs_run: list | None = None, arms_run: list | None = None) -> None:
+                 pairs_run: list | None = None, arms_run: list | None = None, main_dir: str | None = None) -> None:
     if sensitivity:
         # CODEX-TP2-A-05: record what was ACTUALLY executed (restricted pairs, no BH, no SPA, no L7 gate)
         pairs_run = list(pairs_run or [])
         ledger = {
+            'inputs': _run_inputs(main_dir) if main_dir else None,
             'family': 'Family-1 machinery re-used for a POST-HOC SENSITIVITY run',
             'role': ('POST-HOC SENSITIVITY (NOT confirmatory; no BH family opened; raw HLN p only; '
                      'docs/c5_rerun_brief_2026-09-10.md)'),
@@ -716,7 +732,8 @@ def main() -> int:
         print(rob_df.to_string(index=False))
 
     spa_M = int(spa_df['M'].iloc[0]) if len(spa_df) else len(spa_candidates)
-    write_ledger(args.output_dir, l7, spa_M, sensitivity=args.sensitivity, pairs_run=pairs, arms_run=arms)
+    write_ledger(args.output_dir, l7, spa_M, sensitivity=args.sensitivity, pairs_run=pairs, arms_run=arms,
+                 main_dir=args.main_dir)
     write_summary(args.output_dir, l7, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df,
                   sensitivity=args.sensitivity)
     print(f"[F1] DONE → {args.output_dir}")

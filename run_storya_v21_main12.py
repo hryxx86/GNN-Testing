@@ -697,26 +697,34 @@ def main():
         import platform, subprocess, lightgbm
         def _md5(p):
             return hashlib.md5(open(p, 'rb').read()).hexdigest() if os.path.exists(p) else None
-        # source state of EVERY repo module actually imported by this process (blob sha + git status):
-        # the run is reproducible from git_rev only if every entry has git_status == '' (clean).
-        repo = os.getcwd()
-        mods = sorted({os.path.relpath(m.__file__, repo) for m in list(sys.modules.values())
-                       if getattr(m, '__file__', None) and os.path.isabs(m.__file__)
-                       and m.__file__.startswith(repo + os.sep) and 'site-packages' not in m.__file__})
+        # source state of EVERY repo module actually imported by this process. FINGNN-B-01 (TP2-B):
+        # anchor the repo at the CODE location (not cwd — on Colab setup_workdir() chdirs to the Drive data
+        # folder, which is not a git repo), always record a content md5 per module (no git needed), and
+        # only claim source_clean when git actually answered and every module is unmodified.
+        repo = os.path.dirname(os.path.abspath(anchor.__file__))
+        mod_paths = sorted({os.path.abspath(m.__file__) for m in list(sys.modules.values())
+                            if getattr(m, '__file__', None) and os.path.isabs(m.__file__)
+                            and os.path.abspath(m.__file__).startswith(repo + os.sep)
+                            and 'site-packages' not in m.__file__})
+        mods = [os.path.relpath(p, repo) for p in mod_paths]
+        src_state = {m: {'md5': hashlib.md5(open(p, 'rb').read()).hexdigest()} for m, p in zip(mods, mod_paths)}
+        git_rev, git_error = None, None
         try:
-            git_rev = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-            st = subprocess.check_output(['git', 'status', '--porcelain', '--'] + mods, text=True)
+            git_rev = subprocess.check_output(['git', '-C', repo, 'rev-parse', 'HEAD'], text=True).strip()
+            st = subprocess.check_output(['git', '-C', repo, 'status', '--porcelain', '--'] + mods, text=True)
             status = {ln[3:]: ln[:2].strip() for ln in st.splitlines()}
-            shas = subprocess.check_output(['git', 'hash-object'] + mods, text=True).split()
-            src_state = {m: {'blob_sha': sha, 'git_status': status.get(m, '')} for m, sha in zip(mods, shas)}
+            shas = subprocess.check_output(['git', '-C', repo, 'hash-object'] + mods, text=True).split()
+            for m, sha in zip(mods, shas):
+                src_state[m].update({'blob_sha': sha, 'git_status': status.get(m, '')})
         except Exception as e:
-            git_rev, src_state = None, {'error': str(e)}
+            git_error = str(e)
+        source_clean = (None if git_error else
+                        bool(mods and all(v.get('git_status') == '' for v in src_state.values())))
         run_prov = {
             'universe': 'C5', 'role': 'post-hoc TEST-INFORMED feature-subset sensitivity (NOT confirmatory)',
-            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'), 'git_rev': git_rev,
-            'imported_repo_modules': src_state,      # all git_status == '' ⇒ run == git_rev exactly
-            'source_clean': bool(src_state and all(v.get('git_status') == '' for v in src_state.values()
-                                                  if isinstance(v, dict))),
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'), 'git_rev': git_rev, 'git_error': git_error,
+            'code_dir': repo, 'imported_repo_modules': src_state,   # md5 always; blob_sha/git_status if git worked
+            'source_clean': source_clean,   # True = every imported module == git_rev; None = git unavailable (use md5s)
             'invocation': {'argv': sys.argv, 'universes': universes_run, 'arms': arms_run,
                            'seeds': seeds_run, 'folds': folds_run, 'resume': bool(args.resume)},
             'platform': platform.platform(), 'python': sys.version.split()[0], 'device': str(device),

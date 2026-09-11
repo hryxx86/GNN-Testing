@@ -1,4 +1,4 @@
-# Family-1 machinery — POST-HOC SENSITIVITY (NOT confirmatory; raw HLN p, no BH)  (_generated 2026-09-11 02:43:52_)
+# Family-1 machinery — POST-HOC SENSITIVITY (NOT confirmatory; raw HLN p, no BH)  (_generated 2026-09-11 02:57:02_)
 
 **L7/Cn5 contingency**: SKIPPED (sensitivity mode; L7 not part of this run). **SPA**: not run. **BH-FDR**: not applied (raw HLN p).
 

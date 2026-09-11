@@ -1,4 +1,13 @@
 {
+  "inputs": {
+    "main_dir": "experiments/storya_v21_main12_c5",
+    "results_csv_md5": "1d7445bf5081ea3683d0a5d1c9e0b562",
+    "manifest_csv_md5": "380894ee7ff2a7765a2a6f4ffdc1e5a7",
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "git_rev": "9008dbe956220951db54975af8516365de9061d2",
+    "source_clean": true
+  },
   "family": "Family-1 machinery re-used for a POST-HOC SENSITIVITY run",
   "role": "POST-HOC SENSITIVITY (NOT confirmatory; no BH family opened; raw HLN p only; docs/c5_rerun_brief_2026-09-10.md)",
   "sensitivity_scope": {

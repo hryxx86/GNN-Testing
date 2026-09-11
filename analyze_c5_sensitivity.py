@@ -40,7 +40,8 @@ import pandas as pd
 
 from analyze_paper_eval_robustness import seed_pooled          # appendix C.2 estimator (import-only)
 from compute_family1_ladder import (                            # validated loaders (import-only)
-    collect_arm_matrix, seed_avg_pooled, CANONICAL_SEEDS, N_FOLDS, HORIZON, BLOCK_SIZE, N_BOOT,
+    collect_arm_matrix, seed_avg_pooled, seed_avg_per_fold, CANONICAL_SEEDS, N_FOLDS, HORIZON, BLOCK_SIZE, N_BOOT,
+    MDE_FACTOR,
 )
 from compute_e6_dm_spa import hln_test, stationary_bootstrap_ci
 
@@ -87,6 +88,24 @@ def run_integrity(c5_main: str, frozen_path: str | None, conf_results_csv: str, 
             if L != cal[int(r.fold)]:                      # partial/full collapse vs frozen calendar
                 short_cells.append({'file': os.path.basename(p), 'len': L, 'calendar': cal[int(r.fold)]})
     md5_frozen = hashlib.md5(open(frozen_path, 'rb').read()).hexdigest() if frozen else None
+    # FINGNN-B-02 (TP2-B): identify the exact inputs these statistics were computed from
+    run_prov_p = os.path.join(c5_main, '_run_provenance.json')
+    run_prov = json.load(open(run_prov_p)) if os.path.exists(run_prov_p) else None
+    if isinstance(run_prov, list):
+        run_prov = run_prov[-1] if run_prov else None
+    code_id_p = os.path.join(c5_main, '_code_identity_t4.json')
+    code_id = json.load(open(code_id_p)) if os.path.exists(code_id_p) else None
+    inputs = {
+        'c5_main_dir': c5_main, 'conf_results_csv': conf_results_csv,
+        'results_csv_md5': hashlib.md5(open(os.path.join(c5_main, 'results.csv'), 'rb').read()).hexdigest(),
+        'manifest_csv_md5': hashlib.md5(open(os.path.join(c5_main, 'manifest.csv'), 'rb').read()).hexdigest(),
+        'device': run_prov.get('device') if run_prov else None,
+        'platform': run_prov.get('platform') if run_prov else None,
+        'git_rev': run_prov.get('git_rev') if run_prov else None,
+        'source_clean': run_prov.get('source_clean') if run_prov else None,
+        'code_identity_post_hoc': ({'all_modules_match': code_id.get('all_modules_match_9008dbe'),
+                                    'commit': '9008dbe', 'verified_at': code_id.get('verified_at')} if code_id else None),
+    }
     prov_ok = None
     if prov is not None and frozen is not None:
         applied = prov.get('applied', {})
@@ -112,6 +131,7 @@ def run_integrity(c5_main: str, frozen_path: str | None, conf_results_csv: str, 
         'frozen_calendar_days_per_fold': cal, 'frozen_calendar_total': int(sum(cal.values())),
         'cells_not_full_calendar_length': short_cells,          # any entry = date alignment NOT guaranteed
         'n_features': uni['n_features'], 'feature_names': uni['feature_names'],
+        'inputs': inputs,
         'frozen_hparams_path': frozen_path, 'frozen_present': frozen is not None, 'frozen_md5': md5_frozen,
         'provenance_present': prov is not None,
         'provenance_mode': prov.get('mode') if prov else None,
@@ -173,15 +193,77 @@ def paired_contrast(c5_main: str, conf_main: str, other: str, n_boot: int, stric
     _, hln_p21, _ = hln_test(d, lag=HORIZON)
     mean_d, lo, hi = stationary_bootstrap_ci(d, lambda x: float(np.mean(x)), n_boot=n_boot,
                                              block_size=BLOCK_SIZE)
+    from arch.bootstrap import StationaryBootstrap          # same SE/MDE construction as family1 run_ci_and_mde
+    sb = StationaryBootstrap(BLOCK_SIZE, d, seed=86)
+    se_block = float(np.std(sb.apply(lambda x: float(np.mean(x)), n_boot).ravel(), ddof=1))
     return {'contrast': f'(L1-L0)_{other} - (L1-L0)_C5', 'T': int(T),
             'mean_delta_C5': round(float(d5[:n].mean()), 5), f'mean_delta_{other}': round(float(dc[:n].mean()), 5),
             'mean_paired_diff': round(float(mean_d), 5), 'ci_lo': round(float(lo), 5), 'ci_hi': round(float(hi), 5),
             'ci_excludes_0': bool(lo > 0 or hi < 0),
+            'SE_block': round(se_block, 5), 'MDE_2p8xSE': round(MDE_FACTOR * se_block, 5),
             'HLN_stat': round(float(hln_stat), 4), 'HLN_p_t': round(float(hln_p), 5),
             'HLN_p_t_lag21': round(float(hln_p21), 5),
             'n_boot': n_boot, 'block_size': BLOCK_SIZE,
             'note': (f'post-hoc conditional subset contrast; same test days + same 10 seeds; positive = {other} '
                      f'contrast larger than C5; not an identified leakage-inflation effect (C5 selection is test-informed)')}
+
+
+# ══════════════════════════════════════════════════════════════
+# 3b. leave-one-fold-out pooled statistics for the dominant fold (FINGNN-R-A-01: 2025Q2 concentration)
+# ══════════════════════════════════════════════════════════════
+
+def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int) -> dict:
+    """Pooled seed-averaged daily ΔIC statistics with one fold EXCLUDED (HLN both lags + 21d block CI + SE/MDE)."""
+    pd_dir = os.path.join(main_dir, 'per_day_ic')
+    a = seed_avg_per_fold(collect_arm_matrix(pd_dir, universe, PAIR[0]))
+    b = seed_avg_per_fold(collect_arm_matrix(pd_dir, universe, PAIR[1]))
+    parts, fold_delta = [], None
+    for f in range(N_FOLDS):
+        if a.get(f) is None or b.get(f) is None:
+            continue
+        n = min(len(a[f]), len(b[f]))
+        dd = a[f][:n] - b[f][:n]
+        if f == ex_fold:
+            fold_delta = float(dd.mean())
+            continue
+        parts.append(dd)
+    d = np.concatenate(parts)
+    _, p, T = hln_test(d)
+    _, p21, _ = hln_test(d, lag=HORIZON)
+    m, lo, hi = stationary_bootstrap_ci(d, lambda x: float(np.mean(x)), n_boot=n_boot, block_size=BLOCK_SIZE)
+    from arch.bootstrap import StationaryBootstrap
+    se = float(np.std(StationaryBootstrap(BLOCK_SIZE, d, seed=86).apply(lambda x: float(np.mean(x)), n_boot).ravel(), ddof=1))
+    return {'universe': universe, 'excluded_fold': ex_fold, 'excluded_fold_delta_IC': round(fold_delta, 5) if fold_delta is not None else None,
+            'T_ex': int(T), 'mean_delta_IC_ex': round(float(m), 5), 'ci_lo': round(float(lo), 5), 'ci_hi': round(float(hi), 5),
+            'HLN_p_t': round(float(p), 5), 'HLN_p_t_lag21': round(float(p21), 5),
+            'SE_block': round(se, 5), 'MDE_2p8xSE': round(MDE_FACTOR * se, 5)}
+
+
+# ══════════════════════════════════════════════════════════════
+# 3c. device replication: primary vs replicate result dirs, cell-level (FINGNN-B-02 generator in repo)
+# ══════════════════════════════════════════════════════════════
+
+def device_replication(primary_dir: str, replicate_dir: str) -> tuple:
+    p = pd.read_csv(os.path.join(primary_dir, 'results.csv')); r = pd.read_csv(os.path.join(replicate_dir, 'results.csv'))
+    j = p.merge(r, on=['arm', 'seed', 'fold'], suffixes=('_primary', '_replicate'))
+    assert len(j) == len(p) == len(r), f'replicate join mismatch {len(j)} vs {len(p)}/{len(r)}'
+    rows = []
+    for arm in sorted(j.arm.unique()):
+        s = j[j.arm == arm]; d = s.IC_mean_replicate - s.IC_mean_primary
+        rows.append({'arm': arm, 'n_cells': int(len(s)),
+                     'corr_cell_IC': round(float(np.corrcoef(s.IC_mean_primary, s.IC_mean_replicate)[0, 1]), 4),
+                     'mean_IC_primary': round(float(s.IC_mean_primary.mean()), 5),
+                     'mean_IC_replicate': round(float(s.IC_mean_replicate.mean()), 5),
+                     'mean_abs_diff': round(float(d.abs().mean()), 5), 'max_abs_diff': round(float(d.abs().max()), 5),
+                     'n_identical': int((d.abs() < 1e-9).sum()),
+                     'wall_primary_s': round(float(s.wall_time_sec_primary.mean()), 1),
+                     'wall_replicate_s': round(float(s.wall_time_sec_replicate.mean()), 1)})
+    def pooled(df):
+        return {arm: float(np.average(df[df.arm == arm].IC_mean, weights=df[df.arm == arm].n_test_days)) for arm in ('L0', 'L1')}
+    pp, pr = pooled(p), pooled(r)
+    extra = {'primary_dir': primary_dir, 'replicate_dir': replicate_dir,
+             'pooled_delta_L1_L0_primary': round(pp['L1'] - pp['L0'], 5), 'pooled_delta_L1_L0_replicate': round(pr['L1'] - pr['L0'], 5)}
+    return pd.DataFrame(rows), extra
 
 
 # ══════════════════════════════════════════════════════════════
@@ -242,13 +324,18 @@ def hparam_report(frozen_c5: str, frozen_conf: str = 'artifacts/storya_v21_tune/
     return rows
 
 
-def write_md(out_dir: str, comp: pd.DataFrame, paired: list, integ: dict, hp_rows: list | None = None) -> None:
+def write_md(out_dir: str, comp: pd.DataFrame, paired: list, integ: dict, hp_rows: list | None = None,
+             ex_rows: list | None = None, dev: tuple | None = None) -> None:
+    inp = integ.get('inputs', {})
     L = ['# C5 feature-subset sensitivity (POST-HOC, TEST-INFORMED selection) — L1 (MLP) − L0 (LightGBM)\n',
          f"_C5 = {integ['n_features']} columns = Plan-AAA permutation top-15 ∩ single-feature-IC proxy top-15 "
-         f"(proxy top-15 identical with/without the T-1 shift; both selectors scored inside the 12-fold test period — "
-         f"see docs/c5_rerun_brief_2026-09-10.md §9.9). {integ['n_results_rows']} cells; "
+         f"(proxy top-15 identical with/without the T-1 shift; both selectors scored inside the 12-fold test period, using "
+         f"NN-based permutation importance — see docs/c5_rerun_brief_2026-09-10.md §9.9). {integ['n_results_rows']} cells; "
          f"frozen_hparams md5 {integ['frozen_md5']}; integrity PASS={integ['PASS']}. "
-         f"Raw (unadjusted) HLN p; no BH family; not confirmatory._\n",
+         f"Raw (unadjusted, nominal) HLN p; no BH family; not confirmatory._\n",
+         f"_INPUT (primary): `{inp.get('c5_main_dir')}` — device {inp.get('device')}, platform {inp.get('platform')}, "
+         f"results.csv md5 {inp.get('results_csv_md5')}, git_rev {inp.get('git_rev')}, source_clean {inp.get('source_clean')}, "
+         f"post-hoc code identity {inp.get('code_identity_post_hoc')}._\n",
          '| universe | role | ΔIC (L1−L0) | 95% block-boot CI | HLN p | HLN p (lag 21) | IC L0 [CI] | IC L1 [CI] | MDE (≈2.8×SE, approx. nominal) | per-seed same sign | LOSO flips |',
          '|---|---|---|---|---|---|---|---|---|---|---|']
     for r in comp.itertuples():
@@ -258,13 +345,30 @@ def write_md(out_dir: str, comp: pd.DataFrame, paired: list, integ: dict, hp_row
                  f"{r.per_seed_same_sign} | {r.loso_flips} |")
     L.append('\n(source: family1_{dm_hln,ic_ci,mde}.csv in artifacts/storya_v21_family1_c5 for C5 and '
              'artifacts/storya_v21_family1 for C/B; c5_seed_robustness.csv for k/10, m/10)\n')
+    L.append('_Read with the CI and BOTH HAC lags (the frozen NW auto-lag ≈6 truncates while the 21-day-label autocorrelation '
+             'is still ≈0.3; lag-21 and the 21d block bootstrap agree). In C5, C and B the observed |ΔIC| is BELOW the '
+             "design's approximate MDE (≈2.8×SE): marginal, underpowered detections. Per-arm IC levels are conditional on the "
+             'test-informed selection and are not out-of-sample performance figures._\n')
+    if ex_rows:
+        exf = ex_rows[0]['excluded_fold']
+        L.append(f'## Fold concentration — pooled statistics EXCLUDING fold {exf} (the fold flagged by LOFO as dominant)\n')
+        L.append('| universe | fold ΔIC (excluded fold) | ΔIC ex-fold | 95% block-boot CI | HLN p | HLN p (lag 21) | MDE (≈2.8×SE) | T |')
+        L.append('|---|---|---|---|---|---|---|---|')
+        for r in ex_rows:
+            L.append(f"| {r['universe']} | {r['excluded_fold_delta_IC']:+.4f} | {r['mean_delta_IC_ex']:+.4f} | "
+                     f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}] | {r['HLN_p_t']:.3f} | {r['HLN_p_t_lag21']:.3f} | {r['MDE_2p8xSE']:.4f} | {r['T_ex']} |")
+        L.append('\n(source: c5_ex_fold.csv; the excluded quarter carries a large share of the pooled contrast in C5 exactly as in C and B — '
+                 'the C5 contrast inherits their quarter concentration; not evenly persistent)\n')
     if paired:
         L.append('## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional subset contrast)\n')
-        L.append('| contrast | mean paired diff | 95% CI | HLN p | HLN p (lag 21) | T |')
-        L.append('|---|---|---|---|---|---|')
+        L.append('| contrast | mean paired diff | 95% CI | HLN p | HLN p (lag 21) | SE_block | MDE (≈2.8×SE) | T |')
+        L.append('|---|---|---|---|---|---|---|---|')
         for p in paired:
             L.append(f"| {p['contrast']} | {p['mean_paired_diff']:+.4f} | [{p['ci_lo']:+.4f}, {p['ci_hi']:+.4f}] | "
-                     f"{p['HLN_p_t']:.3f} | {p['HLN_p_t_lag21']:.3f} | {p['T']} |")
+                     f"{p['HLN_p_t']:.3f} | {p['HLN_p_t_lag21']:.3f} | {p['SE_block']:.4f} | {p['MDE_2p8xSE']:.4f} | {p['T']} |")
+        L.append('\n_The paired difference is not distinguishable from zero, but its interval is wider than the contrast itself '
+                 '(approximate MDE of the paired test > the C contrast): it does NOT exclude a halving or a doubling of the '
+                 'contrast under the subset. Equivalence is not established; this is an underpowered non-rejection._')
         L.append('\n(source: c5_paired_contrast.csv; positive = the confirmatory universe\'s L1−L0 exceeds the C5 one. '
                  'Conditional subset contrast — feature restriction + re-tuning; NOT an identified leakage-inflation effect: '
                  'C5\'s columns were selected with evaluation-period outcomes, brief §9.9)\n')
@@ -277,13 +381,30 @@ def write_md(out_dir: str, comp: pd.DataFrame, paired: list, integ: dict, hp_row
                      f"{r['winner_mean_val_ic_3seed']:.4f} | {r['mlp_n_params'] if r['mlp_n_params'] is not None else '—'} |")
         L.append('\n(source: experiments/storya_v21_tune/frozen_hparams_c5.json + artifacts/storya_v21_tune/frozen_hparams.json; '
                  'param count via run_storya_e1_anchor.make_nn_model at n_inputs)\n')
+        L.append('_DISCLOSURE (TP2-B B-04 / TP3 R-A-04): on C5 every finalist of BOTH arms had NEGATIVE 2022H2 validation IC '
+                 '(the frozen HPs are protocol-consistent but not a validated optimum; the selection carried no positive signal), '
+                 'whereas the C winners had val-IC +0.07/+0.06; the C5 MLP is ≈14× smaller than the C MLP. Do not attribute the '
+                 'contrast (or its similarity to C) to feature restriction or capacity alone._\n')
+    if dev is not None:
+        df_dev, extra = dev
+        L.append('## Device replication — primary vs replicate result directories (same frozen HPs, same code)\n')
+        L.append(df_dev.to_markdown(index=False))
+        L.append(f"\n_{extra['primary_dir']} (primary) vs {extra['replicate_dir']} (replicate): pooled ΔIC L1−L0 "
+                 f"{extra['pooled_delta_L1_L0_primary']:+.5f} vs {extra['pooled_delta_L1_L0_replicate']:+.5f}. L1 cell-level "
+                 f"divergence is backend nondeterminism amplified by early stopping on a flat validation curve; the pooled inference "
+                 f"is insensitive to it (source: c5_device_replication.csv)._\n")
     with open(os.path.join(out_dir, 'c5_comparison.md'), 'w') as f:
         f.write('\n'.join(L))
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument('--c5-main-dir', default='experiments/storya_v21_main12_c5')
+    p.add_argument('--c5-main-dir', default='experiments/storya_v21_main12_c5_t4',
+                   help='PRIMARY result dir (pre-declared 2026-09-11-b: the Colab T4 run); Mac replicate = experiments/storya_v21_main12_c5')
+    p.add_argument('--replicate-main-dir', default=None,
+                   help='optional replicate result dir → c5_device_replication.{csv,md} (cell-level primary-vs-replicate)')
+    p.add_argument('--ex-fold', type=int, default=None,
+                   help='report pooled stats with this fold excluded for C5/C/B (fold flagged by LOFO as dominant, e.g. 9 = 2025Q2)')
     p.add_argument('--c5-family-dir', default='artifacts/storya_v21_family1_c5')
     p.add_argument('--conf-main-dir', default='experiments/storya_v21_main12_tuned')
     p.add_argument('--conf-family-dir', default='artifacts/storya_v21_family1')
@@ -349,7 +470,23 @@ def main() -> int:
     hp_rows = hparam_report(args.frozen)
     if hp_rows:
         pd.DataFrame(hp_rows).to_csv(os.path.join(out_dir, 'c5_tuned_hparams.csv'), index=False)
-    write_md(out_dir, comp, paired, integ, hp_rows)
+    ex_rows = []
+    if args.ex_fold is not None:
+        ex_rows = [ex_fold_stats(args.c5_main_dir, 'C5', args.ex_fold, n_boot)] + \
+                  [ex_fold_stats(args.conf_main_dir, u, args.ex_fold, n_boot) for u in ('C', 'B')]
+        pd.DataFrame(ex_rows).to_csv(os.path.join(out_dir, 'c5_ex_fold.csv'), index=False)
+        for r in ex_rows:
+            print(f"  [ex-fold {r['excluded_fold']} {r['universe']}] fold ΔIC={r['excluded_fold_delta_IC']:+.4f} → ex-fold ΔIC={r['mean_delta_IC_ex']:+.4f} "
+                  f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}] p={r['HLN_p_t']:.3f} (lag21 {r['HLN_p_t_lag21']:.3f})")
+    dev = None
+    if args.replicate_main_dir:
+        dev = device_replication(args.c5_main_dir, args.replicate_main_dir)
+        dev[0].to_csv(os.path.join(out_dir, 'c5_device_replication.csv'), index=False)
+        with open(os.path.join(out_dir, 'c5_device_replication.md'), 'w') as f:
+            f.write('# C5 device replication — primary vs replicate (same frozen HPs, same code)\n\n' + dev[0].to_markdown(index=False)
+                    + '\n\n' + json.dumps(dev[1]) + '\n')
+        print(dev[0].to_string(index=False)); print(dev[1])
+    write_md(out_dir, comp, paired, integ, hp_rows, ex_rows, dev)
     print(comp[['universe', 'mean_delta_IC', 'delta_ci_lo', 'delta_ci_hi', 'HLN_p_t', 'IC_L0', 'IC_L1',
                 'MDE_2p8xSE', 'per_seed_same_sign', 'loso_flips']].to_string(index=False))
     print(f'[C5] DONE → {out_dir}')

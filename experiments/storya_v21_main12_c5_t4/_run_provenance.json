@@ -233,5 +233,243 @@
     ],
     "frozen_hparams": "experiments/storya_v21_tune/frozen_hparams_c5.json",
     "frozen_md5": "cdb4d92314b0d43d3287ea6d403d840d"
+  },
+  {
+    "universe": "C5",
+    "role": "post-hoc TEST-INFORMED feature-subset sensitivity (NOT confirmatory)",
+    "timestamp": "2026-09-11 02:57:01",
+    "git_rev": null,
+    "imported_repo_modules": {
+      "see": "_code_identity_t4.json — md5 of every imported repo module measured on the Colab VM post hoc; all == commit 9008dbe"
+    },
+    "source_clean": null,
+    "invocation": {
+      "argv": [
+        "run_storya_v21_main12.py",
+        "--universe",
+        "C5",
+        "--arms",
+        "L0,L1",
+        "--frozen-hparams",
+        "experiments/storya_v21_tune/frozen_hparams_c5.json",
+        "--out-dir",
+        "experiments/storya_v21_main12_c5_t4"
+      ],
+      "universes": [
+        "C5"
+      ],
+      "arms": [
+        "L0",
+        "L1"
+      ],
+      "seeds": [
+        86,
+        123,
+        456,
+        789,
+        1024,
+        2024,
+        7,
+        34,
+        99,
+        2026
+      ],
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "resume": true
+    },
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "python": "3.13.15",
+    "device": "cuda",
+    "versions": {
+      "torch": "2.11.0+cu128",
+      "lightgbm": "4.6.0",
+      "numpy": "2.1.3",
+      "pandas": "2.2.3"
+    },
+    "feature_names_ordered": [
+      "ROC30",
+      "MA60",
+      "MAX60",
+      "MIN60",
+      "QTLU60",
+      "QTLD60",
+      "KMID",
+      "KMID2",
+      "KSFT",
+      "KSFT2",
+      "OPEN0",
+      "HIGH0",
+      "VWAP0",
+      "KUP",
+      "KUP2",
+      "CNTP20",
+      "CNTD20",
+      "CNTP30",
+      "CNTD30",
+      "CORR60"
+    ],
+    "groups": {
+      "ROC30+5": [
+        "ROC30",
+        "MA60",
+        "MAX60",
+        "MIN60",
+        "QTLU60",
+        "QTLD60"
+      ],
+      "KMID+6": [
+        "KMID",
+        "KMID2",
+        "KSFT",
+        "KSFT2",
+        "OPEN0",
+        "HIGH0",
+        "VWAP0"
+      ],
+      "KUP+1": [
+        "KUP",
+        "KUP2"
+      ],
+      "CNTP20+3": [
+        "CNTP20",
+        "CNTD20",
+        "CNTP30",
+        "CNTD30"
+      ],
+      "CORR60": [
+        "CORR60"
+      ]
+    },
+    "selector_inputs_md5": {
+      "artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv": null,
+      "artifacts/plan_aaa/ranking.csv": null,
+      "alpha158_meta": "ca02447423c3785878a52743faf224c9",
+      "alpha158_npy": "0a2cd862eb1e94a8b132c12d858591ab"
+    },
+    "data_inputs_md5": {
+      "prices": "b7f62825c0abad748fa756c93353a5b2",
+      "sectors": "1dea301a409ae95544f45dc956763428"
+    },
+    "n_stocks": 501,
+    "n_days": 1255,
+    "selection_window_note": "C5 = Plan-AAA permutation top-15 ∩ single-feature-|IC| proxy top-15 (proxy top-15 identical with/without T-1 shift). Proxy scored the last 313 valid label days of the panel (2024-09-27..2025-12-26); Plan AAA scored the 5-fold test quarters (2024-04-01..2025-06-30). Both lie inside the 12-fold test period 2023Q1..2025Q4 -> selection is TEST-INFORMED (docs/c5_rerun_brief_2026-09-10.md §9.9).",
+    "tuning_window": "train TRAIN_START..2022-06-30 / val 2022H2 (run_storya_v21_tune.TUNE_FOLD, seeds [11,22,33])",
+    "eval_calendar_12fold": [
+      {
+        "id": 0,
+        "train_end": "2022-09-30",
+        "val_end": "2022-12-31",
+        "test_end": "2023-03-31",
+        "desc": "2023Q1"
+      },
+      {
+        "id": 1,
+        "train_end": "2022-12-31",
+        "val_end": "2023-03-31",
+        "test_end": "2023-06-30",
+        "desc": "2023Q2"
+      },
+      {
+        "id": 2,
+        "train_end": "2023-03-31",
+        "val_end": "2023-06-30",
+        "test_end": "2023-09-30",
+        "desc": "2023Q3"
+      },
+      {
+        "id": 3,
+        "train_end": "2023-06-30",
+        "val_end": "2023-09-30",
+        "test_end": "2023-12-31",
+        "desc": "2023Q4"
+      },
+      {
+        "id": 4,
+        "train_end": "2023-09-30",
+        "val_end": "2023-12-31",
+        "test_end": "2024-03-31",
+        "desc": "2024Q1"
+      },
+      {
+        "id": 5,
+        "train_end": "2023-12-31",
+        "val_end": "2024-03-31",
+        "test_end": "2024-06-30",
+        "desc": "2024Q2"
+      },
+      {
+        "id": 6,
+        "train_end": "2024-03-31",
+        "val_end": "2024-06-30",
+        "test_end": "2024-09-30",
+        "desc": "2024Q3"
+      },
+      {
+        "id": 7,
+        "train_end": "2024-06-30",
+        "val_end": "2024-09-30",
+        "test_end": "2024-12-31",
+        "desc": "2024Q4"
+      },
+      {
+        "id": 8,
+        "train_end": "2024-09-30",
+        "val_end": "2024-12-31",
+        "test_end": "2025-03-31",
+        "desc": "2025Q1"
+      },
+      {
+        "id": 9,
+        "train_end": "2024-12-31",
+        "val_end": "2025-03-31",
+        "test_end": "2025-06-30",
+        "desc": "2025Q2"
+      },
+      {
+        "id": 10,
+        "train_end": "2025-03-31",
+        "val_end": "2025-06-30",
+        "test_end": "2025-09-30",
+        "desc": "2025Q3"
+      },
+      {
+        "id": 11,
+        "train_end": "2025-06-30",
+        "val_end": "2025-09-30",
+        "test_end": "2025-12-31",
+        "desc": "2025Q4"
+      }
+    ],
+    "horizon_days": 21,
+    "canonical_seeds": [
+      86,
+      123,
+      456,
+      789,
+      1024,
+      2024,
+      7,
+      34,
+      99,
+      2026
+    ],
+    "frozen_hparams": "experiments/storya_v21_tune/frozen_hparams_c5.json",
+    "frozen_md5": "cdb4d92314b0d43d3287ea6d403d840d",
+    "entry_type": "CORRECTION (2026-09-11, FINGNN-B-01)",
+    "git_error": "git unavailable at run time: setup_workdir() chdir to the Drive data folder (not a git repo); the original entry reported source_clean=true vacuously",
+    "correction_note": "Entry 0 is the run-time record (cells 2400-2639 were produced under it). This entry corrects its provenance fields only; no result was changed. Code identity of the run: commit 9008dbe (post-hoc md5 verification)."
   }
 ]

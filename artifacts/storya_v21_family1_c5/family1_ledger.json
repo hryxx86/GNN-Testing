@@ -1,4 +1,13 @@
 {
+  "inputs": {
+    "main_dir": "experiments/storya_v21_main12_c5_t4",
+    "results_csv_md5": "eaa8af1de0e50168b439cb9eb0d7eee7",
+    "manifest_csv_md5": "50986847355c27edb476e791a94d854d",
+    "device": "cuda",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "git_rev": null,
+    "source_clean": null
+  },
   "family": "Family-1 machinery re-used for a POST-HOC SENSITIVITY run",
   "role": "POST-HOC SENSITIVITY (NOT confirmatory; no BH family opened; raw HLN p only; docs/c5_rerun_brief_2026-09-10.md)",
   "sensitivity_scope": {

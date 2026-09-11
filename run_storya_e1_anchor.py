@@ -75,7 +75,7 @@ warnings.filterwarnings('ignore')
 CANONICAL_SEEDS = [86, 123, 456, 789, 1024, 2024, 7, 34, 99, 2026]
 ALL_MODELS = ['GAT', 'SAGE-Mean', 'MLP', 'LightGBM']
 ALL_UNIVERSES = ['B', 'C']
-# Post-hoc sensitivity universes (2026-09-10 C5 leak-free re-selection check). Deliberately NOT in
+# Post-hoc sensitivity universes (2026-09-10 C5 test-informed feature-subset check). Deliberately NOT in
 # ALL_UNIVERSES: `--universe both`, the confirmatory meta and every default stay strictly B,C;
 # C5 must be requested explicitly (docs/c5_rerun_brief_2026-09-10.md §9.2).
 SENSITIVITY_UNIVERSES = ['C5']
@@ -439,7 +439,7 @@ def build_universe_C(prices: pd.DataFrame, returns: pd.DataFrame):
 
 
 def build_universe_C5(prices: pd.DataFrame, returns: pd.DataFrame):
-    """Universe C5 (post-hoc sensitivity): the 20-column leak-free re-selection subset of Universe C.
+    """Universe C5 (post-hoc, TEST-INFORMED subset sensitivity): the 20-column subset of Universe C.
 
     Built by calling build_universe_C and selecting columns BY NAME — nothing is recomputed, so every
     C5 column is numerically identical to the same-named Universe C column (same T-1 shift, same

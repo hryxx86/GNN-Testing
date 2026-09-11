@@ -64,6 +64,17 @@
     "CNTD30",
     "CORR60"
   ],
+  "inputs": {
+    "c5_main_dir": "experiments/storya_v21_main12_c5",
+    "conf_results_csv": "experiments/storya_v21_main12_tuned/results.csv",
+    "results_csv_md5": "1d7445bf5081ea3683d0a5d1c9e0b562",
+    "manifest_csv_md5": "380894ee7ff2a7765a2a6f4ffdc1e5a7",
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "git_rev": "9008dbe956220951db54975af8516365de9061d2",
+    "source_clean": true,
+    "code_identity_post_hoc": null
+  },
   "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_c5.json",
   "frozen_present": true,
   "frozen_md5": "cdb4d92314b0d43d3287ea6d403d840d",

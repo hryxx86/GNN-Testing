@@ -4,6 +4,71 @@
 
 ---
 
+## 2026-09-11-a: C5 feature-subset sensitivity（post-hoc，TEST-INFORMED selection）— MLP−LightGBM 在 "5 surviving groups" 20 列子集上的 L1−L0
+
+→ progress: 2026-09-10-a/-b/-c, 2026-09-11-a/-b/-c/-d | plan: 2026-09-10-a, 2026-09-11-a | analysis: 2026-09-11-a
+
+**性质（措辞锁定；Codex TP1 Round A BLOCK → Round B PROCEED；TP2 Round A Codex + Round B fallback；TP3 fallback finance-gnn-reviewer PROCEED-WITH-FIXES，全部处置）**：post-hoc、**test-informed** feature-subset sensitivity。**不是** leak-free re-selection，**不是** confirmatory，不入任何 BH 族（raw、nominal、unadjusted HLN p）。原因（Claude 亲自核实）：(a) 5 组的选择器 `analyze_plan_aaa_t1_diagnostic.py:86-99` 在面板最后 313 个有效标签日（2024-09-27→2025-12-26）上打分，Plan AAA 原排名在 5 折测试季（2024-04-01→2025-06-30，`data/reference/fold_manifest_expanding.json`）上用 **NN（SAGE-Mean/MLP）permutation 重要性**打分（`artifacts/plan_aaa/baseline_ic_per_cell.csv` 列 `arch`）——两者都在 12 折测试期 2023Q1–2025Q4 内；(b) `proxy_rank_raw<=15` 与 `proxy_rank_t1<=15` 集合完全相同，orig∩raw = orig∩t1 = 同 5 组 → "5/15" = Plan AAA permutation top-15 ∩ 单特征 |IC| proxy top-15，是**重要性度量方法之差**，T−1 shift 一组未除（source: `artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv` 列 `proxy_rank_raw`/`proxy_rank_t1`/`plan_aaa_orig_rank`）。**论文 main.tex:290（L1）、:998、:1012 caption 的 "only 5 of the 15 groups survive strict T−1 re-ranking" 与 L1 的 "A re-run … is the definitive check" 两句需改口径（待 H博士；插入 C5 数字前必须先改，否则自相矛盾）。**
+
+**C5 定义与协议**：ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60 = 20 列（source: `experiments/storya_v21_main12_c5_t4/_universe_c5.json`），按名从 T−1 shifted 的 Universe C 张量选列（逐列 `array_equal` 断言，row-0 零），不含 3 个 hc 列。协议与 confirmatory 完全一致：12 折 expanding（2023Q1–2025Q4，T=749 天）、21d purge、同 label、10 canonical seeds、L0/L1 各自 30-trial / top-5 × 3 tune seeds 重调（train ≤ 2022-06-30 / val 2022H2）。**主运行 Colab T4（结果出来前预先声明）**，Mac M4 复现。frozen_hparams_c5.json md5 `cdb4d92314b0d43d3287ea6d403d840d`；T4 代码身份 = commit 9008dbe（Colab VM 上 md5sum 7 个导入模块全部一致，`_code_identity_t4.json`）。
+
+**调参冠军（选模指标，不是结果；source: `artifacts/storya_v21_family1_c5/c5_tuned_hparams.csv`、`experiments/storya_v21_tune/C5_{L0,L1}.json` top_table）**：L0 LightGBM {num_leaves 63, lr 0.0129, min_data_in_leaf 100, λ1 4.7e-4, λ2 0.016}；L1 MLP {lr 0.0092, wd 6.6e-5, dropout 0.3, hidden 32, 1 layer}，#params 2,337 @20 inputs（C 的 L1 冠军 31,745 @51）。**必须披露**：2022H2 调参窗上两臂**全部 5 个决赛配置**的 val-IC 均为负（L1 −0.0448…−0.0453，per-tune-seed −0.006/−0.045/−0.084；L0 −0.0121…−0.0122；C 对应冠军为 +0.074 / +0.060）——冻结超参符合协议但**不是经验证的最优**，选择未携带正信号；C5 的 MLP 比 C 的小约 14×。**不得**把对比（或其与 C 的相似）归因于特征限制或容量。
+
+**主结果（T4 主运行；source: `artifacts/storya_v21_family1_c5/c5_comparison.csv`；C/B 行来自 `artifacts/storya_v21_family1/family1_{dm_hln,ic_ci,mde}.csv`；k/10、m/10 来自 `c5_seed_robustness.csv`）**：
+
+| universe | ΔIC L1−L0 | 21d block-boot 95% CI | HLN p（auto lag） | HLN p（lag 21） | MDE（≈2.8×SE） | per-seed 同号 | LOSO 翻转 |
+|---|---|---|---|---|---|---|---|
+| **C5**（post-hoc, test-informed） | **+0.0134** | **[+0.0008, +0.0283]** | 0.008 | 0.054 | 0.0197 | 10/10 | 0/10 |
+| C（confirmatory） | +0.0148 | [−0.0004, +0.0304] | 0.011 | 0.063 | 0.0220 | 10/10 | 0/10 |
+| B（confirmatory） | +0.0143 | [−0.0051, +0.0341] | 0.052 | 0.181 | 0.0275 | 10/10 | 0/10 |
+
+读法（TP3 R-A-02）：**以 CI 为主、两档 HAC lag 并报**（冻结的 NW auto-lag ≈6 在 21 日重叠标签的自相关仍约 0.3 处截断；lag-21 与 21d block bootstrap 一致）；C5、C、B 的 |ΔIC| **都低于设计的近似 MDE**——marginal、underpowered 的检出。Per-seed ΔIC 范围 +0.0029…+0.0250（source: `c5_seed_robustness.csv`）；0 塌缩 cell（`family1_stability.csv`）。C5 的 per-arm IC 水平（L0 0.020、L1 0.034）条件于 test-informed 选择，**不得**当作样本外表现引用。
+
+**季度集中（TP3 R-A-01；source: `artifacts/storya_v21_family1_c5/c5_ex_fold.csv`）**：fold 9（2025Q2）一季贡献约一半——C5 fold-9 ΔIC = +0.086；**剔除 fold 9 后 C5 ΔIC = +0.0069 [−0.0032, +0.0179]，p = 0.13（lag 21：0.23）**；C 同法 +0.0090 [−0.0052, +0.0228] p 0.125；B +0.0108 [−0.0089, +0.0300] p 0.143。C5 继承了 C/B 的季度集中，**不是均匀持续**。
+
+**Paired 日度对比（conditional subset contrast；source: `artifacts/storya_v21_family1_c5/c5_paired_contrast.csv`）**：(L1−L0)_C − (L1−L0)_C5 = +0.0013，95% CI [−0.0159, +0.0189]，p 0.84（lag 21：0.88），SE 0.0088、paired MDE ≈ 0.025 **大于 C 效应本身**；(L1−L0)_B − C5 = +0.0008 [−0.0186, +0.0200]。解读（TP3 R-A-03）：点估计基本未变，但区间**既不排除对比减半也不排除加倍**——**等价不成立**，这是 underpowered non-rejection；它是 51→20 列限制 + 重调后的变化量，**不是**泄漏膨胀的识别量。
+
+**设备复现（source: `artifacts/storya_v21_family1_c5/c5_device_replication.md`；Mac 统计 `artifacts/storya_v21_family1_c5_mac/`）**：L0 120/120 cell IC 逐位相同；L1 cell-IC 相关 0.951（平均 |Δ| 0.018，最大 0.103，均为 fold 9 且 epochs_run 不同——early-stop 在 val loss ≈ 0.998 的平坦曲线上的后端非确定性），Mac 复现 ΔIC **+0.0132 [+0.0002, +0.0279]，p 0.013 / lag-21 0.067**，paired C−C5 +0.0016，ex-fold-9 +0.0064 p 0.19 → 结论对 MPS/CUDA 不敏感；paired 对比中 C（Mac）vs C5（T4）的设备混杂以该复现为界。
+
+**Run integrity（source: `artifacts/storya_v21_family1_c5/c5_run_integrity.json`）**：240/240、cell_id 2400–2639 唯一、0 failed、全 converged、240 个 per-day 数组全部 == 冻结日历折天数（和 749）、provenance gate（TUNED per-arm、md5 cdb4d923、applied == frozen）PASS；`inputs` 记录目录/md5/设备/代码身份。TP3 reviewer 独立复算 ΔIC +0.013433、per-seed、npy 满长、cell_id 不交：一致。
+
+**允许的解读（TP3 措辞）**：在由两个 test-informed 重要性排名之交集选出的 20 列子集上，MLP−LightGBM 点估计为 +0.0134（95% 21d-block CI [+0.0008, +0.0283]；nominal HLN p 在冻结 auto-lag 下 0.008、在 lag = horizon 下 0.054；10/10 seed 同号；0 LOSO 翻转），对比 C +0.0148、B +0.0143；配对变化 +0.0013 [−0.016, +0.019]，点估计基本未变但区间不能区分"未变"与"减半/加倍"；三者的效应都低于近似 MDE；约一半来自 2025Q2；两臂调参 val-IC 为负；**本 sensitivity 不解决、不界定、也不估计 C 的 feature-selection leakage；由于选择用了 NN permutation 重要性，C/C5 内涉及 NN 臂的对比并非 selection-neutral；B 仍是 leak-free 特征基锚点**；只涉及 L0/L1，不提供 GNN 何时有帮助的新直接证据。**禁止的解读**："leak-free re-selection"、"survives T−1 re-ranking"、"definitive check"、"confirms/validates C"、"the advantage persists"（不带 fold-9 与 MDE 限定）、"robust to leakage"、"did not materially change / unchanged / equivalent"、单独引用 p = 0.008、任何容量归因、把 C5 per-arm IC 当样本外表现、"L1−L0 对比不受选择影响"。
+
+**后续（待 H博士）**：(1) 论文 L1/附录两句改口径（先改再插 C5 段）；(2) **C5h 不必要**（TP3：对论断无影响）；(3) C-pre（pre-test 选择器，`docs/c5_rerun_brief_2026-09-10.md` §9.10 + Codex B-01 coverage 规则）**只在论文想对泄漏做量化陈述时才需要**，否则保持"suggestive；B 为锚；泄漏未量化"即可；(4) 可选 L2 层（T4 已就绪）。
+
+## 2026-07-28-a: M Scout Step-1（预注册，bounded）— sector-peer momentum 在现代大盘幸存者面板不可检测；分支裁决 DEAD（bounded）
+
+→ progress: 2026-07-28-g/-h/-i | plan: Decision Log 2026-07-28 | analysis: 2026-07-28-a
+
+**协议链**：prereg 冻结（`docs/prereg_m_scout_2026-07-28.md`，md5 d8f998a2…）→ T2 3 MAJOR 全修（`artifacts/reviews/2026-07-28_codex_code_mscout_A.md`）→ confirmatory → T3 PASS-WITH-CONCERNS 0C/0M/4Cn（`artifacts/reviews/2026-07-28_codex_results_mscout_A.md`）。以下措辞按 T3 许可/禁止清单执行。
+
+**主结果**：126d sector-peer momentum 对 paper-1 21d 前瞻市场超额 z-score 标签的日度 rank IC 均值 = **−0.00414**，95% 21d-block-bootstrap CI **[−0.03525, +0.02854]**，n=1,107 IC 天（source: experiments/m_scout_step1/branch_rule.csv）。冻结可检测底线 F=0.03180（=1.96×SE_block 0.01623）；CI 上界 < F → **预注册 bounded 分支裁决 DEAD**（source: experiments/m_scout_step1/branch_floor.csv）。
+
+**必带限定（T3 强制）**：这是 **bounded 现代幸存者面板结果，不是历史衰减结果**——价格面板 2021-01-29→2026-01-28，主 IC 窗口 2021-08-02→2025-12-26；WRDS/CRSP PIT 成员/历史行业/退市收益分支未跑。裁决贴线而非大幅：**不能排除最高约 +0.029 的正 IC**（≈ 底线的 90%）。幸存者偏差对 rank IC 方向不定号；行业为快照非 PIT；21d 日频标签不等于经典月频 J/K 检验。
+
+**许可解读**：驱动图选股模型的 sector-peer momentum 信号在本面板/horizon 上不可检测 → **paper-1 的 graph-penalty null 更不意外**（机制支持，窄义）。**禁止解读**："异象已死"/"历史衰减获证"/"GNN 动机文献失效"/"不存在图载信号"。
+
+**次要族**（BH q=0.05，0/4 拒绝；source: experiments/m_scout_step1/secondary_family.csv）：S1 corr-top-20 IC −0.0218（p=0.33）；S2 21d 形成期 IC −0.0233（p=0.11）；S3 VW 行业动量 L/S +0.51%/月（NW p=0.28，n=53 月）；**S4 Lo–MacKinlay 大→小周频引领不对称 +0.0531（p=0.061，p_BH=0.22）= 预注册次要近信号，仅 hypothesis-generating**，不得回流影响主分支。
+
+**决策含义（T3 §5）**：无 WRDS 时 M 缩水为 paper-1 支持性诊断，不足以独立成机制论文；有 WRDS 则历史衰减分支仍可开。**paper-2 骨架天平向 J 倾斜**（条件于 J 数据闸门通过）。
+
+## 2026-07-26-a: 近半年（2026-01→07）金融 ML 文献扫描 — 六切面 ~70 篇；9 个未被占据的研究空白；下一篇 idea 候选 A–F
+
+→ progress: 2026-07-26-a | plan: 2026-07-26-a | analysis: 2026-07-26-a
+
+**Full report**: `docs/lit_scan_2026-07-26.md`（6 并行检索 agent：GNN图方法 / LLM金融 / 基础模型 / 评估严谨性 / regime非平稳 / 损失与决策导向；arXiv 摘要页直接核验，UNVERIFIED 已逐条标注）。
+
+**核心发现**（数字来源均为报告内 arXiv/SSRN 引用）：
+1. **GNN 选股批判位空置**：窗口内零篇 critique/replication；支持派自曝松动（危机期相关图密度 9.2%→93.3% 致 oversmoothing，arXiv:2605.19278；"structural purification" 去关系噪声，arXiv:2604.20204）；venue 从 AAAI/KDD 主 track 漂移到 ICASSP/ICAIF/workshop/MDPI。
+2. **预注册 + 等预算阶梯 + SPA/FDR 的组合截至 2026-07 无人占据**（评估严谨性 agent 显式核查；3 个部分例外均非模型对比场景）。2026 严谨性浪潮 8+ 篇全部砸向 LLM agent，经典 GNN/DL 排序零受审。
+3. **设计选择主导架构**获旗舰锚点：Chen-Hanauer-Kalsbach（SSRN 5031755，1,056 模型）nonstandard error = 1.59× standard error，算法非主导因子。{arch, loss, tuning, seed} 四因子分解、横截面 rank-IC 的 seed 方差分解（foil: arXiv:2603.16886 称 seed 仅 0.01% 方差 vs 我们 GAT-21d CV=55%）、深→浅蒸馏均无人做。
+4. **Regime-gate/MoE 是 2026 架构共识**（KDD'26 ReCAP / IJCAI'26 PRISM-VQ）但零推断：无人检验 regime×model 交互，Giacomini-White 条件预测能力检验在金融 ML 全窗口零应用。
+5. **通用 TSFM 零样本迁移收益预测 = 收敛负结果**（三篇独立：≈随机游走、输 GBM）；正面证据仅域内预训练（Kronos AAAI'26，4M–500M 参数族）；复杂性之德论战（Nagel vs Kelly-Malamud）无横截面受控实验。
+6. **LLM memorization 控制成熟**：LAP 检测（arXiv:2512.23847）+ 按时点训练 Chrono* 模型（arXiv:2502.21206，Guofu Zhou 组已用于 earnings-call 信号）——LLM 特征研究首次可辩护，但无人对 LLM 信号族做 FDR/SPA。
+7. **效应量先验**：Chen & Welch（arXiv:2607.06502）~200 已发表异象 2005 后非微盘仅 7bp/月。
+
+**Idea 候选**（详见报告 §4–§5 辩论记录）：A = 深度排序的 Nonstandard Errors 方差分解（吸收容量轴+蒸馏臂，大量格点已算完）；B = 图组件条件预测能力（GW 检验复用已存预测，近零算力，ICLR rebuttal 弹药）；C = LLM 文本信号入冻结协议；D/E/F = 缓存。**自辩裁决：B 先行 + A 为下一主论文；待 H博士 决策。**
+
 ## 2026-07-03-b: 15 篇顶会/顶刊文献对照评估 — 我们的评估协议在全部 15 篇中最严格；头条获 4 条独立证据链佐证
 
 → progress: 2026-07-03-d | plan: N/A（R1-R6 建议待 H博士 决策后入 plan） | analysis: 2026-07-03-b
