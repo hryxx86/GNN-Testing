@@ -11,7 +11,7 @@
 2. `progress.md` — 已完成工作
 3. `plan.md` — 接下来计划
 4. `docs/analysis.md` — 分析发现
-5. `docs/session_handoff_2026-04-20.md` — 最新 session 交接
+5. `docs/session_handoff_2026-09-11.md` — 最新 session 交接（历史 handoff 见 `docs/README.md`）
 6. 本次任务相关文件夹的 `README.md`（Quad-Doc Rule 5）
 
 ---
@@ -69,6 +69,9 @@
 ### Shared Library (.py, 1)
 - `run_step3_plan_z_part_a.py` — **不可归档**：被 5 个 active script `import` 作为 data loading + model definitions + utilities 共享模块（4 个 Tier 1 runner + `run_loss_horserace.py`）。注：另有 4 个引用 part_a 的脚本（part_b/c/c_perfold + smoke_test_part_a）已归档；它们的 import 在 archived 位置不会触发，仅作历史记录。
 
+### C5 sensitivity（.py, 1, 2026-09-11；详见 `docs/c5_rerun_brief_2026-09-10.md` §9 + `docs/analysis.md` 2026-09-11-a）
+- `analyze_c5_sensitivity.py` — C5（20 列 test-informed 子集）L1−L0 的 post-hoc 统计：strict integrity 门（逐 cell 冻结日历长度 + provenance md5）、per-seed 符号/LOSO、paired 日度对比（含 SE/MDE）、ex-fold 行、设备复现、并列表；配合 `compute_family1_ladder.py --universes C5 --arms L0,L1 --sensitivity`
+
 ### Sanity-Check Suite (.py, 3, 2026-06-11)
 管线证伪套件（E0–E4），发布 Story A null 前falsify"null 是破管线伪影"。import-only 复用 `run_storya_e1_anchor.py`，零改动 anchor。详见 `docs/analysis.md` 2026-06-11-a。
 - `run_sanity.py` — E0 wiring/provenance canary + E1/E1b/E2/E3 runner（`--experiment/--graph_type/--smoke/--resume`）
@@ -100,3 +103,4 @@
 - **2026-04-20**: 建立 24 个文件夹 README 体系，CLAUDE.md 升级为 Quad-Doc（→ progress: 2026-04-20-d）
 - **2026-04-27**: 新增 `run_local_stage1_segmented.sh`（本地 12h+1h segmented runner）；patched `analyze_loss_horserace.py:247` (sm.stats.norm → scipy.stats.norm fix for statsmodels 0.14 API)（→ progress: 2026-04-27-a）
 - **2026-05-21**: 根目录 .py 32 → 14（18 files 归档到 `archived/scripts/2026-05-21/`），重写根脚本索引（→ progress: 2026-05-21-a）
+- **2026-09-11**: 新增 `analyze_c5_sensitivity.py`（C5 sensitivity 分析）；`run_storya_v21_main12.py`/`run_storya_v21_tune.py` 支持显式 `--universe C5`；`compute_family1_ladder.py` 加 `--universes/--arms/--sensitivity`；新子目录 `experiments/storya_v21_main12_c5{,_t4}/`、`artifacts/storya_v21_family1_c5{,_mac}/`（→ progress: 2026-09-10-a, 2026-09-11-c/-d）

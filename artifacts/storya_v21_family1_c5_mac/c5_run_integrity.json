@@ -19,9 +19,15 @@
   },
   "n_failed": 0,
   "converged_all": true,
-  "n_test_days_total_per_arm": {
-    "L0": 749,
-    "L1": 749
+  "n_test_days_per_arm_per_seed_min_max": {
+    "L0": [
+      749,
+      749
+    ],
+    "L1": [
+      749,
+      749
+    ]
   },
   "per_day_npy_present": 240,
   "per_day_npy_len_mismatch": [],
@@ -64,6 +70,7 @@
     "CNTD30",
     "CORR60"
   ],
+  "feature_names_match_UNIVERSE_C5_NAMES": true,
   "inputs": {
     "c5_main_dir": "experiments/storya_v21_main12_c5",
     "conf_results_csv": "experiments/storya_v21_main12_tuned/results.csv",
@@ -73,7 +80,12 @@
     "platform": "macOS-26.3.1-arm64-arm-64bit",
     "git_rev": "9008dbe956220951db54975af8516365de9061d2",
     "source_clean": true,
-    "code_identity_post_hoc": null
+    "code_identity_post_hoc": null,
+    "n_invocations": 1,
+    "devices_seen": [
+      "mps"
+    ],
+    "multi_device_warning": false
   },
   "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_c5.json",
   "frozen_present": true,
@@ -105,5 +117,13 @@
     }
   },
   "strict": true,
-  "PASS": true
+  "PASS": true,
+  "analysis_mode": {
+    "n_boot": 5000,
+    "strict": true,
+    "smoke": false,
+    "out_dir": "artifacts/storya_v21_family1_c5_mac"
+  },
+  "family_dir_results_md5": "1d7445bf5081ea3683d0a5d1c9e0b562",
+  "family_dir_matches_main_dir": true
 }

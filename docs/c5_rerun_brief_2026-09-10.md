@@ -1,6 +1,6 @@
 # 任务：C5 leak-free re-selection sensitivity（给实验机 Claude Code 的说明）
 
-> 来源：H博士 2026-09-10 交付的任务简报（原文保留；§9 为实验机 Claude 的实施注记，供 Rule 9 Touchpoint 1 评审）。仓库 = GNN-Testing（Colab 上在 `/content/GNN-Testing`，`experiments/`、`data/` 软链到 Drive `GNN测试`；本地 Mac 副本在 `~/Desktop/GNN-Testing`）。下面的行号来自 2026-09-10 的本地副本，可能略有漂移，以 grep 为准。
+> 来源：H博士 2026-09-10 交付的任务简报（**§0–§8 原文逐字保留，受众 = 执行机 AI，为 .claude/rules/docs.md §8 的显式例外：这是任务记录而非规则文件**；§9 为实验机 Claude 的实施注记 + 偏离/处置账本，供 Rule 9 Touchpoint 1 评审与事后追溯）。仓库 = GNN-Testing（Colab 上在 `/content/GNN-Testing`，`experiments/`、`data/` 软链到 Drive `GNN测试`；本地 Mac 副本在 `~/Desktop/GNN-Testing`）。下面的行号来自 2026-09-10 的本地副本，可能略有漂移，以 grep 为准。
 
 ## 0. 背景与目标（先读）
 
@@ -109,3 +109,5 @@ ICLR 2027 稿的审稿意见 2：Limitation L1 说宇宙 C 的正结果（MLP �
 - 选择器：对 168 个候选（158 Alpha158，T−1 shifted + 10 hc）在 **2021-07-01 → 2022-06-30**（= 调参窗 train 段；标签终点 ≤ 2022-06-30，purge 21 天，完全早于调参 val 2022H2 与测试期 2023Q1–2025Q4）算单特征日度 rank-IC 均值；按 Plan AAA 的 61 组定义（`artifacts/plan_aaa/ranking.csv` `group_members`；**需先核实组定义（相关性聚类）的形成窗口是否也在 pre-test**，否则组定义改在同一 pre-test 窗重聚类）取 mean|IC| 排名 → top-15 组 → 列集 C-pre（列数不定）。
 - 之后与 C5 流程完全相同：L0/L1 各 30-trial 重调 → 240 cell → sensitivity 统计 + paired 对比。成本：选择器 < 10 min；其余同 C5（Mac ≈ 3 h）。
 - 性质：仍是论文历史上的事后分析（post-hoc），但选择信息边界干净，可以兑现 "leak-free re-selection" 的字面承诺。需单独 TP1 评审；实施前不动任何代码。
+
+**9.11 运行设备变更（2026-09-11，取代 §9.6；source: progress 2026-09-11-b）**：H博士 指示 "gpu完全没在用" → **240 cell 主结果 = Colab T4 运行**（`experiments/storya_v21_main12_c5_t4/`，结果出来前预先声明），Mac 运行降为设备复现（`experiments/storya_v21_main12_c5/`）。调参仍在 Mac 完成（不重做）。两份 pooled ΔIC 0.0134 vs 0.0132 一致（L0 逐位相同，L1 cell corr 0.951）。T4 代码身份事后在 Colab VM 上 md5sum 核实 == commit 9008dbe（`_code_identity_t4.json`）。

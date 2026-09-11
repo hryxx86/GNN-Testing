@@ -4,7 +4,7 @@
 
 ---
 
-## 当前内容 (as of 2026-07-07)
+## 当前内容 (as of 2026-09-11)
 
 ### Tri-Doc
 - `analysis.md` — 分析发现总表（Quad-Doc Rule 5 强制更新）
@@ -34,7 +34,8 @@
 
 ### Session Handoffs
 - `session_handoff_2026-04-15.md` … `session_handoff_2026-07-03.md`（历史，按日期排列）
-- `session_handoff_2026-07-07.md` ← 最新
+- `session_handoff_2026-07-07.md`
+- `session_handoff_2026-09-11.md` ← 最新（C5 sensitivity 完成；待 H博士：论文改口径 / C-pre / push）
 
 ---
 
@@ -43,7 +44,7 @@
 | 文件 | 用途 | 产出于 | 状态 |
 |------|------|-------|------|
 | `analysis.md` | Tri-doc 分析记录（必读） | 持续更新 | active |
-| `session_handoff_2026-04-20.md` | 最新 session 交接（新窗口必读） | 2026-04-20 | active |
+| `session_handoff_2026-09-11.md` | 最新 session 交接（新窗口必读；历史 handoff 按日期排列） | 2026-09-11 | active |
 | `project_findings_overview_2026-04-20.md` | 项目总纲 | 2026-04-20 | active |
 
 ---
@@ -60,3 +61,4 @@
 - **2026-04-20**: 新增 README；补充 fold4_leakage_diagnostic、project_findings_overview（→ progress: 2026-04-20-d）
 - **2026-04-21**: 新增 `advisor_presentation_2026-04-21.md` + `_en.md`（导师汇报中英双版；图见 `plots/advisor/`）（→ progress: 2026-04-21-a）
 - **2026-07-28**: 新增下一篇论文 ideation 工作流三件套：`next_paper_ideation_index.md`（专门管理索引）+ `lit_scan_2026-07-26.md` + `idea_expansions_2026-07-28.md`；评审存档在 `artifacts/reviews/2026-07-28_codex_plan_A.md`（→ progress: 2026-07-28-c）
+- **2026-09-11**: 新增 `c5_rerun_brief_2026-09-10.md`（C5 任务简报 + 实施注记 + C-pre 提案）与 `session_handoff_2026-09-11.md`（→ progress: 2026-09-10-a, 2026-09-11-d）

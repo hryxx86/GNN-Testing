@@ -48,5 +48,7 @@
       "match_9008dbe": true,
       "blob_sha_9008dbe": "68daa87f9f1a3b5795c075e025f1a69408fa59a9"
     }
-  }
+  },
+  "commit": "9008dbe",
+  "all_modules_match": true
 }

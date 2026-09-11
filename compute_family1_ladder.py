@@ -529,7 +529,8 @@ def _run_inputs(main_dir: str) -> dict:
 
 
 def write_ledger(out_dir: str, l7: dict, spa_M: int, sensitivity: bool = False,
-                 pairs_run: list | None = None, arms_run: list | None = None, main_dir: str | None = None) -> None:
+                 pairs_run: list | None = None, arms_run: list | None = None, main_dir: str | None = None,
+                 n_tests_actual: int | None = None) -> None:
     if sensitivity:
         # CODEX-TP2-A-05: record what was ACTUALLY executed (restricted pairs, no BH, no SPA, no L7 gate)
         pairs_run = list(pairs_run or [])
@@ -540,9 +541,12 @@ def write_ledger(out_dir: str, l7: dict, spa_M: int, sensitivity: bool = False,
                      'docs/c5_rerun_brief_2026-09-10.md)'),
             'sensitivity_scope': {'universes': list(UNIVERSES), 'arms': list(arms_run or []),
                                   'pairs_tested': [f'{a}-{b}' for a, b in pairs_run],
-                                  'n_tests_total': len(pairs_run) * len(UNIVERSES),
+                                  'n_tests_total': (int(n_tests_actual) if n_tests_actual is not None
+                                                    else len(pairs_run) * len(UNIVERSES)),
                                   'note': 'pre-registered LADDER_PAIRS/EDGE_PAIRS restricted to arms present; no pair added'},
             'bh_fdr': 'NOT APPLIED (raw, unadjusted HLN p; no family opened)',
+            'hln_hac_lag': ('HLN_p_t = Newey-West AUTO lag (implementation default in compute_e6_dm_spa.nw_lag; NOT specified '
+                            'by protocol §6); HLN_p_t_lag21 = horizon-matched lag reported alongside (EXPL-STAT-01)'),
             'spa': 'NOT RUN',
             'l7_contingency': 'SKIPPED (L7 not part of this run)',
             'degenerate_cell_treatment': {'primary': 'EXCLUDE (as confirmatory)',
@@ -631,7 +635,8 @@ def write_summary(out_dir: str, l7: dict, spa_df, dm_df, ci_df, mde_df, lofo_df,
     L.append("\n## Seed-averaged IC block-bootstrap CI per arm\n")
     if len(ci_df):
         L.append(ci_df.to_markdown(index=False))
-    L.append("\n## MDE per pairwise (MDE = 2.8 × SE; 'ci_excludes_0' = detected at this design)\n")
+    L.append("\n## MDE per pairwise (MDE = 2.8 × SE = effect detectable with 80% power; 'ci_excludes_0' = significant at α=0.05 — "
+             "an effect can be significant and still below the MDE)\n")
     if len(mde_df):
         L.append(mde_df[['universe', 'pair', 'is_edge_pair', 'mean_delta_IC', 'delta_ci_lo',
                          'delta_ci_hi', 'ci_excludes_0', 'SE_block', 'MDE_2p8xSE']].to_markdown(index=False))
@@ -679,6 +684,8 @@ def main() -> int:
     e6.N_FOLDS = N_FOLDS
     e6.CANONICAL_SEEDS = CANONICAL_SEEDS
 
+    if args.sensitivity and os.path.abspath(args.output_dir) == os.path.abspath('artifacts/storya_v21_family1'):
+        raise SystemExit('--sensitivity must not write into the confirmatory artifacts/storya_v21_family1; pass --output-dir')  # EXPL-CODE-01
     if args.sensitivity:
         print(f"[F1] POST-HOC SENSITIVITY mode: universes={UNIVERSES} arms={arms} "
               f"(no L7 contingency / SPA / BH; LADDER_PAIRS unchanged, restricted to arms present)")
@@ -700,6 +707,10 @@ def main() -> int:
 
     print("[F1] aggregating per-day IC matrices ...")
     agg = build_aggregate(arms, args.main_dir, args.l7_dir)
+    if args.sensitivity:   # EXPL-CODE-10: fail closed on an empty requested scope (silent empty CSVs otherwise)
+        empty = [(u, a) for u in UNIVERSES for a in arms if len(agg[(u, a)]['seed_avg_pooled']) == 0]
+        if empty:
+            raise SystemExit(f'no per-day IC found for {empty} in {args.main_dir}; check --universes/--arms')
 
     if args.sensitivity:
         spa_df = pd.DataFrame()
@@ -733,7 +744,7 @@ def main() -> int:
 
     spa_M = int(spa_df['M'].iloc[0]) if len(spa_df) else len(spa_candidates)
     write_ledger(args.output_dir, l7, spa_M, sensitivity=args.sensitivity, pairs_run=pairs, arms_run=arms,
-                 main_dir=args.main_dir)
+                 main_dir=args.main_dir, n_tests_actual=len(dm_df))
     write_summary(args.output_dir, l7, spa_df, dm_df, ci_df, mde_df, lofo_df, stab_df, rob_df,
                   sensitivity=args.sensitivity)
     print(f"[F1] DONE → {args.output_dir}")

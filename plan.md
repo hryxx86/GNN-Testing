@@ -8,7 +8,7 @@
 
 ## 2026-09-11-a: C5 sensitivity 完成 → 待 H博士 的三项决定（论文改口径 / C-pre / L2 层）；主线回到 9/25 全文截稿
 
-→ progress: 2026-09-11-a/-b/-c/-d | plan: 2026-09-11-a | analysis: 2026-09-11-a
+→ progress: 2026-09-11-a/-b/-c/-d/-e | plan: 2026-09-11-a | analysis: 2026-09-11-a | README: README.md + docs/README.md + experiments/README.md + artifacts/README.md 2026-09-11
 
 **已完成**：C5（20 列）L0/L1 重调 + 240 cell（T4 主 + Mac 复现）+ sensitivity 统计 + Rule 9 全链（TP1 A/B Codex；TP2 A Codex、B fallback；TP3 fallback）。结果与措辞见 analysis.md 2026-09-11-a；数据/代码已提交。**运行实质**：C5 上 L1−L0 = +0.0134 [+0.0008, +0.0283]（p 0.008 / lag-21 0.054），与 C/B 点估计相近但三者效应都 < MDE、约一半来自 2025Q2、两臂调参 val-IC 为负；C5 的选择本身 test-informed → 不能兑现论文 L1 的 "definitive check"。
 
@@ -22,7 +22,7 @@
 
 ## 2026-09-10-a: C5 leak-free re-selection sensitivity（post-hoc）— 审稿意见 2 / Limitation L1 承诺的 re-run
 
-→ progress: 2026-09-10-a | plan: 2026-09-10-a | analysis: PENDING（240 cell 结果 + TP3 后写入）
+→ progress: 2026-09-10-a | plan: 2026-09-10-a | analysis: 2026-09-11-a | README: experiments/README.md + artifacts/README.md 2026-09-10
 
 **任务来源**：H博士 简报 `docs/c5_rerun_brief_2026-09-10.md`（§0–§8 原文；§9 实施注记 = 偏离简报处逐条列出）。目标：宇宙 C 里只保留 T−1 re-rank 存活的 5 个因子组（**C5 = 20 列**：ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60，不含 hc 列），按 confirmatory 冻结协议（12 折 expanding、21d purge、同 label、10 canonical seeds、30-trial/top-5×3 tune seeds、2022H1/2022H2 调参窗）**重调** L0/L1 并评估，报告 C5 上 L1−L0 与 C（+0.0148, HLN p=0.011）/ B（+0.0143, p=0.052）并列。**post-hoc sensitivity：不入 BH 族、报原始 HLN p、不改任何 confirmatory 表。**
 

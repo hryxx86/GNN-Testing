@@ -1,4 +1,4 @@
-# Family-1 machinery — POST-HOC SENSITIVITY (NOT confirmatory; raw HLN p, no BH)  (_generated 2026-09-11 02:54:11_)
+# Family-1 machinery — POST-HOC SENSITIVITY (NOT confirmatory; raw HLN p, no BH)  (_generated 2026-09-11 03:15:09_)
 
 **L7/Cn5 contingency**: SKIPPED (sensitivity mode; L7 not part of this run). **SPA**: not run. **BH-FDR**: not applied (raw HLN p).
 
@@ -19,7 +19,7 @@
 | C5         | L0    | 749 |   0.02031 |   -0.00373 |    0.04717 | False           |
 | C5         | L1    | 749 |   0.03349 |    0.00201 |    0.07076 | True            |
 
-## MDE per pairwise (MDE = 2.8 × SE; 'ci_excludes_0' = detected at this design)
+## MDE per pairwise (MDE = 2.8 × SE = effect detectable with 80% power; 'ci_excludes_0' = significant at α=0.05 — an effect can be significant and still below the MDE)
 
 | universe   | pair   | is_edge_pair   |   mean_delta_IC |   delta_ci_lo |   delta_ci_hi | ci_excludes_0   |   SE_block |   MDE_2p8xSE |
 |:-----------|:-------|:---------------|----------------:|--------------:|--------------:|:----------------|-----------:|-------------:|

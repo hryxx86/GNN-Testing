@@ -25,6 +25,7 @@
     "note": "pre-registered LADDER_PAIRS/EDGE_PAIRS restricted to arms present; no pair added"
   },
   "bh_fdr": "NOT APPLIED (raw, unadjusted HLN p; no family opened)",
+  "hln_hac_lag": "HLN_p_t = Newey-West AUTO lag (implementation default in compute_e6_dm_spa.nw_lag; NOT specified by protocol \u00a76); HLN_p_t_lag21 = horizon-matched lag reported alongside (EXPL-STAT-01)",
   "spa": "NOT RUN",
   "l7_contingency": "SKIPPED (L7 not part of this run)",
   "degenerate_cell_treatment": {

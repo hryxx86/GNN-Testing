@@ -21,8 +21,9 @@
 - [`sanity_summary/`](sanity_summary/) — `verdicts.json` + `sanity_summary.md`（总 verdict = RESULT A,管线无罪）
 - `sanity_{fullrun,smoke,resmoke}_*.log` — 运行日志（不索引,按需查）
 
-### C5 sensitivity（2026-09-10，post-hoc、test-informed；详见 `docs/c5_rerun_brief_2026-09-10.md` §9.9）
-- [`storya_v21_main12_c5/`](storya_v21_main12_c5/) — L0/L1 × 10 seeds × 12 folds = 240 cell（cell_id 2400–2639）；`results.csv` / `manifest.csv` / `per_day_ic/` / `_universe_c5.json`（20 列）/ `_frozen_hp_provenance.json` / `_run_provenance.json`（git 白名单提交）
+### C5 sensitivity（2026-09-10/11，post-hoc、test-informed；详见 `docs/c5_rerun_brief_2026-09-10.md` §9.9/§9.11）
+- [`storya_v21_main12_c5_t4/`](storya_v21_main12_c5_t4/) — **PRIMARY（Colab T4，结果前预先声明）**：L0/L1 × 10 seeds × 12 folds = 240 cell（cell_id 2400–2639）；`results.csv` / `manifest.csv` / `per_day_ic/` / `_universe_c5.json`（20 列）/ `_frozen_hp_provenance.json` / `_run_provenance.json`（含事后 correction 条目）/ `_code_identity_t4.json`（Colab VM md5 == commit 9008dbe）
+- [`storya_v21_main12_c5/`](storya_v21_main12_c5/) — **Mac M4 设备复现**（同 frozen、同代码；L0 逐位相同、L1 cell corr 0.951），同一套文件
 - `storya_v21_tune/C5_{L0,L1}.json` + `frozen_hparams_c5.json` — C5 两臂 30-trial 调参冠军与冻结文件（副本+md5 在 `artifacts/storya_v21_tune/`）
 
 ---
@@ -67,3 +68,4 @@
 - **2026-06-11**: 新增 7 个 Sanity-Check 子目录（`sanity_e0..e4_*` + `sanity_summary/`）到子目录索引；run 日志不索引（→ progress: 2026-06-11-a）
 - **2026-04-20**: 新增 README。严格遵循 Rule 5 narrow：只索引论文级主表（9 个 CSV）+ 子目录；诊断 CSV/日志/per-seed NPY 不在此登记（→ progress: 2026-04-20-d, 2026-04-20-e）
 - **2026-09-10**: 新增 `storya_v21_main12_c5/`（C5 test-informed subset sensitivity，240 cell）+ `storya_v21_tune/C5_*.json`/`frozen_hparams_c5.json`（→ progress: 2026-09-10-c）
+- **2026-09-11**: `storya_v21_main12_c5_t4/` 定为 C5 主结果目录（T4），`storya_v21_main12_c5/` 改标为 Mac 复现（→ progress: 2026-09-11-b/-c）

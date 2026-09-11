@@ -4,7 +4,7 @@
 
 ---
 
-## 当前内容 (as of 2026-04-20)
+## 当前内容 (as of 2026-09-11)
 
 ### 根级日志 (.log, 4)
 - `alpha158_rebuild_save_raw.log` — Alpha158 重建
@@ -18,7 +18,8 @@
 - [`storya_v21_family2_fc/`](storya_v21_family2_fc/) — D-RERUN-12F Family-2 (causal FC edge) confirmatory: matched-ΔIC + BH-FDR/6
 - [`storya_v21_cost/`](storya_v21_cost/) — Cost-口径 (gross/net) crosswalk on the confirmatory ladder (descriptive; IC stays confirmatory)
 - [`reviews/`](reviews/) — Rule 9 reviewer outputs (Codex / finance-gnn-reviewer / closeout), §6 schema
-- [`storya_v21_family1_c5/`](storya_v21_family1_c5/) — **C5 post-hoc test-informed subset sensitivity**（NOT confirmatory）: family1 machinery in `--sensitivity` mode (raw HLN p, no BH/SPA) + `c5_*` seed robustness / paired contrast / comparison table / integrity（2026-09-10）
+- [`storya_v21_family1_c5/`](storya_v21_family1_c5/) — **C5 post-hoc test-informed subset sensitivity, PRIMARY（T4 运行）**（NOT confirmatory）: family1 machinery in `--sensitivity` mode (raw HLN p, no BH/SPA) + `c5_*` seed robustness / paired contrast (SE+MDE) / ex-fold-9 / device replication / comparison table / integrity（2026-09-10/11）
+- [`storya_v21_family1_c5_mac/`](storya_v21_family1_c5_mac/) — 同一套统计在 **Mac 设备复现**目录上的结果（对照用，2026-09-11）
 - [`storya_v21_tune/`](storya_v21_tune/) — frozen_hparams 源记录：confirmatory 20 winners + `frozen_hparams.json`；2026-09-10 起加 C5 两臂 winners + `frozen_hparams_c5.json` + `studies_c5/` sqlite 归档 + `c5_tune_archive_md5.json`
 
 ---
@@ -29,6 +30,9 @@
 |------|------|-------|------|
 | `fold4_leakage_diag.log` | Fold 4 专项诊断日志 | 2026-04-20 | active |
 | `part_c_perfold_run.log` | Part C perfold 最新运行 | 2026-04-20 | active |
+| `storya_v21_family1_c5/c5_comparison.md` | C5 sensitivity 并列表（主，T4）+ paired/ex-fold/调参披露 | 2026-09-11 | active |
+| `storya_v21_family1_c5/c5_run_integrity.json` | C5 主运行完整性 + inputs（目录/md5/设备/代码身份） | 2026-09-11 | active |
+| `storya_v21_tune/frozen_hparams_c5.json` | C5 两臂冻结超参（md5 cdb4d923） | 2026-09-11 | active |
 
 ---
 
@@ -44,3 +48,4 @@
 - **2026-04-20**: 新增 README（→ progress: 2026-04-20-d）
 - **2026-06-21**: 子目录索引补 D-RERUN-12F confirmatory 产出（storya_v21_family1 / family2_fc / cost / reviews）（→ progress: 2026-06-21-b）
 - **2026-09-10**: 新增 `storya_v21_family1_c5/`（C5 sensitivity 统计产物）+ `storya_v21_tune/` C5 归档（→ progress: 2026-09-10-c）
+- **2026-09-11**: 新增 `storya_v21_family1_c5_mac/`（Mac 复现统计）；`storya_v21_family1_c5/` 定为主（T4）；关键文件速查补 C5 三行（→ progress: 2026-09-11-c/-d）

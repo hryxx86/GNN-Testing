@@ -321,14 +321,19 @@ def main():
     result['smoke'] = bool(args.smoke)
     # execution metadata (CODEX TP1-B A-06 2026-09-10): tuning device/software alongside the winner
     import platform, subprocess, lightgbm
+    _code_dir = os.path.dirname(os.path.abspath(anchor.__file__))    # EXPL-CODE-11: anchor git at the code dir, not cwd
+    _rev, _git_err = None, None
     try:
-        _rev = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-    except Exception:
-        _rev = None
+        _rev = subprocess.check_output(['git', '-C', _code_dir, 'rev-parse', 'HEAD'], text=True).strip()
+    except Exception as e:
+        _git_err = str(e)
+    _self_md5 = {os.path.basename(f): hashlib.md5(open(f, 'rb').read()).hexdigest()
+                 for f in (os.path.abspath(__file__), os.path.abspath(anchor.__file__), os.path.abspath(main12.__file__))}
     result['execution'] = {'device': str(get_device()), 'platform': platform.platform(),
                            'python': sys.version.split()[0], 'torch': torch.__version__,
                            'lightgbm': lightgbm.__version__, 'optuna': optuna.__version__,
-                           'numpy': np.__version__, 'git_rev': _rev,
+                           'numpy': np.__version__, 'git_rev': _rev, 'git_error': _git_err, 'code_dir': _code_dir,
+                           'module_md5': _self_md5,
                            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')}
 
     # CODEX-A-02: smoke artifacts go to _smoke_{u}_{a}.json (+ {u}_{a}_smoke.db) — excluded by the

@@ -711,11 +711,14 @@ def main():
         git_rev, git_error = None, None
         try:
             git_rev = subprocess.check_output(['git', '-C', repo, 'rev-parse', 'HEAD'], text=True).strip()
-            st = subprocess.check_output(['git', '-C', repo, 'status', '--porcelain', '--'] + mods, text=True)
+            top = subprocess.check_output(['git', '-C', repo, 'rev-parse', '--show-toplevel'], text=True).strip()
+            # EXPL-CODE-12: `git status --porcelain` prints TOPLEVEL-relative paths → key everything on those
+            top_rel = [os.path.relpath(p, top) for p in mod_paths]
+            st = subprocess.check_output(['git', '-C', top, 'status', '--porcelain', '--'] + top_rel, text=True)
             status = {ln[3:]: ln[:2].strip() for ln in st.splitlines()}
-            shas = subprocess.check_output(['git', '-C', repo, 'hash-object'] + mods, text=True).split()
-            for m, sha in zip(mods, shas):
-                src_state[m].update({'blob_sha': sha, 'git_status': status.get(m, '')})
+            shas = subprocess.check_output(['git', '-C', top, 'hash-object'] + top_rel, text=True).split()
+            for m, tr, sha in zip(mods, top_rel, shas):
+                src_state[m].update({'blob_sha': sha, 'git_status': status.get(tr, ''), 'toplevel_path': tr})
         except Exception as e:
             git_error = str(e)
         source_clean = (None if git_error else

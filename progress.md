@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-09-11-e: Session Closeout Audit（4-agent 并行）— 2 CRITICAL（README 索引）当场修，8 MAJOR 全修；Verdict PASS
+
+- Scope: `git diff --name-only eb8314e..a903c5e`（6 个 C5 代码文件 + 46b3b8c 补交的 3 个 + 四文档/README/.gitignore + C5 产物与评审）
+- Agents: explore-leakage / explore-statistics / explore-correctness / explore-doc-drift（Explore 子代理，独立上下文）
+- Full reviews: `artifacts/reviews/2026-09-11_explore-{leakage,statistics,correctness,doc-drift}_closeout.md`
+
+| Agent | CRITICAL | MAJOR | CONCERN | Verdict |
+|-------|----------|-------|---------|---------|
+| Leakage | 0 | 0 | 1 | PASS |
+| Statistics | 0 | 2 | 8 | PASS-WITH-CONCERNS |
+| Correctness | 0 | 4 | 11 | PASS-WITH-CONCERNS |
+| Doc Drift | 2 | 2 | 8 | PROCEED-WITH-FIXES |
+
+- **当场修复（全部亲自读码/核数后）**：
+  - Leakage-01：paired 对比改为逐折配对，C5 与 confirmatory 两侧每折长度都断言 == 冻结日历（重跑数字不变）。
+  - Stats-01/02（MAJOR）：NW auto-lag 非协议指定项（`protocol_v2_freeze.md` §6 无 HAC lag，grep 核实）→ ledger 记 HAC 策略、去掉"冻结"字样、明示 **lag-21 下 C5/C/B 均未达 0.05**；"lag-21 与 bootstrap 一致"改为 "SE 一致、5% 判定边际相反（1.96×SE 0.0138 > ΔIC 0.0134，CI 排零为边界情形）"。Stats-03..10：B 为 non-detection 分开表述；16 个 nominal p 的清单（`c5_tests_reported.json`）；k=10 ⇒ m=0 必然、seed 稳定性非独立复制；C5 最小 p 由方差驱动；HLN_stat 列改名 `HLN_stat_on_IC_diff`；fold-9 份额 53%/44%/31%（B 最大折是 fold 7，核实）；MDE 与显著性标题分开；CI 估计量标为 10-seed 平均。
+  - Correctness-01..04（MAJOR）：`--sensitivity` 拒绝写入 confirmatory 目录（负测试通过）；analyze 强制校验 family 目录 ledger 的 results.csv md5 == cell 目录（Mac/T4 混用 → 拒绝，负测试通过）；smoke/conf-only 输出自动加后缀且拒写正式目录，md 记 n_boot/strict；md 判断句改为由数据推导（MDE 上/下、paired MDE vs C 效应、决赛 val-IC 负数计数与范围、参数比）。Concern-06..15：paired CSV 固定列名；provenance 读取取 CORRECTION 条目并报 n_invocations/devices；code-identity 通用键；integrity 校验 20 列名 == `UNIVERSE_C5_NAMES`；空 scope fail-closed + n_tests_total 取实际行数；tune git 以代码目录为锚 + module md5；main12 provenance 以 git toplevel 相对路径为键；per-arm 天数改 min/max；`--ex-fold` 越界报错；注释方向修正。Concern-05（dm_hln 两模式列不同）ACCEPTED-AS-CONCERN（改 confirmatory 分支会破坏字节一致）。
+  - Doc-01/02（CRITICAL）：experiments/README 索引 T4 主目录并标 Mac 为复现；artifacts/README 索引 `_c5_mac` + 关键文件速查 + as-of 日期。Doc-03/04（MAJOR）：两处 `analysis: PENDING` → `2026-09-11-a`。Doc-05..11：tri-doc 行加 README 字段；README.md/docs/README.md 随本次提交；progress ex-fold CI 改为产物值并注 source；analysis.md 去 MUST 口吻；简报头部写明 §8 例外；§9.11 记录 T4 主运行取代 §9.6；artifacts/README 日期。Doc-12 ACCEPTED-AS-CONCERN（沿用父目录索引惯例）。
+- 产物已用修复后的代码重生成（`artifacts/storya_v21_family1_c5/`、`_c5_mac/`）；数字不变。
+- **Verdict: PASS**（0 CRITICAL 未决、0 MAJOR 未决；2 项 ACCEPTED-AS-CONCERN）。
+
+→ progress: 2026-09-11-e | plan: 2026-09-11-a | analysis: 2026-09-11-a | README: README.md + docs/README.md + experiments/README.md + artifacts/README.md 2026-09-11
+
 ## 2026-09-11-d: Fallback Reviews — TP2 Round B（code）+ TP3 Round A（results），finance-gnn-reviewer；全部发现处置完毕并重生成产物
 
 - **TP2 Round B**（`artifacts/reviews/2026-09-11_finance-gnn-reviewer_code_B.md`；Codex 额度中断后的 fallback，第一次尝试又撞 Claude 月度 429，第二次完成）：Round A 五项全 FIXED（reviewer 亲自复算：默认 merge 与 eb8314e 字节一致 md5 2d49f67a；C-only sensitivity 复现 confirmatory 行 `DataFrame.equals` True；240+240+480 cell 全部满日历长度）。新发现 0 C + 2 M + 2 Cn，verdict PROCEED-WITH-FIXES，**全部亲自核实并修复**：
@@ -11,24 +34,24 @@
   - B-02 主产物未记录输入目录 → `c5_run_integrity.json` 与 sensitivity ledger 加 `inputs`（目录、results/manifest md5、device、platform、git_rev、source_clean、事后代码身份）；`c5_comparison.md` 头部写明 INPUT；默认 `--c5-main-dir` 改为预先声明的 T4；设备复现改由 `analyze_c5_sensitivity.py --replicate-main-dir` 生成。
   - B-03 paired 对比加 SE_block/MDE（≈0.025 > C 效应 0.0148）→ 措辞"underpowered non-rejection，不排除减半/加倍，不成立等价"；B-04 负 val-IC 调参披露句加入产物。A-04 残留（anchor 两处 docstring "leak-free"）改词。
 - **TP3 Round A**（`artifacts/reviews/2026-09-11_finance-gnn-reviewer_results_A.md`）：计算可信度 PASS（reviewer 独立复算 ΔIC +0.013433、per-seed、240 npy 满长、cell_id 不交）；0 C + 4 M + 3 Cn，verdict PROCEED-WITH-FIXES，**逐条亲自核实**：
-  - R-A-01 fold 9（2025Q2）贡献约一半：C5 fold-9 ΔIC +0.086，ex-fold-9 ΔIC **+0.0069** [−0.0029, +0.0182]，p 0.132 / lag-21 0.231（C ex-9 +0.0090 p 0.125；B +0.0108 p 0.143）→ `--ex-fold 9` 表加入产物（`c5_ex_fold.csv`），措辞"继承 C/B 的季度集中，非均匀持续"。FIXED。
+  - R-A-01 fold 9（2025Q2）贡献约一半：C5 fold-9 ΔIC +0.086，ex-fold-9 ΔIC **+0.0069** [−0.0032, +0.0179]，p 0.132 / lag-21 0.231（C ex-9 +0.0090 p 0.125；B +0.0108 p 0.143；source: `artifacts/storya_v21_family1_c5/c5_ex_fold.csv`）→ `--ex-fold 9` 表加入产物（`c5_ex_fold.csv`），措辞"继承 C/B 的季度集中，非均匀持续"。FIXED。
   - R-A-02 lag-21 p = 0.054、|ΔIC| 0.0134 < MDE 0.0197（C/B 同样）→ CI 先行 + 双 lag + "marginal, underpowered detections"。FIXED。R-A-03 paired 区间宽于效应本身 → 不作等价解读。FIXED。R-A-04 两臂 5 个决赛配置 val-IC 全负（L1 −0.0448…−0.0453，per-seed −0.006/−0.045/−0.084；L0 −0.0121…−0.0122），C5 MLP 2,337 参数 vs C 31,745 → 披露，不做容量归因。FIXED。
   - R-A-05 Plan AAA 选择器基于 NN（SAGE-Mean/MLP）permutation 重要性（`artifacts/plan_aaa/baseline_ic_per_cell.csv` arch 列核实）→ L1−L0 方向本身可能被选择偏爱；写入 limitation。R-A-06 设备差异 = early-stop 在平坦 val 曲线上的后端非确定性；报 Mac 复现区间。R-A-07 论文两句需改（H博士）。均 ACCEPTED-AS-CONCERN。
   - Reviewer 结论：**C5h 不必要**；C-pre 只在论文想对泄漏量化时才需要。
 - 产物已按修复重生成（primary `artifacts/storya_v21_family1_c5/` 含 ex-fold、paired SE/MDE、inputs、device replication；replicate `_c5_mac/`）；措辞按 TP3 许可/禁止清单写入 analysis.md 2026-09-11-a。
 
-→ progress: 2026-09-11-d | plan: 2026-09-10-a | analysis: 2026-09-11-a
+→ progress: 2026-09-11-d | plan: 2026-09-11-a | analysis: 2026-09-11-a | README: README.md + docs/README.md + experiments/README.md + artifacts/README.md 2026-09-11
 
 ## 2026-09-11-c: C5 两份 240 cell 全部完成（T4 主 1.04 h；Mac 复现 1.7 h）→ family1 sensitivity + analyze_c5 出数；设备复现一致；TP2-B/TP3 走 fallback（Codex 额度至 04:40）
 
 - **T4 主运行**（`experiments/storya_v21_main12_c5_t4/`，Drive tar+scp 回本机，md5 3427440c…）：240/240 completed、0 failed、全 converged、cell_id 2400–2639 唯一；L0 1.3 s/cell、L1 29.4 s/cell；provenance mode TUNED per-arm、md5 cdb4d923 匹配、device cuda、torch 2.11.0+cu128（`_run_provenance.json`；Colab 下 `setup_workdir` chdir 到 Drive → git_rev None，文件 md5 与 commit 9008dbe 一致见 2026-09-11-b）。
 - **Mac 复现**（`experiments/storya_v21_main12_c5/`）：240/240、L1 51.2 s/cell、device mps、`source_clean=true`（git 9008dbe）。
-- **统计（主，source: `artifacts/storya_v21_family1_c5/`）**：C5 L1−L0 seed-avg daily ΔIC = **+0.01343**，21d block-boot 95% CI [+0.00075, +0.02833]，HLN p = **0.0080**（auto lag；lag-21 见 dm_hln.csv），IC L0 = 0.0203、IC L1 = 0.0337，MDE≈2.8×SE = 0.0197，per-seed 同号 10/10，LOSO 翻转 0/10；paired (L1−L0)_C − (L1−L0)_C5 = +0.0013 [−0.0159, +0.0189]，p=0.84；(L1−L0)_B − C5 = +0.0009 [−0.0186, +0.0200]，p=0.91；integrity PASS（240 npy 全等冻结日历折天数、provenance gate 通过）。Mac 复现同法：ΔIC +0.01318 [+0.00021, +0.02786]，p=0.0125（`artifacts/storya_v21_family1_c5_mac/`）。
+- **统计（主，source: `artifacts/storya_v21_family1_c5/`）**：C5 L1−L0 seed-avg daily ΔIC = **+0.01343**，21d block-boot 95% CI [+0.00075, +0.02833]，HLN p = **0.0080**（auto lag；lag-21 见 dm_hln.csv），IC L0 = 0.0203、IC L1 = 0.0337，MDE≈2.8×SE = 0.0197，per-seed 同号 10/10，LOSO 翻转 0/10；paired (L1−L0)_C − (L1−L0)_C5 = +0.0013 [−0.0159, +0.0189]，p=0.84；(L1−L0)_B − C5 = +0.0008 [−0.0186, +0.0200]，p=0.91；integrity PASS（240 npy 全等冻结日历折天数、provenance gate 通过）。Mac 复现同法：ΔIC +0.01318 [+0.00021, +0.02786]，p=0.0125（`artifacts/storya_v21_family1_c5_mac/`）。
 - **设备复现**（`c5_device_replication.md`）：L0 120/120 cell IC 逐位相同；L1 cell-IC 相关 0.951、平均 |Δ| 0.018、最大 0.103（单 cell），pooled ΔIC 0.01343（T4）vs 0.01318（Mac）→ 结论对设备不敏感。
 - Rule 9：TP2 Round B fallback（finance-gnn-reviewer，重启）与 **TP3 Round A fallback**（finance-gnn-reviewer；Codex 额度 04:40 恢复）并行送审；**结论措辞待 TP3 过审后写入 analysis.md**。
 - 简报 §6 交付物 1–5 已齐（6 L2 层未跑；7 文档待 TP3；8 遵守）。
 
-→ progress: 2026-09-11-c | plan: 2026-09-10-a | analysis: PENDING（TP3 后）
+→ progress: 2026-09-11-c | plan: 2026-09-10-a | analysis: 2026-09-11-a | README: experiments/README.md + artifacts/README.md 2026-09-10
 
 ## 2026-09-11-b: H博士 指示 "gpu完全没在用" → 240 cell 改由 Colab T4 作为**主结果**（预先声明），Mac 那份降为设备复现对照
 
