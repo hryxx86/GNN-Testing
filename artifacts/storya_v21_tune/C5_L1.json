@@ -1,0 +1,127 @@
+{
+  "universe": "C5",
+  "arm": "L1",
+  "model": "MLP",
+  "n_trials": 30,
+  "top_k": 5,
+  "tune_seeds": [
+    11,
+    22,
+    33
+  ],
+  "tune_window": {
+    "train_end": "2022-06-30",
+    "val_end": "2022-12-31",
+    "test_end": "2022-12-31"
+  },
+  "winner_params": {
+    "lr": 0.009172900184875115,
+    "weight_decay": 6.558234573242414e-05,
+    "dropout": 0.3,
+    "hidden_channels": 32,
+    "num_layers": 1
+  },
+  "winner_mean_val_ic_3seed": -0.04479823106278976,
+  "top_table": [
+    {
+      "rank": 1,
+      "params": {
+        "lr": 0.009172900184875115,
+        "weight_decay": 6.558234573242414e-05,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "search_val_ic": -0.005592803470790386,
+      "tune_seed_ics": [
+        -0.005592803470790386,
+        -0.04453199356794357,
+        -0.08426989614963531
+      ],
+      "mean_val_ic_3seed": -0.04479823106278976
+    },
+    {
+      "rank": 4,
+      "params": {
+        "lr": 0.005102748431488049,
+        "weight_decay": 0.00017843454706568238,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "search_val_ic": -0.010187504813075066,
+      "tune_seed_ics": [
+        -0.010187504813075066,
+        -0.04393046721816063,
+        -0.08028481155633926
+      ],
+      "mean_val_ic_3seed": -0.044800927862524986
+    },
+    {
+      "rank": 3,
+      "params": {
+        "lr": 0.008712128146106375,
+        "weight_decay": 7.763718664753513e-05,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "search_val_ic": -0.005991401616483927,
+      "tune_seed_ics": [
+        -0.005991401616483927,
+        -0.04496398940682411,
+        -0.08390351384878159
+      ],
+      "mean_val_ic_3seed": -0.04495296829069654
+    },
+    {
+      "rank": 0,
+      "params": {
+        "lr": 0.009270097954101036,
+        "weight_decay": 0.00018732763755945227,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "search_val_ic": -0.005428030621260405,
+      "tune_seed_ics": [
+        -0.005428030621260405,
+        -0.04558493196964264,
+        -0.08486286550760269
+      ],
+      "mean_val_ic_3seed": -0.04529194269950191
+    },
+    {
+      "rank": 2,
+      "params": {
+        "lr": 0.009199152784260504,
+        "weight_decay": 0.00016568491419545706,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "search_val_ic": -0.005782647989690304,
+      "tune_seed_ics": [
+        -0.005782647989690304,
+        -0.0448441244661808,
+        -0.0853375568985939
+      ],
+      "mean_val_ic_3seed": -0.045321443118155
+    }
+  ],
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "wall_time_sec": 905.8,
+  "smoke": false,
+  "execution": {
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.11.15",
+    "torch": "2.11.0",
+    "lightgbm": "4.6.0",
+    "optuna": "4.9.0",
+    "numpy": "2.4.4",
+    "git_rev": "9008dbe956220951db54975af8516365de9061d2",
+    "timestamp": "2026-09-11 00:30:17",
+    "study_db": "experiments/storya_v21_tune/studies/C5_L1.db"
+  }
+}

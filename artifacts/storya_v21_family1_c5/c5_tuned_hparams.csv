@@ -1,0 +1,5 @@
+universe,arm,model,n_inputs,winner_params,winner_mean_val_ic_3seed,n_trials,mlp_n_params
+C5,L0,LightGBM,20,"{'num_leaves': 63, 'learning_rate': 0.01288916458910432, 'min_data_in_leaf': 100, 'lambda_l1': 0.000465635505528644, 'lambda_l2': 0.015550600226247952}",-0.012074580416083336,30,
+C5,L1,MLP,20,"{'lr': 0.009172900184875115, 'weight_decay': 6.558234573242414e-05, 'dropout': 0.3, 'hidden_channels': 32, 'num_layers': 1}",-0.04479823106278976,30,2337.0
+C,L0,LightGBM,51,"{'num_leaves': 15, 'learning_rate': 0.027924746980950325, 'min_data_in_leaf': 100, 'lambda_l1': 1.1945711070427778e-07, 'lambda_l2': 0.04279834445098042}",0.07352573424577713,30,
+C,L1,MLP,51,"{'lr': 0.0019531137875202621, 'weight_decay': 0.00024029526489767312, 'dropout': 0.1, 'hidden_channels': 128, 'num_layers': 1}",0.059699345380067825,30,31745.0

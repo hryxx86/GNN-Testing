@@ -1,0 +1,33 @@
+{
+  "family": "Family-1 machinery re-used for a POST-HOC SENSITIVITY run",
+  "role": "POST-HOC SENSITIVITY (NOT confirmatory; no BH family opened; raw HLN p only; docs/c5_rerun_brief_2026-09-10.md)",
+  "sensitivity_scope": {
+    "universes": [
+      "C5"
+    ],
+    "arms": [
+      "L0",
+      "L1"
+    ],
+    "pairs_tested": [
+      "L1-L0"
+    ],
+    "n_tests_total": 1,
+    "note": "pre-registered LADDER_PAIRS/EDGE_PAIRS restricted to arms present; no pair added"
+  },
+  "bh_fdr": "NOT APPLIED (raw, unadjusted HLN p; no family opened)",
+  "spa": "NOT RUN",
+  "l7_contingency": "SKIPPED (L7 not part of this run)",
+  "degenerate_cell_treatment": {
+    "primary": "EXCLUDE (as confirmatory)",
+    "reference_for_partial_collapse": "max length over arms present"
+  },
+  "block_bootstrap": {
+    "n_boot": 5000,
+    "block_size_days": 21
+  },
+  "mde_rule": "MDE \u2248 2.8 x SE_block-bootstrap(mean delta-IC) (approximate nominal)",
+  "horizon_days": 21,
+  "seed_avg_note": "Seeds averaged per (arm, universe, date, fold) BEFORE HLN (as confirmatory).",
+  "tuning_val_ic_note": "The \u00a74 tuning val-IC is a SELECTION metric, NEVER entered as a result."
+}

@@ -1,0 +1,3 @@
+universe,arm,T,IC_mean,IC_ci_lo,IC_ci_hi,ci_excludes_0
+C5,L0,749,0.02031,-0.00373,0.04717,False
+C5,L1,749,0.03374,0.00208,0.07045,True

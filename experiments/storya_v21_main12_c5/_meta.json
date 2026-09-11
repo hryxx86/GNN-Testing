@@ -1,0 +1,45 @@
+{
+  "experiment_id": "storya_v21_main12",
+  "protocol_ref": "docs/protocol_v2_freeze.md v2.1-frozen \u00a72a/\u00a73/\u00a75/\u00a78",
+  "disposition_ref": "artifacts/reviews/2026-06-12_codex_plan_T1.md",
+  "decision": "D-RERUN-12F (12-fold fresh under frozen hparams; old 5-fold = pilot/smoke)",
+  "axis": "expanding 12-fold, train_start=2021-07-01, test 2023Q1..2025Q4",
+  "horizon_days": 21,
+  "canonical_seeds": [
+    86,
+    123,
+    456,
+    789,
+    1024,
+    2024,
+    7,
+    34,
+    99,
+    2026
+  ],
+  "arms_implemented": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L2s",
+    "L5s",
+    "L6"
+  ],
+  "arms_followup": [
+    "L7 (separate HATS runner under \u00a76 contingency)"
+  ],
+  "import_only_source": "run_storya_e1_anchor.py (E0-validated; no data/edge/snapshot rewrite)",
+  "cost_convention": "L1_one_way",
+  "cost_levels_bps": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    30
+  ],
+  "l6_note": "L6 = make_nn_model(GAT) on complete graph; param-identical to L2, edge-only diff"
+}

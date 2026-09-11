@@ -1,0 +1,98 @@
+{
+  "n_results_rows": 240,
+  "n_expected": 240,
+  "universes": [
+    "C5"
+  ],
+  "arms": [
+    "L0",
+    "L1"
+  ],
+  "cell_id_unique": true,
+  "cell_id_range": [
+    2400,
+    2639
+  ],
+  "cell_id_disjoint_from_confirmatory_0_2399": true,
+  "manifest_status_counts": {
+    "completed": 240
+  },
+  "n_failed": 0,
+  "converged_all": true,
+  "n_test_days_total_per_arm": {
+    "L0": 749,
+    "L1": 749
+  },
+  "per_day_npy_present": 240,
+  "per_day_npy_len_mismatch": [],
+  "frozen_calendar_days_per_fold": {
+    "0": 62,
+    "1": 62,
+    "2": 63,
+    "3": 63,
+    "4": 61,
+    "5": 63,
+    "6": 64,
+    "7": 64,
+    "8": 60,
+    "9": 62,
+    "10": 64,
+    "11": 61
+  },
+  "frozen_calendar_total": 749,
+  "cells_not_full_calendar_length": [],
+  "n_features": 20,
+  "feature_names": [
+    "ROC30",
+    "MA60",
+    "MAX60",
+    "MIN60",
+    "QTLU60",
+    "QTLD60",
+    "KMID",
+    "KMID2",
+    "KSFT",
+    "KSFT2",
+    "OPEN0",
+    "HIGH0",
+    "VWAP0",
+    "KUP",
+    "KUP2",
+    "CNTP20",
+    "CNTD20",
+    "CNTP30",
+    "CNTD30",
+    "CORR60"
+  ],
+  "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_c5.json",
+  "frozen_present": true,
+  "frozen_md5": "cdb4d92314b0d43d3287ea6d403d840d",
+  "provenance_present": true,
+  "provenance_mode": "TUNED per-arm",
+  "provenance_md5": "cdb4d92314b0d43d3287ea6d403d840d",
+  "provenance_gate_ok": true,
+  "applied_hparams": {
+    "C5_L0": {
+      "src": "C5_L0",
+      "params": {
+        "num_leaves": 63,
+        "learning_rate": 0.01288916458910432,
+        "min_data_in_leaf": 100,
+        "lambda_l1": 0.000465635505528644,
+        "lambda_l2": 0.015550600226247952
+      }
+    },
+    "C5_L1": {
+      "src": "C5_L1",
+      "params": {
+        "lr": 0.009172900184875115,
+        "weight_decay": 6.558234573242414e-05,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      }
+    }
+  },
+  "strict": true,
+  "PASS": true
+}

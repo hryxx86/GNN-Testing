@@ -1,0 +1,2 @@
+universe,pair,is_edge_pair,T,mean_delta_IC,delta_ci_lo,delta_ci_hi,ci_excludes_0,SE_block,MDE_2p8xSE,T_days,n_eff_blocks
+C5,L1-L0,False,749,0.01318,0.00021,0.02786,True,0.00707,0.0198,749,35.7

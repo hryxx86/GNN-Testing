@@ -1,0 +1,45 @@
+{
+  "source": "run_storya_v21_tune.py per-study outputs",
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "universes": [
+    "C5"
+  ],
+  "arms": [
+    "L0",
+    "L1"
+  ],
+  "n_studies": 2,
+  "expected": 2,
+  "complete": true,
+  "missing": [],
+  "studies": {
+    "C5_L0": {
+      "universe": "C5",
+      "arm": "L0",
+      "model": "LightGBM",
+      "winner_params": {
+        "num_leaves": 63,
+        "learning_rate": 0.01288916458910432,
+        "min_data_in_leaf": 100,
+        "lambda_l1": 0.000465635505528644,
+        "lambda_l2": 0.015550600226247952
+      },
+      "winner_mean_val_ic_3seed": -0.012074580416083336,
+      "n_trials": 30
+    },
+    "C5_L1": {
+      "universe": "C5",
+      "arm": "L1",
+      "model": "MLP",
+      "winner_params": {
+        "lr": 0.009172900184875115,
+        "weight_decay": 6.558234573242414e-05,
+        "dropout": 0.3,
+        "hidden_channels": 32,
+        "num_layers": 1
+      },
+      "winner_mean_val_ic_3seed": -0.04479823106278976,
+      "n_trials": 30
+    }
+  }
+}

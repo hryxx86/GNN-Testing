@@ -57,13 +57,14 @@ artifacts/**
 !artifacts/storya_v21_cost/*.json
 !artifacts/storya_v21_cost/*.md
 # 2026-09-10 C5 test-informed feature-subset sensitivity (post-hoc) — small text/JSON + per-day IC arrays
-!artifacts/storya_v21_family1_c5/*.csv
-!artifacts/storya_v21_family1_c5/*.json
-!artifacts/storya_v21_family1_c5/*.md
-!experiments/storya_v21_main12_c5/results.csv
-!experiments/storya_v21_main12_c5/manifest.csv
-!experiments/storya_v21_main12_c5/_*.json
-!experiments/storya_v21_main12_c5/per_day_ic/*.npy
+# (_c5 = T4 primary stats, _c5_mac = Mac device replicate; main12_c5_t4 = T4 primary cells, main12_c5 = Mac replicate)
+!artifacts/storya_v21_family1_c5*/*.csv
+!artifacts/storya_v21_family1_c5*/*.json
+!artifacts/storya_v21_family1_c5*/*.md
+!experiments/storya_v21_main12_c5*/results.csv
+!experiments/storya_v21_main12_c5*/manifest.csv
+!experiments/storya_v21_main12_c5*/_*.json
+!experiments/storya_v21_main12_c5*/per_day_ic/*.npy
 
 # Claude Code — whitelist shareable team infrastructure, ignore everything else by default.
 # Previously (pre-2026-04-23) blanket-ignored `.claude/`, which broke Rule 9 infra shipping.

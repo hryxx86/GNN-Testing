@@ -1,0 +1,26 @@
+{
+  "archived": "2026-09-11 00:30:18",
+  "source_dir": "experiments/storya_v21_tune",
+  "files": {
+    "frozen_hparams_c5.json": {
+      "md5": "cdb4d92314b0d43d3287ea6d403d840d",
+      "bytes": 1035
+    },
+    "C5_L0.json": {
+      "md5": "406241e92bc206f10d913b2c2f9c8019",
+      "bytes": 3346
+    },
+    "C5_L1.json": {
+      "md5": "b0e9a296f1a7637f2081aad4305b472f",
+      "bytes": 3152
+    },
+    "studies_c5/C5_L0.db": {
+      "md5": "734b690b83b4cb5668009f88f2ba23f9",
+      "bytes": 135168
+    },
+    "studies_c5/C5_L1.db": {
+      "md5": "4eb94b6e2d5e5b877afd13e5bc413139",
+      "bytes": 135168
+    }
+  }
+}

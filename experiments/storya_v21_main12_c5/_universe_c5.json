@@ -1,0 +1,59 @@
+{
+  "universe": "C5",
+  "n_features": 20,
+  "feature_names": [
+    "ROC30",
+    "MA60",
+    "MAX60",
+    "MIN60",
+    "QTLU60",
+    "QTLD60",
+    "KMID",
+    "KMID2",
+    "KSFT",
+    "KSFT2",
+    "OPEN0",
+    "HIGH0",
+    "VWAP0",
+    "KUP",
+    "KUP2",
+    "CNTP20",
+    "CNTD20",
+    "CNTP30",
+    "CNTD30",
+    "CORR60"
+  ],
+  "groups": {
+    "ROC30+5": [
+      "ROC30",
+      "MA60",
+      "MAX60",
+      "MIN60",
+      "QTLU60",
+      "QTLD60"
+    ],
+    "KMID+6": [
+      "KMID",
+      "KMID2",
+      "KSFT",
+      "KSFT2",
+      "OPEN0",
+      "HIGH0",
+      "VWAP0"
+    ],
+    "KUP+1": [
+      "KUP",
+      "KUP2"
+    ],
+    "CNTP20+3": [
+      "CNTP20",
+      "CNTD20",
+      "CNTP30",
+      "CNTD30"
+    ],
+    "CORR60": [
+      "CORR60"
+    ]
+  },
+  "source": "docs/c5_rerun_brief_2026-09-10.md \u00a71 / \u00a79.1"
+}

@@ -4,6 +4,50 @@
 
 ---
 
+## 2026-09-11-c: C5 两份 240 cell 全部完成（T4 主 1.04 h；Mac 复现 1.7 h）→ family1 sensitivity + analyze_c5 出数；设备复现一致；TP2-B/TP3 走 fallback（Codex 额度至 04:40）
+
+- **T4 主运行**（`experiments/storya_v21_main12_c5_t4/`，Drive tar+scp 回本机，md5 3427440c…）：240/240 completed、0 failed、全 converged、cell_id 2400–2639 唯一；L0 1.3 s/cell、L1 29.4 s/cell；provenance mode TUNED per-arm、md5 cdb4d923 匹配、device cuda、torch 2.11.0+cu128（`_run_provenance.json`；Colab 下 `setup_workdir` chdir 到 Drive → git_rev None，文件 md5 与 commit 9008dbe 一致见 2026-09-11-b）。
+- **Mac 复现**（`experiments/storya_v21_main12_c5/`）：240/240、L1 51.2 s/cell、device mps、`source_clean=true`（git 9008dbe）。
+- **统计（主，source: `artifacts/storya_v21_family1_c5/`）**：C5 L1−L0 seed-avg daily ΔIC = **+0.01343**，21d block-boot 95% CI [+0.00075, +0.02833]，HLN p = **0.0080**（auto lag；lag-21 见 dm_hln.csv），IC L0 = 0.0203、IC L1 = 0.0337，MDE≈2.8×SE = 0.0197，per-seed 同号 10/10，LOSO 翻转 0/10；paired (L1−L0)_C − (L1−L0)_C5 = +0.0013 [−0.0159, +0.0189]，p=0.84；(L1−L0)_B − C5 = +0.0009 [−0.0186, +0.0200]，p=0.91；integrity PASS（240 npy 全等冻结日历折天数、provenance gate 通过）。Mac 复现同法：ΔIC +0.01318 [+0.00021, +0.02786]，p=0.0125（`artifacts/storya_v21_family1_c5_mac/`）。
+- **设备复现**（`c5_device_replication.md`）：L0 120/120 cell IC 逐位相同；L1 cell-IC 相关 0.951、平均 |Δ| 0.018、最大 0.103（单 cell），pooled ΔIC 0.01343（T4）vs 0.01318（Mac）→ 结论对设备不敏感。
+- Rule 9：TP2 Round B fallback（finance-gnn-reviewer，重启）与 **TP3 Round A fallback**（finance-gnn-reviewer；Codex 额度 04:40 恢复）并行送审；**结论措辞待 TP3 过审后写入 analysis.md**。
+- 简报 §6 交付物 1–5 已齐（6 L2 层未跑；7 文档待 TP3；8 遵守）。
+
+→ progress: 2026-09-11-c | plan: 2026-09-10-a | analysis: PENDING（TP3 后）
+
+## 2026-09-11-b: H博士 指示 "gpu完全没在用" → 240 cell 改由 Colab T4 作为**主结果**（预先声明），Mac 那份降为设备复现对照
+
+- 决策（结果出来前锁定，避免事后选择）：**主结果 = T4 运行**（`experiments/storya_v21_main12_c5_t4/`，Drive；简报 §5 原方案 + H博士 指示），**Mac 运行 = 设备复现对照**（`experiments/storya_v21_main12_c5/`，00:30 起已在跑，不中断）。两份都是同一 frozen（md5 cdb4d923…）、同代码（Colab 文件 md5 与本机一致：main12 21090661、anchor 5300b079）。报告时并列两份 L1−L0，差异即 MPS-vs-CUDA 设备敏感性（confirmatory C/L0,L1 在 Mac）。
+- 调参（L0/L1）已在 Mac 完成，不重做（等预算协议一致；调参 val-IC 仅选模用）。
+- Colab 侧：代码经 scp 直传（未 push；Colab 工作树的 8 个 .py 内容 == commit 9008dbe/46b3b8c 的 blob），`setup_workdir()` 在 Colab 会 chdir 到 Drive 目录 → provenance 的 git_rev 为 None（记录以文件 md5 为准）。tmux `c5`，日志 `/content/GNN-Testing/artifacts/colab_runs/c5_t4.log`。
+- 后续：T4 完成 → tar+scp 回 `experiments/_rerun_colab_staging/storya_v21_main12_c5_t4/` → family1 `--sensitivity` + analyze_c5（主）；Mac 完成 → 同法出对照 → 两份并列。
+
+→ progress: 2026-09-11-b | plan: 2026-09-10-a | analysis: N/A
+
+## 2026-09-11-a: Fallback Reviewer — Codex usage limit（错误中断）, finance-gnn-reviewer took Touchpoint 2 Round B
+
+- Codex TP2 Round B（`codex exec`，00:15 启动）在读完文件后于 00:16 以 `ERROR: You've hit your usage limit ... try again at 4:40 AM` 终止，无输出（`scratchpad/tp2b/codex_stdout.log` 末尾）。非挂起（stdin 已关），是账户额度。
+- 按 CLAUDE.md Rule 9 Fallback：启动 `finance-gnn-reviewer` 接手 TP2 Round B（同 prompt：cross-round diffing A-01..A-05 + 新发现；重点 launcher 默认序列化、strict integrity 门、paired 对齐、family1 sensitivity 分支、provenance 写入），产出 `artifacts/reviews/2026-09-11_finance-gnn-reviewer_code_B.md`。发现享受与 Codex 同等权重。
+- 影响：TP3（结果评审）若在 04:40 前到达也走 fallback；04:40 后若 session 仍在可补一轮 Codex。
+- 运行侧不受影响：C5 pipeline 已过 tune/merge（frozen_hparams_c5.json md5 `cdb4d92314b0d43d3287ea6d403d840d`；L0 冠军 val-IC −0.012、L1 冠军 val-IC −0.045——2022H2 调参窗上 20 列子集两臂 rank-IC 均为负，选模指标非结果），00:30 起跑 240 cell。
+
+→ progress: 2026-09-11-a | plan: 2026-09-10-a | analysis: N/A
+
+## 2026-09-10-c: Codex Review — Code (TP2 Round A) PROCEED-WITH-FIXES 5/5 修 + Plan (TP1 Round B) PROCEED-WITH-FIXES → 提交 9008dbe → C5 pipeline 于 Mac 启动（00:14）
+
+- **TP2 Round A**（`artifacts/reviews/2026-09-10_codex_code_A.md`，codex @ gpt-6-astra xhigh）：0 CRITICAL + 4 MAJOR + 1 CONCERN，verdict PROCEED-WITH-FIXES。逐条亲自核实并修复：
+  - A-01 默认 merge 多写 universes/arms 字段改变 frozen 文件字节 → 只在子集 merge 写 scope 键；**验证**：默认 merge 输出与 HEAD 版 merge 输出字节一致（md5 2d49f67a…；历史文件 59ddd0a2… 不同仅因 B_L2/C_L2.json 已换成 90-trial 版）。
+  - A-02 部分塌缩 cell 会在 positional packing 下悄悄错位配对 → `run_integrity` 逐 cell 要求 npy 长度 == 冻结日历该折天数（取自 confirmatory L0 cell，和 749）；paired 断言在非 smoke 下直接抛错；family1 `degeneracy_report` 在 sensitivity 模式以在场臂为参考。**fixture 验证**：用 confirmatory C L0/L1 改名合成完整 C5 目录 → PASS 且 paired diff = 0；删一个内部观测 → FAIL。
+  - A-03 缺 frozen/provenance 或 mode 错也 PASS → strict 门：frozen 存在且 complete 2/2、provenance mode == "TUNED per-arm"、md5 相符、applied C5_L0/C5_L1 参数 == frozen 冠军；fixture：错 mode / 缺 provenance / 缺 frozen 均 FAIL。
+  - A-04 脚本文字残留 "leak-free/inflation" → 全部改为 test-informed subset sensitivity / conditional subset contrast。
+  - A-05 sensitivity ledger 仍写 20 测试/BH/SPA → ledger 记录实际 pairs_tested [L1-L0]、BH NOT APPLIED、SPA NOT RUN、L7 SKIPPED；默认序列化不变。
+- **TP1 Round B**（`artifacts/reviews/2026-09-10_codex_plan_B.md`）：0 C + 0 M + 1 CONCERN（B-01：C-pre 提案需先定 coverage 规则——`hc_mom12m` 252 日 warm-up 使 231 天窗口仅 85 天非常数），verdict **PROCEED-WITH-FIXES**；Codex 明确："C5 is scientifically defensible as the explicitly labelled, test-informed subset sensitivity in §9.9. It does not need a clean selector or completed paper edits before computation." A-02/A-04/A-05 FIXED；A-01（文字残留）/A-03（配对强制）/A-06（执行状态）STILL-OPEN → 均已在上述 TP2 修复 + provenance 扩展中关闭（`_run_provenance.json` 记录进程实际导入的每个仓库模块 blob sha + git status → `source_clean`、prices/sectors md5、调用参数、resume 追加；tune JSON 增 `execution` 块；调参 sqlite 归档 + md5）。Codex 另核实：C-pre 的 2021-07-01→2022-06-30 选择窗（purge 后标签终点 ≤ 2022-06-30）边界干净；Plan AAA 61 组定义的校准窗 2021-01-29→2022-01-27（`artifacts/plan_aaa/groups_168.json`）亦在 pre-test。
+- **提交**：`46b3b8c` housekeeping（2026-06-13 起从未提交的 compute_e6_dm_spa `lag=`/`two_sided_power`/data-driven N_FOLDS + e3/e4 cell_id 泛化——HEAD 的 compute_family1_ladder 本就依赖它们）；`9008dbe` C5 代码 + 简报 + 三份评审 + .gitignore 白名单。提交后 `git status` 对运行导入的全部模块为空 → provenance `source_clean` 应为 true。**未 push**（待 H博士）。
+- **启动**：`scratchpad/run/run_c5_pipeline.sh`（tune L0 → tune L1 → merge → 归档 → main12 240 cell → family1 --sensitivity → analyze_c5），Mac M4，2026-09-11 00:14:44。TP2 Round B 并行送审（修复验证）；若其发现影响**训练路径**的问题则停跑重来，仅影响分析路径则重跑分析。
+- 遗留给 H博士 的工作树：`analyze_e1_lofo.py`、`paper_figs/fig_family2.py`、`figures/family2_edge_causal.*`、`docs/analysis.md`（+33 行，2026-07-28 条目）及大量 archived/ 移动（D/??）仍未提交——非本任务范围，未动。
+
+→ progress: 2026-09-10-c | plan: 2026-09-10-a | analysis: N/A
+
 ## 2026-09-10-b: Codex Review — Plan (Touchpoint 1, Round A) on C5 简报 → BLOCK-EXECUTION；两项核心指控亲自核实成立，运行重新定性为 "test-informed subset sensitivity"
 
 - Target: `docs/c5_rerun_brief_2026-09-10.md`（H博士 简报 §0–§8 + 实施注记 §9）
