@@ -65,6 +65,17 @@ artifacts/**
 !experiments/storya_v21_main12_c5*/manifest.csv
 !experiments/storya_v21_main12_c5*/_*.json
 !experiments/storya_v21_main12_c5*/per_day_ic/*.npy
+# 2026-09-12 C-pre pre-evaluation re-selection sensitivity (post-hoc) — selector archive + stats + per-day IC arrays
+!artifacts/storya_cpre_select/*.csv
+!artifacts/storya_cpre_select/*.json
+!artifacts/storya_cpre_select/*.md
+!artifacts/storya_v21_family1_cpre*/*.csv
+!artifacts/storya_v21_family1_cpre*/*.json
+!artifacts/storya_v21_family1_cpre*/*.md
+!experiments/storya_v21_main12_cpre*/results.csv
+!experiments/storya_v21_main12_cpre*/manifest.csv
+!experiments/storya_v21_main12_cpre*/_*.json
+!experiments/storya_v21_main12_cpre*/per_day_ic/*.npy
 
 # Claude Code — whitelist shareable team infrastructure, ignore everything else by default.
 # Previously (pre-2026-04-23) blanket-ignored `.claude/`, which broke Rule 9 infra shipping.

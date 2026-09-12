@@ -59,7 +59,7 @@ import optuna
 import run_storya_e1_anchor as anchor
 from run_storya_e1_anchor import (
     CANONICAL_SEEDS, HORIZON, TRAIN_START,
-    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_labels,
+    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_universe_CPRE, build_labels,
     SENSITIVITY_UNIVERSES,
     build_correlation_snapshots, get_frozen_snapshot_idx, create_fold_masks,
     winsorize_train_only, standardize_train_only, compute_daily_ic,
@@ -183,6 +183,9 @@ def build_data_ctx(universe: str, arm: str, device) -> dict:
         assert_univ_c_t1_contract(feats_raw)
     elif universe == 'C5':   # post-hoc sensitivity: 20-col name-selected subset of Universe C
         feats_raw, _ = build_universe_C5(prices, returns)
+        assert_univ_c_t1_contract(feats_raw)
+    elif universe == 'CPRE':   # post-hoc sensitivity: PRE-EVALUATION re-selection (run_storya_cpre_select.py, plan §3)
+        feats_raw, _ = build_universe_CPRE(prices, returns)
         assert_univ_c_t1_contract(feats_raw)
     else:
         raise ValueError(f'unknown universe {universe}')
@@ -335,6 +338,12 @@ def main():
                            'numpy': np.__version__, 'git_rev': _rev, 'git_error': _git_err, 'code_dir': _code_dir,
                            'module_md5': _self_md5,
                            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')}
+    if args.universe == 'CPRE':   # link tuning → the frozen selection (plan §3.6 / Codex TP1-A A-04)
+        _sel_p = anchor.UNIVERSE_CPRE_SELECTION_JSON
+        result['execution']['selection_json'] = _sel_p
+        result['execution']['selection_json_md5'] = hashlib.md5(open(_sel_p, 'rb').read()).hexdigest()
+        result['execution']['columns_md5'] = anchor.UNIVERSE_CPRE_COLUMNS_MD5
+        result['execution']['n_inputs'] = len(anchor.UNIVERSE_CPRE_NAMES)
 
     # CODEX-A-02: smoke artifacts go to _smoke_{u}_{a}.json (+ {u}_{a}_smoke.db) — excluded by the
     # launcher merge — so a wiring check can never enter frozen_hparams.json.

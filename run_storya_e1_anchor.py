@@ -78,7 +78,7 @@ ALL_UNIVERSES = ['B', 'C']
 # Post-hoc sensitivity universes (2026-09-10 C5 test-informed feature-subset check). Deliberately NOT in
 # ALL_UNIVERSES: `--universe both`, the confirmatory meta and every default stay strictly B,C;
 # C5 must be requested explicitly (docs/c5_rerun_brief_2026-09-10.md §9.2).
-SENSITIVITY_UNIVERSES = ['C5']
+SENSITIVITY_UNIVERSES = ['C5', 'CPRE']   # post-hoc sensitivity universes (explicit --universe only; never in `both`)
 HORIZON = 21  # locked per CLAUDE.md Rule 8
 
 # Walk-forward folds (port from archived/scripts/run_horizon_ablation.py:72-83)
@@ -193,6 +193,15 @@ UNIVERSE_C5_GROUPS = {
     'CORR60':   ['CORR60'],
 }
 UNIVERSE_C5_NAMES = [n for members in UNIVERSE_C5_GROUPS.values() for n in members]
+
+# ── Universe C-pre (post-hoc sensitivity with PRE-EVALUATION feature re-selection, 2026-09-12) ──
+# Frozen by run_storya_cpre_select.py (docs/c_pre_plan_2026-09-11.md §3): single-feature |IC| on the tuning-train
+# window 2021-07-01..2022-05-31 (label end ≤ 2022-06-30), τ = 0.50 coverage, Plan-AAA 61 groups reused, top-15
+# groups → union of ALL members. The list below is COPIED from artifacts/storya_cpre_select/selection.json after
+# the committed selector ran; build_universe_CPRE re-asserts list + md5 against that file every time.
+UNIVERSE_CPRE_SELECTION_JSON = 'artifacts/storya_cpre_select/selection.json'
+UNIVERSE_CPRE_NAMES = None          # frozen after the selector run (ordered column names: hc_* and/or Alpha158)
+UNIVERSE_CPRE_COLUMNS_MD5 = None    # md5 of ','.join(UNIVERSE_CPRE_NAMES) as recorded in selection.json
 
 
 # ══════════════════════════════════════════════════════════════
@@ -461,6 +470,67 @@ def build_universe_C5(prices: pd.DataFrame, returns: pd.DataFrame):
     assert np.all(features[0] == 0.0), "Universe C5 T-1 contract broken: row 0 not zeroed"
     assert features.shape[2] == 20, f"Universe C5 expected 20 features, got {features.shape[2]}"
     names = list(UNIVERSE_C5_NAMES)
+    return features, names
+
+
+def build_universe_CPRE(prices: pd.DataFrame, returns: pd.DataFrame):
+    """Universe C-pre (post-hoc sensitivity, PRE-EVALUATION selection): the columns frozen in UNIVERSE_CPRE_NAMES.
+
+    Alpha158 members are sliced BY NAME from the raw npy and T-1-shifted exactly as build_universe_C (np.roll +
+    zero row 0 + elementwise shift assert); hc members come from run_step3_plan_z_part_a.load_data_and_features()
+    (Plan AAA's source; T-1 by construction) and, for the three hc columns Universe C also carries, are asserted
+    equal to Universe C's own construction. Column order = UNIVERSE_CPRE_NAMES (group by group). NaN → 0.0 as in
+    C. Per-fold train-only winsorize/standardize happen downstream exactly as for B / C / C5."""
+    if UNIVERSE_CPRE_NAMES is None or UNIVERSE_CPRE_COLUMNS_MD5 is None:
+        raise RuntimeError('UNIVERSE_CPRE_NAMES is not frozen yet: run run_storya_cpre_select.py, copy selection.json '
+                           'columns + columns_md5 into run_storya_e1_anchor.py, commit, then run')
+    names = list(UNIVERSE_CPRE_NAMES)
+    import hashlib as _hl
+    assert _hl.md5(','.join(names).encode()).hexdigest() == UNIVERSE_CPRE_COLUMNS_MD5, 'UNIVERSE_CPRE_NAMES md5 mismatch'
+    sel = json.load(open(UNIVERSE_CPRE_SELECTION_JSON))
+    assert sel.get('smoke') is False and sel['columns'] == names and sel['columns_md5'] == UNIVERSE_CPRE_COLUMNS_MD5, \
+        f'{UNIVERSE_CPRE_SELECTION_JSON} does not match the frozen UNIVERSE_CPRE_NAMES'
+    assert len(names) == len(set(names)) >= 1
+    a_names = [n for n in names if not n.startswith('hc_')]
+    hc_names = [n for n in names if n.startswith('hc_')]
+
+    alpha158_meta = json.load(open(PATHS['alpha158_meta']))
+    a_order = alpha158_meta['feature_order']
+    a_idx = {n: i for i, n in enumerate(a_order)}
+    for n in a_names:
+        assert n in a_idx, f'C-pre Alpha158 column {n} missing from alpha158_meta'
+    col_src = {}
+    if a_names:
+        alpha158_arr = np.load(PATHS['alpha158_npy'])
+        a_raw = alpha158_arr[:, :, [a_idx[n] for n in a_names]].astype(np.float32)
+        a_t1 = np.roll(a_raw, shift=1, axis=0)       # identical shift to build_universe_C (CR-A-01)
+        a_t1[0] = 0.0
+        assert np.array_equal(a_t1[1], a_raw[0]) and np.all(a_t1[0] == 0.0), 'C-pre Alpha158 T-1 shift failed'
+        col_src = {n: a_t1[:, :, j] for j, n in enumerate(a_names)}
+
+    if hc_names:
+        import run_step3_plan_z_part_a as _pa
+        base = _pa.load_data_and_features()
+        assert list(base['valid_tickers']) == list(prices.columns), 'hc ticker axis != anchor ticker axis'
+        assert list(base['all_dates']) == list(prices.index), 'hc date axis != anchor date axis'
+        hc_all = base['features_np'].astype(np.float32)
+        hc_idx = {f'hc_{n}': i for i, n in enumerate(base['feature_names'])}
+        for n in hc_names:
+            assert n in hc_idx, f'C-pre hc column {n} not produced by part_a'
+            col_src[n] = hc_all[:, :, hc_idx[n]]
+        # the hc columns Universe C also carries must be numerically identical to C's construction
+        phase5 = np.load(PATHS['phase5_npy'])
+        c_ref = {'hc_mom12m': np.nan_to_num(phase5[:, :, 0].astype(np.float32), 0.0),
+                 'hc_ret_std_5d': np.nan_to_num(returns.rolling(5).std().shift(1).values.astype(np.float32), 0.0),
+                 'hc_ret_std_10d': np.nan_to_num(returns.rolling(10).std().shift(1).values.astype(np.float32), 0.0)}
+        for n in hc_names:
+            if n in c_ref:
+                assert np.allclose(np.nan_to_num(col_src[n], 0.0), c_ref[n], atol=1e-6), f'{n}: part_a != Universe C construction'
+
+    features = np.stack([col_src[n] for n in names], axis=-1).astype(np.float32)
+    features = np.nan_to_num(features, 0.0)
+    assert np.all(features[0] == 0.0), 'C-pre row 0 not zeroed (T-1 contract)'
+    assert features.shape[2] == len(names)
     return features, names
 
 

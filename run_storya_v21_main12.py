@@ -70,7 +70,7 @@ import torch.nn.functional as F  # used by train_gnn_per_day_edges (per-day MSE 
 import run_storya_e1_anchor as anchor
 from run_storya_e1_anchor import (
     CANONICAL_SEEDS, HORIZON, TRAIN_START, COST_LEVELS_BPS, COST_CONVENTION,
-    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_labels,
+    load_core_data, build_universe_B, build_universe_C, build_universe_C5, build_universe_CPRE, build_labels,
     SENSITIVITY_UNIVERSES,
     build_correlation_snapshots, get_frozen_snapshot_idx, create_fold_masks,
     winsorize_train_only, standardize_train_only, train_nn, train_lightgbm,
@@ -126,7 +126,7 @@ EDGE_CONFIGS_NEWS = {'corr_news', 'corr_sector_news'}        # arms needing per-
 EDGE_CONFIGS_SECTOR = {'corr_sector', 'corr_sector_news'}    # arms needing sector edges
 ALL_UNIVERSES = ['B', 'C']                              # confirmatory; `--universe both` == exactly this
 KNOWN_UNIVERSES = ALL_UNIVERSES + SENSITIVITY_UNIVERSES  # + 'C5' post-hoc sensitivity (explicit only)
-UNIVERSE_IDX = {'B': 0, 'C': 1, 'C5': 2}                # cell_id radix; C5 → [2400, 3599] ∩ [0, 2399] = ∅
+UNIVERSE_IDX = {'B': 0, 'C': 1, 'C5': 2, 'CPRE': 3}     # cell_id radix; C5 → [2400, 3599], CPRE → [3600, 4799]; both ∩ [0, 2399] = ∅
 
 OUT_DIR = 'experiments/storya_v21_main12'
 RESULTS_CSV = f'{OUT_DIR}/results.csv'
@@ -191,7 +191,7 @@ def assert_cell_id_injective() -> None:
     """Enumerate the FULL (3 universe × 10 arm × 12 fold × 10 seed) space; confirm injective and
     range [0, 3599]; confirm the confirmatory block is still exactly [0, 2399] and the sensitivity
     (C5) block lies strictly above it — validates the formula regardless of which arms run."""
-    seen, conf, sens = set(), set(), set()
+    seen, conf, sens = set(), set(), {}
     for u_name, u in UNIVERSE_IDX.items():
         for arm in ARM_ORDER:
             for f in range(N_FOLDS):
@@ -199,14 +199,19 @@ def assert_cell_id_injective() -> None:
                     cid = cell_id(u, arm, f, s)
                     assert cid not in seen, f"cell_id collision u={u} arm={arm} f={f} s={s}"
                     seen.add(cid)
-                    (conf if u_name in ALL_UNIVERSES else sens).add(cid)
+                    (conf if u_name in ALL_UNIVERSES else sens.setdefault(u_name, set())).add(cid)
     n_u = len(UNIVERSE_IDX)
     assert min(seen) == 0 and max(seen) == n_u * 1200 - 1 and len(seen) == n_u * 1200, \
         f"cell_id range broken: min={min(seen)} max={max(seen)} n={len(seen)}"
     assert min(conf) == 0 and max(conf) == 2399 and len(conf) == 2400, "confirmatory cell_id block moved"
-    assert min(sens) > max(conf), f"sensitivity cell_id block {min(sens)} overlaps confirmatory max {max(conf)}"
+    assert set(sens) == set(SENSITIVITY_UNIVERSES), (set(sens), SENSITIVITY_UNIVERSES)
+    blocks = {u: (min(b), max(b)) for u, b in sens.items()}
+    for u, (lo, hi) in blocks.items():        # every sensitivity block above the confirmatory one, pairwise disjoint
+        assert lo > max(conf) and hi - lo == 1199 and len(sens[u]) == 1200, f"sensitivity block {u} broken: [{lo}, {hi}]"
+        for v, (lo2, hi2) in blocks.items():
+            assert u == v or hi < lo2 or hi2 < lo, f"sensitivity blocks overlap: {u} [{lo}, {hi}] vs {v} [{lo2}, {hi2}]"
     print(f'✓ cell_id injective over {n_u}×10×12×10={n_u * 1200} space, range [0, {n_u * 1200 - 1}]; '
-          f'confirmatory [0, 2399] ∩ sensitivity [{min(sens)}, {max(sens)}] = ∅')
+          f'confirmatory [0, 2399] ∩ sensitivity blocks {blocks} = ∅ (pairwise disjoint)')
 
 
 # ══════════════════════════════════════════════════════════════
@@ -552,7 +557,7 @@ def run_arm_cell(arm, feats_winz, feats_std_t, labels_np, labels_t, label_valid_
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--universe', choices=KNOWN_UNIVERSES + ['both'], default='both',
-                        help="B | C | both (= B,C confirmatory) | C5 (post-hoc sensitivity, explicit only)")
+                        help="B | C | both (= B,C confirmatory) | C5 / CPRE (post-hoc sensitivity universes, explicit only)")
     parser.add_argument('--arms', type=str, default=','.join(IMPLEMENTED_ARMS),
                         help=f'Comma-separated subset of {IMPLEMENTED_ARMS}')
     parser.add_argument('--seeds', type=str, default=','.join(str(s) for s in CANONICAL_SEEDS))
@@ -684,19 +689,51 @@ def main():
         assert_univ_c_t1_contract(fC)               # §5 per-run re-confirmation
         features_raw['C'] = fC
         print(f'Universe C features: {fC.shape}')
-    if 'C5' in universes_run:                        # post-hoc sensitivity (explicit --universe C5 only)
-        fC5, names_c5 = build_universe_C5(prices, returns)   # pure name-selection of Universe C columns
-        assert_univ_c_t1_contract(fC5)
-        features_raw['C5'] = fC5
-        with open(f'{OUT_DIR}/_universe_c5.json', 'w') as f:
-            json.dump({'universe': 'C5', 'n_features': int(fC5.shape[2]), 'feature_names': names_c5,
-                       'groups': anchor.UNIVERSE_C5_GROUPS,
-                       'source': 'docs/c5_rerun_brief_2026-09-10.md §1 / §9.1'}, f, indent=2)
-        print(f'Universe C5 features: {fC5.shape} (names: {names_c5})')
-        # CODEX-A-06 (TP1 2026-09-10): execution/selection provenance beyond the frozen-HP md5 gate
+    # ── post-hoc sensitivity universes (explicit --universe C5 / CPRE only; never part of `both`) ──
+    SENS_BUILDERS = {'C5': build_universe_C5, 'CPRE': build_universe_CPRE}
+    for su in [u for u in universes_run if u in SENSITIVITY_UNIVERSES]:
+        fS, names_s = SENS_BUILDERS[su](prices, returns)
+        assert_univ_c_t1_contract(fS)
+        features_raw[su] = fS
         import platform, subprocess, lightgbm
         def _md5(p):
             return hashlib.md5(open(p, 'rb').read()).hexdigest() if os.path.exists(p) else None
+        if su == 'C5':
+            u_meta = {'groups': anchor.UNIVERSE_C5_GROUPS, 'source': 'docs/c5_rerun_brief_2026-09-10.md §1 / §9.1'}
+            role = 'post-hoc TEST-INFORMED feature-subset sensitivity (NOT confirmatory)'
+            selector_md5 = {
+                'artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv':
+                    _md5('artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv'),
+                'artifacts/plan_aaa/ranking.csv': _md5('artifacts/plan_aaa/ranking.csv'),
+                'alpha158_meta': _md5(anchor.PATHS['alpha158_meta']),
+                'alpha158_npy': _md5(anchor.PATHS['alpha158_npy']),
+            }
+            sel_note = ('C5 = Plan-AAA permutation top-15 ∩ single-feature-|IC| proxy top-15 '
+                        '(proxy top-15 identical with/without T-1 shift). Proxy scored the last 313 '
+                        'valid label days of the panel (2024-09-27..2025-12-26); Plan AAA scored the '
+                        '5-fold test quarters (2024-04-01..2025-06-30). Both lie inside the 12-fold '
+                        'test period 2023Q1..2025Q4 -> selection is TEST-INFORMED '
+                        '(docs/c5_rerun_brief_2026-09-10.md §9.9).')
+        else:   # CPRE: selection frozen by the committed run_storya_cpre_select.py (plan §3)
+            sel = json.load(open(anchor.UNIVERSE_CPRE_SELECTION_JSON))
+            u_meta = {'groups': {g['label']: g['members'] for g in sel['selected_groups']},
+                      'selected_groups': sel['selected_groups'], 'selection_json': anchor.UNIVERSE_CPRE_SELECTION_JSON,
+                      'selection_json_md5': _md5(anchor.UNIVERSE_CPRE_SELECTION_JSON), 'columns_md5': sel['columns_md5'],
+                      'source': 'docs/c_pre_plan_2026-09-11.md §2-§3 (frozen; Codex TP1-A)'}
+            role = 'post-hoc sensitivity with PRE-EVALUATION feature re-selection (NOT confirmatory)'
+            selector_md5 = {'selection.json': u_meta['selection_json_md5'], **sel.get('input_md5', {}),
+                            'selector_git_rev': (sel.get('source_identity') or {}).get('git_rev')}
+            w = sel['selection_window']
+            sel_note = (f"CPRE = union of all members of the top-{sel['rules']['top_k_groups']} Plan-AAA groups ranked by "
+                        f"single-feature |IC| (tau={sel['rules']['tau_min_coverage']}) on {w['n_feature_dates']} feature dates "
+                        f"{w['first_feature_date']}..{w['last_feature_date']} (label end <= {w['label_end_max']}); "
+                        f"strictly before the tuning-val window (2022H2) and the 12-fold test period -> selection is "
+                        f"PRE-EVALUATION (still post-hoc: designed after the test results were known). "
+                        f"Unscored: {[u['feature'] for u in sel.get('unscored_features', [])]}.")
+        with open(f'{OUT_DIR}/_universe_{su.lower()}.json', 'w') as f:
+            json.dump({'universe': su, 'n_features': int(fS.shape[2]), 'feature_names': names_s, **u_meta}, f, indent=2)
+        print(f'Universe {su} features: {fS.shape} (names: {names_s})')
+        # CODEX-A-06 (TP1 2026-09-10): execution/selection provenance beyond the frozen-HP md5 gate
         # source state of EVERY repo module actually imported by this process. FINGNN-B-01 (TP2-B):
         # anchor the repo at the CODE location (not cwd — on Colab setup_workdir() chdirs to the Drive data
         # folder, which is not a git repo), always record a content md5 per module (no git needed), and
@@ -724,7 +761,7 @@ def main():
         source_clean = (None if git_error else
                         bool(mods and all(v.get('git_status') == '' for v in src_state.values())))
         run_prov = {
-            'universe': 'C5', 'role': 'post-hoc TEST-INFORMED feature-subset sensitivity (NOT confirmatory)',
+            'universe': su, 'role': role,
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'), 'git_rev': git_rev, 'git_error': git_error,
             'code_dir': repo, 'imported_repo_modules': src_state,   # md5 always; blob_sha/git_status if git worked
             'source_clean': source_clean,   # True = every imported module == git_rev; None = git unavailable (use md5s)
@@ -733,24 +770,13 @@ def main():
             'platform': platform.platform(), 'python': sys.version.split()[0], 'device': str(device),
             'versions': {'torch': torch.__version__, 'lightgbm': lightgbm.__version__,
                          'numpy': np.__version__, 'pandas': pd.__version__},
-            'feature_names_ordered': names_c5, 'groups': anchor.UNIVERSE_C5_GROUPS,
-            'selector_inputs_md5': {
-                'artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv':
-                    _md5('artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv'),
-                'artifacts/plan_aaa/ranking.csv': _md5('artifacts/plan_aaa/ranking.csv'),
-                'alpha158_meta': _md5(anchor.PATHS['alpha158_meta']),
-                'alpha158_npy': _md5(anchor.PATHS['alpha158_npy']),
-            },
+            'feature_names_ordered': names_s, 'groups': u_meta['groups'],
+            'selector_inputs_md5': selector_md5,
             'data_inputs_md5': {   # prices + sectors determine the ticker universe and the labels
                 'prices': _md5(anchor.PATHS['prices']), 'sectors': _md5(anchor.PATHS['sectors']),
             },
             'n_stocks': int(num_stocks), 'n_days': int(num_days),
-            'selection_window_note': ('C5 = Plan-AAA permutation top-15 ∩ single-feature-|IC| proxy top-15 '
-                                      '(proxy top-15 identical with/without T-1 shift). Proxy scored the last 313 '
-                                      'valid label days of the panel (2024-09-27..2025-12-26); Plan AAA scored the '
-                                      '5-fold test quarters (2024-04-01..2025-06-30). Both lie inside the 12-fold '
-                                      'test period 2023Q1..2025Q4 -> selection is TEST-INFORMED '
-                                      '(docs/c5_rerun_brief_2026-09-10.md §9.9).'),
+            'selection_window_note': sel_note,
             'tuning_window': 'train TRAIN_START..2022-06-30 / val 2022H2 (run_storya_v21_tune.TUNE_FOLD, seeds [11,22,33])',
             'eval_calendar_12fold': WALK_FORWARD_FOLDS_12, 'horizon_days': HORIZON,
             'canonical_seeds': CANONICAL_SEEDS,
