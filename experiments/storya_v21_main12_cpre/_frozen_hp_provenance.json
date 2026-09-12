@@ -1,0 +1,28 @@
+{
+  "mode": "TUNED per-arm",
+  "frozen_hparams": "experiments/storya_v21_tune/frozen_hparams_cpre.json",
+  "frozen_md5": "a8fdfb8f9cefb24dcaf827a5905d6aad",
+  "fc_fix_arm": null,
+  "applied": {
+    "CPRE_L0": {
+      "src": "CPRE_L0",
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010520856370501335,
+        "min_data_in_leaf": 10,
+        "lambda_l1": 2.3110698302219116e-08,
+        "lambda_l2": 0.3394454877627604
+      }
+    },
+    "CPRE_L1": {
+      "src": "CPRE_L1",
+      "params": {
+        "lr": 0.001990231214211617,
+        "weight_decay": 0.0002549552933302671,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      }
+    }
+  }
+}

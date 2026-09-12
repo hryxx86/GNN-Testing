@@ -1,0 +1,176 @@
+{
+  "universe": "CPRE",
+  "n_results_rows": 240,
+  "n_expected": 240,
+  "universes": [
+    "CPRE"
+  ],
+  "arms": [
+    "L0",
+    "L1"
+  ],
+  "cell_id_unique": true,
+  "cell_id_range": [
+    3600,
+    3839
+  ],
+  "cell_id_block_expected": [
+    3600,
+    4799
+  ],
+  "cell_id_inside_block": true,
+  "cell_id_disjoint_from_confirmatory_0_2399": true,
+  "manifest_status_counts": {
+    "completed": 240
+  },
+  "n_failed": 0,
+  "converged_all": true,
+  "n_test_days_per_arm_per_seed_min_max": {
+    "L0": [
+      749,
+      749
+    ],
+    "L1": [
+      749,
+      749
+    ]
+  },
+  "per_day_npy_present": 240,
+  "per_day_npy_len_mismatch": [],
+  "frozen_calendar_days_per_fold": {
+    "0": 62,
+    "1": 62,
+    "2": 63,
+    "3": 63,
+    "4": 61,
+    "5": 63,
+    "6": 64,
+    "7": 64,
+    "8": 60,
+    "9": 62,
+    "10": 64,
+    "11": 61
+  },
+  "frozen_calendar_total": 749,
+  "cells_not_full_calendar_length": [],
+  "n_features": 48,
+  "n_features_expected": 48,
+  "feature_names": [
+    "hc_ret_std_5d",
+    "hc_ret_std_10d",
+    "hc_dolvol",
+    "hc_ret_std_21d",
+    "hc_maxret",
+    "STD5",
+    "STD10",
+    "KLEN",
+    "MAX20",
+    "QTLU20",
+    "MAX30",
+    "QTLU30",
+    "CNTN20",
+    "CNTN30",
+    "CNTP20",
+    "CNTD20",
+    "CNTP30",
+    "CNTD30",
+    "BETA20",
+    "RANK20",
+    "RSV20",
+    "IMAX20",
+    "IMXD20",
+    "SUMP20",
+    "SUMD20",
+    "RANK30",
+    "RSV30",
+    "MAX5",
+    "RSV5",
+    "MAX10",
+    "QTLU10",
+    "RANK10",
+    "RSV10",
+    "STD20",
+    "STD30",
+    "WVMA60",
+    "CNTP5",
+    "CNTN5",
+    "CNTD5",
+    "CNTP10",
+    "CNTN10",
+    "CNTD10",
+    "ROC20",
+    "IMIN20",
+    "SUMN20",
+    "IMIN30",
+    "SUMN30",
+    "RESI60"
+  ],
+  "feature_names_match_UNIVERSE_CPRE_NAMES": true,
+  "inputs": {
+    "universe": "CPRE",
+    "main_dir": "experiments/storya_v21_main12_cpre",
+    "conf_results_csv": "experiments/storya_v21_main12_tuned/results.csv",
+    "results_csv_md5": "3cf9f526dbc105f279702c30deb52b1c",
+    "manifest_csv_md5": "dd47986ccacee690ef190dc6ba014f95",
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "git_rev": "46ca6e38966f6304fefc55dd67da710bf5d78a55",
+    "source_clean": true,
+    "code_identity_post_hoc": null,
+    "n_invocations": 1,
+    "devices_seen": [
+      "mps"
+    ],
+    "multi_device_warning": false,
+    "selector_inputs_md5": {
+      "selection.json": "0a853e6909a15319b888bb8a1218b2eb",
+      "alpha158_npy": "0a2cd862eb1e94a8b132c12d858591ab",
+      "alpha158_meta": "ca02447423c3785878a52743faf224c9",
+      "phase5_npy": "cc0dad3ac90885a6b44606cc87df42df",
+      "prices": "b7f62825c0abad748fa756c93353a5b2",
+      "sectors": "1dea301a409ae95544f45dc956763428",
+      "news_events_ticker_membership": "08e1ea612e71e3b290a841e06a73b1ec",
+      "groups_168_json": "c50c221fe13ff64712cc9548159006f3",
+      "selector_git_rev": "044dd09cb7ae6a62d1045638d8387058f181e8b2"
+    }
+  },
+  "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_cpre.json",
+  "frozen_present": true,
+  "frozen_md5": "a8fdfb8f9cefb24dcaf827a5905d6aad",
+  "provenance_present": true,
+  "provenance_mode": "TUNED per-arm",
+  "provenance_md5": "a8fdfb8f9cefb24dcaf827a5905d6aad",
+  "provenance_gate_ok": true,
+  "applied_hparams": {
+    "CPRE_L0": {
+      "src": "CPRE_L0",
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010520856370501335,
+        "min_data_in_leaf": 10,
+        "lambda_l1": 2.3110698302219116e-08,
+        "lambda_l2": 0.3394454877627604
+      }
+    },
+    "CPRE_L1": {
+      "src": "CPRE_L1",
+      "params": {
+        "lr": 0.001990231214211617,
+        "weight_decay": 0.0002549552933302671,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      }
+    }
+  },
+  "strict": true,
+  "PASS": true,
+  "analysis_mode": {
+    "n_boot": 5000,
+    "strict": true,
+    "smoke": false,
+    "out_dir": "artifacts/storya_v21_family1_cpre"
+  },
+  "family_dir_results_md5": "3cf9f526dbc105f279702c30deb52b1c",
+  "family_dir_matches_main_dir": true
+}

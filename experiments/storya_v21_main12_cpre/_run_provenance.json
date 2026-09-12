@@ -1,0 +1,349 @@
+[
+  {
+    "universe": "CPRE",
+    "role": "post-hoc sensitivity with PRE-EVALUATION feature re-selection (NOT confirmatory)",
+    "timestamp": "2026-09-12 02:33:34",
+    "git_rev": "46ca6e38966f6304fefc55dd67da710bf5d78a55",
+    "git_error": null,
+    "code_dir": "/Users/heruixi/Desktop/GNN-Testing",
+    "imported_repo_modules": {
+      "run_step3_plan_z_part_a.py": {
+        "md5": "52bb062952cc8fd7ac1d78e104341577",
+        "blob_sha": "a149ac77dcd8784e402eb21ea574d237d9bac199",
+        "git_status": "",
+        "toplevel_path": "run_step3_plan_z_part_a.py"
+      },
+      "run_storya_e1_anchor.py": {
+        "md5": "13233c7ad09516feb7dfbdb04a6a347c",
+        "blob_sha": "9a2a4e1326522e208e017f42b637b9ada1dce041",
+        "git_status": "",
+        "toplevel_path": "run_storya_e1_anchor.py"
+      },
+      "run_storya_e3_news_edge.py": {
+        "md5": "60a4c344efa8c3a15b04bdf36bd02284",
+        "blob_sha": "0f8dc122a4656399face1f0c6d0bf7fbcba81f9e",
+        "git_status": "",
+        "toplevel_path": "run_storya_e3_news_edge.py"
+      },
+      "run_storya_e4_alpha.py": {
+        "md5": "c228ab023d505991437e58f4524a3564",
+        "blob_sha": "1a398cc6696dca68b6cfc3a8e8021015ca146b53",
+        "git_status": "",
+        "toplevel_path": "run_storya_e4_alpha.py"
+      },
+      "run_storya_v21_main12.py": {
+        "md5": "21dd7b88583d7bc5a65ce2a1c519d0c6",
+        "blob_sha": "0de8ddea05dd36431b07603cc0e1d99fcf2bd327",
+        "git_status": "",
+        "toplevel_path": "run_storya_v21_main12.py"
+      }
+    },
+    "source_clean": true,
+    "invocation": {
+      "argv": [
+        "run_storya_v21_main12.py",
+        "--universe",
+        "CPRE",
+        "--arms",
+        "L0,L1",
+        "--frozen-hparams",
+        "experiments/storya_v21_tune/frozen_hparams_cpre.json",
+        "--out-dir",
+        "experiments/storya_v21_main12_cpre"
+      ],
+      "universes": [
+        "CPRE"
+      ],
+      "arms": [
+        "L0",
+        "L1"
+      ],
+      "seeds": [
+        86,
+        123,
+        456,
+        789,
+        1024,
+        2024,
+        7,
+        34,
+        99,
+        2026
+      ],
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "resume": true
+    },
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.11.15",
+    "device": "mps",
+    "versions": {
+      "torch": "2.11.0",
+      "lightgbm": "4.6.0",
+      "numpy": "2.4.4",
+      "pandas": "2.3.3"
+    },
+    "feature_names_ordered": [
+      "hc_ret_std_5d",
+      "hc_ret_std_10d",
+      "hc_dolvol",
+      "hc_ret_std_21d",
+      "hc_maxret",
+      "STD5",
+      "STD10",
+      "KLEN",
+      "MAX20",
+      "QTLU20",
+      "MAX30",
+      "QTLU30",
+      "CNTN20",
+      "CNTN30",
+      "CNTP20",
+      "CNTD20",
+      "CNTP30",
+      "CNTD30",
+      "BETA20",
+      "RANK20",
+      "RSV20",
+      "IMAX20",
+      "IMXD20",
+      "SUMP20",
+      "SUMD20",
+      "RANK30",
+      "RSV30",
+      "MAX5",
+      "RSV5",
+      "MAX10",
+      "QTLU10",
+      "RANK10",
+      "RSV10",
+      "STD20",
+      "STD30",
+      "WVMA60",
+      "CNTP5",
+      "CNTN5",
+      "CNTD5",
+      "CNTP10",
+      "CNTN10",
+      "CNTD10",
+      "ROC20",
+      "IMIN20",
+      "SUMN20",
+      "IMIN30",
+      "SUMN30",
+      "RESI60"
+    ],
+    "groups": {
+      "hc_ret_std_5d+1": [
+        "hc_ret_std_5d",
+        "hc_ret_std_10d"
+      ],
+      "hc_dolvol": [
+        "hc_dolvol"
+      ],
+      "hc_ret_std_21d+1": [
+        "hc_ret_std_21d",
+        "hc_maxret"
+      ],
+      "STD5+1": [
+        "STD5",
+        "STD10"
+      ],
+      "KLEN": [
+        "KLEN"
+      ],
+      "MAX20+3": [
+        "MAX20",
+        "QTLU20",
+        "MAX30",
+        "QTLU30"
+      ],
+      "CNTN20+1": [
+        "CNTN20",
+        "CNTN30"
+      ],
+      "CNTP20+3": [
+        "CNTP20",
+        "CNTD20",
+        "CNTP30",
+        "CNTD30"
+      ],
+      "BETA20+8": [
+        "BETA20",
+        "RANK20",
+        "RSV20",
+        "IMAX20",
+        "IMXD20",
+        "SUMP20",
+        "SUMD20",
+        "RANK30",
+        "RSV30"
+      ],
+      "MAX5+5": [
+        "MAX5",
+        "RSV5",
+        "MAX10",
+        "QTLU10",
+        "RANK10",
+        "RSV10"
+      ],
+      "STD20+1": [
+        "STD20",
+        "STD30"
+      ],
+      "WVMA60": [
+        "WVMA60"
+      ],
+      "CNTP5+5": [
+        "CNTP5",
+        "CNTN5",
+        "CNTD5",
+        "CNTP10",
+        "CNTN10",
+        "CNTD10"
+      ],
+      "ROC20+4": [
+        "ROC20",
+        "IMIN20",
+        "SUMN20",
+        "IMIN30",
+        "SUMN30"
+      ],
+      "RESI60": [
+        "RESI60"
+      ]
+    },
+    "selector_inputs_md5": {
+      "selection.json": "0a853e6909a15319b888bb8a1218b2eb",
+      "alpha158_npy": "0a2cd862eb1e94a8b132c12d858591ab",
+      "alpha158_meta": "ca02447423c3785878a52743faf224c9",
+      "phase5_npy": "cc0dad3ac90885a6b44606cc87df42df",
+      "prices": "b7f62825c0abad748fa756c93353a5b2",
+      "sectors": "1dea301a409ae95544f45dc956763428",
+      "news_events_ticker_membership": "08e1ea612e71e3b290a841e06a73b1ec",
+      "groups_168_json": "c50c221fe13ff64712cc9548159006f3",
+      "selector_git_rev": "044dd09cb7ae6a62d1045638d8387058f181e8b2"
+    },
+    "data_inputs_md5": {
+      "prices": "b7f62825c0abad748fa756c93353a5b2",
+      "sectors": "1dea301a409ae95544f45dc956763428"
+    },
+    "n_stocks": 501,
+    "n_days": 1255,
+    "selection_window_note": "CPRE = union of all members of the top-15 Plan-AAA groups ranked by single-feature |IC| (tau=0.5) on 231 feature dates 2021-07-01..2022-05-31 (label end <= 2022-06-30); strictly before the tuning-val window (2022H2) and the 12-fold test period -> selection is PRE-EVALUATION (still post-hoc: designed after the test results were known). Unscored: ['hc_mom12m'].",
+    "tuning_window": "train TRAIN_START..2022-06-30 / val 2022H2 (run_storya_v21_tune.TUNE_FOLD, seeds [11,22,33])",
+    "eval_calendar_12fold": [
+      {
+        "id": 0,
+        "train_end": "2022-09-30",
+        "val_end": "2022-12-31",
+        "test_end": "2023-03-31",
+        "desc": "2023Q1"
+      },
+      {
+        "id": 1,
+        "train_end": "2022-12-31",
+        "val_end": "2023-03-31",
+        "test_end": "2023-06-30",
+        "desc": "2023Q2"
+      },
+      {
+        "id": 2,
+        "train_end": "2023-03-31",
+        "val_end": "2023-06-30",
+        "test_end": "2023-09-30",
+        "desc": "2023Q3"
+      },
+      {
+        "id": 3,
+        "train_end": "2023-06-30",
+        "val_end": "2023-09-30",
+        "test_end": "2023-12-31",
+        "desc": "2023Q4"
+      },
+      {
+        "id": 4,
+        "train_end": "2023-09-30",
+        "val_end": "2023-12-31",
+        "test_end": "2024-03-31",
+        "desc": "2024Q1"
+      },
+      {
+        "id": 5,
+        "train_end": "2023-12-31",
+        "val_end": "2024-03-31",
+        "test_end": "2024-06-30",
+        "desc": "2024Q2"
+      },
+      {
+        "id": 6,
+        "train_end": "2024-03-31",
+        "val_end": "2024-06-30",
+        "test_end": "2024-09-30",
+        "desc": "2024Q3"
+      },
+      {
+        "id": 7,
+        "train_end": "2024-06-30",
+        "val_end": "2024-09-30",
+        "test_end": "2024-12-31",
+        "desc": "2024Q4"
+      },
+      {
+        "id": 8,
+        "train_end": "2024-09-30",
+        "val_end": "2024-12-31",
+        "test_end": "2025-03-31",
+        "desc": "2025Q1"
+      },
+      {
+        "id": 9,
+        "train_end": "2024-12-31",
+        "val_end": "2025-03-31",
+        "test_end": "2025-06-30",
+        "desc": "2025Q2"
+      },
+      {
+        "id": 10,
+        "train_end": "2025-03-31",
+        "val_end": "2025-06-30",
+        "test_end": "2025-09-30",
+        "desc": "2025Q3"
+      },
+      {
+        "id": 11,
+        "train_end": "2025-06-30",
+        "val_end": "2025-09-30",
+        "test_end": "2025-12-31",
+        "desc": "2025Q4"
+      }
+    ],
+    "horizon_days": 21,
+    "canonical_seeds": [
+      86,
+      123,
+      456,
+      789,
+      1024,
+      2024,
+      7,
+      34,
+      99,
+      2026
+    ],
+    "frozen_hparams": "experiments/storya_v21_tune/frozen_hparams_cpre.json",
+    "frozen_md5": "a8fdfb8f9cefb24dcaf827a5905d6aad"
+  }
+]

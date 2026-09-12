@@ -1,0 +1,26 @@
+{
+  "archived": "2026-09-12 02:33:30",
+  "source_dir": "experiments/storya_v21_tune",
+  "files": {
+    "frozen_hparams_cpre.json": {
+      "md5": "a8fdfb8f9cefb24dcaf827a5905d6aad",
+      "bytes": 1045
+    },
+    "CPRE_L0.json": {
+      "md5": "a38207488dffcdfaeb0dc5c05b252778",
+      "bytes": 3835
+    },
+    "CPRE_L1.json": {
+      "md5": "86a0e7cd1f217b1e374f95a096a7c1d9",
+      "bytes": 3664
+    },
+    "studies_cpre/CPRE_L0.db": {
+      "md5": "012897f613ade4086df4b3f4394f815f",
+      "bytes": 135168
+    },
+    "studies_cpre/CPRE_L1.db": {
+      "md5": "9da52087ff8cabe863386e7d7bcd8743",
+      "bytes": 135168
+    }
+  }
+}

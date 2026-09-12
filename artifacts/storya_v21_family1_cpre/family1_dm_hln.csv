@@ -1,0 +1,2 @@
+universe,arm_A,arm_B,mean_delta_IC,T,NW_lag,DM_stat,DM_p_normal,HLN_stat,HLN_p_t,HLN_p_t_lag21,BH_FDR_reject_family,BH_FDR_reject_per_univ,bh_fdr_q,bh_applied
+CPRE,L1,L0,-0.002419290364310506,749,6,0.27986820216652525,0.7795786237103415,0.272208193934575,0.785537061941763,0.8465831005239175,,,,False

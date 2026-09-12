@@ -1,0 +1,3 @@
+universe,arm,n_cells,n_fully_degenerate,n_partial_collapse,n_normal,collapse_rate
+CPRE,L0,120,0,0,120,0.0
+CPRE,L1,120,0,0,120,0.0

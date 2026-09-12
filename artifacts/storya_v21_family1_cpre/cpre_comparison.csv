@@ -1,0 +1,5 @@
+universe,T_days,mean_delta_IC,delta_ci_lo,delta_ci_hi,HLN_p_t,HLN_p_t_lag21,BH_reject_family,IC_L0,IC_L0_ci_lo,IC_L0_ci_hi,IC_L1,IC_L1_ci_lo,IC_L1_ci_hi,SE_block,MDE_2p8xSE,per_seed_same_sign,loso_flips,role
+CPRE,749,-0.00242,-0.02563,0.01784,0.78554,0.84658,,0.00568,-0.02301,0.03759,0.00326,-0.01807,0.02449,0.01119,0.03134,5/10,1/10,"post-hoc sensitivity, pre-evaluation selection (no BH)"
+C,749,0.01477,-0.00036,0.03041,0.01085,0.06319,True,0.01953,-0.00702,0.04808,0.03429,0.00437,0.06694,0.00786,0.02201,10/10,0/10,confirmatory (BH over 20-test family)
+B,749,0.01428,-0.00507,0.03414,0.05236,0.18121,False,0.02279,0.00236,0.04294,0.03707,0.01179,0.06297,0.00982,0.02749,10/10,0/10,confirmatory (BH over 20-test family)
+C5,749,0.01343,0.00075,0.02833,0.00802,0.05373,,0.02031,-0.00373,0.04717,0.03374,0.00208,0.07045,0.00704,0.0197,10/10,0/10,post-hoc sensitivity (no BH)

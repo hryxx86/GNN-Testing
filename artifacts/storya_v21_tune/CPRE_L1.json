@@ -1,0 +1,138 @@
+{
+  "universe": "CPRE",
+  "arm": "L1",
+  "model": "MLP",
+  "n_trials": 30,
+  "top_k": 5,
+  "tune_seeds": [
+    11,
+    22,
+    33
+  ],
+  "tune_window": {
+    "train_end": "2022-06-30",
+    "val_end": "2022-12-31",
+    "test_end": "2022-12-31"
+  },
+  "winner_params": {
+    "lr": 0.001990231214211617,
+    "weight_decay": 0.0002549552933302671,
+    "dropout": 0.2,
+    "hidden_channels": 128,
+    "num_layers": 1
+  },
+  "winner_mean_val_ic_3seed": 0.013464543192336956,
+  "top_table": [
+    {
+      "rank": 1,
+      "params": {
+        "lr": 0.001990231214211617,
+        "weight_decay": 0.0002549552933302671,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.03439895063638687,
+      "tune_seed_ics": [
+        0.03439895063638687,
+        0.012230444699525833,
+        -0.0062357657589018345
+      ],
+      "mean_val_ic_3seed": 0.013464543192336956
+    },
+    {
+      "rank": 0,
+      "params": {
+        "lr": 0.00199499265259745,
+        "weight_decay": 0.0003217674412807514,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.034529924392700195,
+      "tune_seed_ics": [
+        0.034529924392700195,
+        0.012121498584747314,
+        -0.006559016183018684
+      ],
+      "mean_val_ic_3seed": 0.013364135598142942
+    },
+    {
+      "rank": 2,
+      "params": {
+        "lr": 0.002072712851712957,
+        "weight_decay": 0.0009028874065600971,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.0337894931435585,
+      "tune_seed_ics": [
+        0.0337894931435585,
+        0.010853495448827744,
+        -0.008775093592703342
+      ],
+      "mean_val_ic_3seed": 0.0119559649998943
+    },
+    {
+      "rank": 4,
+      "params": {
+        "lr": 0.0022764625771929956,
+        "weight_decay": 0.0005139766122480519,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.03211089223623276,
+      "tune_seed_ics": [
+        0.03211089223623276,
+        -0.011074613779783249,
+        -0.01486286148428917
+      ],
+      "mean_val_ic_3seed": 0.00205780565738678
+    },
+    {
+      "rank": 3,
+      "params": {
+        "lr": 0.0022344162495091194,
+        "weight_decay": 0.0002424757299929709,
+        "dropout": 0.2,
+        "hidden_channels": 128,
+        "num_layers": 1
+      },
+      "search_val_ic": 0.033439043909311295,
+      "tune_seed_ics": [
+        0.033439043909311295,
+        -0.0134145962074399,
+        -0.015774305909872055
+      ],
+      "mean_val_ic_3seed": 0.0014167139306664467
+    }
+  ],
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "wall_time_sec": 837.2,
+  "smoke": false,
+  "execution": {
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.11.15",
+    "torch": "2.11.0",
+    "lightgbm": "4.6.0",
+    "optuna": "4.9.0",
+    "numpy": "2.4.4",
+    "git_rev": "46ca6e38966f6304fefc55dd67da710bf5d78a55",
+    "git_error": null,
+    "code_dir": "/Users/heruixi/Desktop/GNN-Testing",
+    "module_md5": {
+      "run_storya_v21_tune.py": "4d3421adf7384c86c4321b9dc539535d",
+      "run_storya_e1_anchor.py": "13233c7ad09516feb7dfbdb04a6a347c",
+      "run_storya_v21_main12.py": "21dd7b88583d7bc5a65ce2a1c519d0c6"
+    },
+    "timestamp": "2026-09-12 02:33:30",
+    "selection_json": "artifacts/storya_cpre_select/selection.json",
+    "selection_json_md5": "0a853e6909a15319b888bb8a1218b2eb",
+    "columns_md5": "0ac94cf67e6157b35edb56010771f512",
+    "n_inputs": 48,
+    "study_db": "experiments/storya_v21_tune/studies/CPRE_L1.db"
+  }
+}

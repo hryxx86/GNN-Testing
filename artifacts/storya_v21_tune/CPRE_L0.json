@@ -1,0 +1,138 @@
+{
+  "universe": "CPRE",
+  "arm": "L0",
+  "model": "LightGBM",
+  "n_trials": 30,
+  "top_k": 5,
+  "tune_seeds": [
+    11,
+    22,
+    33
+  ],
+  "tune_window": {
+    "train_end": "2022-06-30",
+    "val_end": "2022-12-31",
+    "test_end": "2022-12-31"
+  },
+  "winner_params": {
+    "num_leaves": 15,
+    "learning_rate": 0.010520856370501335,
+    "min_data_in_leaf": 10,
+    "lambda_l1": 2.3110698302219116e-08,
+    "lambda_l2": 0.3394454877627604
+  },
+  "winner_mean_val_ic_3seed": 0.031086603179574013,
+  "top_table": [
+    {
+      "rank": 0,
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010520856370501335,
+        "min_data_in_leaf": 10,
+        "lambda_l1": 2.3110698302219116e-08,
+        "lambda_l2": 0.3394454877627604
+      },
+      "search_val_ic": 0.031086603179574013,
+      "tune_seed_ics": [
+        0.031086603179574013,
+        0.031086603179574013,
+        0.031086603179574013
+      ],
+      "mean_val_ic_3seed": 0.031086603179574013
+    },
+    {
+      "rank": 1,
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010134539214209405,
+        "min_data_in_leaf": 10,
+        "lambda_l1": 5.317154541209497e-07,
+        "lambda_l2": 0.3334754251356258
+      },
+      "search_val_ic": 0.031086603179574013,
+      "tune_seed_ics": [
+        0.031086603179574013,
+        0.031086603179574013,
+        0.031086603179574013
+      ],
+      "mean_val_ic_3seed": 0.031086603179574013
+    },
+    {
+      "rank": 2,
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010499633039289058,
+        "min_data_in_leaf": 20,
+        "lambda_l1": 4.2886041173845804e-07,
+        "lambda_l2": 0.08799318203725054
+      },
+      "search_val_ic": 0.030171018093824387,
+      "tune_seed_ics": [
+        0.030171018093824387,
+        0.030171018093824387,
+        0.030171018093824387
+      ],
+      "mean_val_ic_3seed": 0.030171018093824387
+    },
+    {
+      "rank": 3,
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010483087967119506,
+        "min_data_in_leaf": 20,
+        "lambda_l1": 3.3546159839540677e-07,
+        "lambda_l2": 0.04968989049871891
+      },
+      "search_val_ic": 0.030171018093824387,
+      "tune_seed_ics": [
+        0.030171018093824387,
+        0.030171018093824387,
+        0.030171018093824387
+      ],
+      "mean_val_ic_3seed": 0.030171018093824387
+    },
+    {
+      "rank": 4,
+      "params": {
+        "num_leaves": 15,
+        "learning_rate": 0.010563931535907197,
+        "min_data_in_leaf": 20,
+        "lambda_l1": 4.484397354004202e-06,
+        "lambda_l2": 0.21143486751818868
+      },
+      "search_val_ic": 0.030171018093824387,
+      "tune_seed_ics": [
+        0.030171018093824387,
+        0.030171018093824387,
+        0.030171018093824387
+      ],
+      "mean_val_ic_3seed": 0.030171018093824387
+    }
+  ],
+  "search_space_ref": "docs/protocol_v2_freeze.md v2.2 \u00a74",
+  "wall_time_sec": 34.7,
+  "smoke": false,
+  "execution": {
+    "device": "mps",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.11.15",
+    "torch": "2.11.0",
+    "lightgbm": "4.6.0",
+    "optuna": "4.9.0",
+    "numpy": "2.4.4",
+    "git_rev": "46ca6e38966f6304fefc55dd67da710bf5d78a55",
+    "git_error": null,
+    "code_dir": "/Users/heruixi/Desktop/GNN-Testing",
+    "module_md5": {
+      "run_storya_v21_tune.py": "4d3421adf7384c86c4321b9dc539535d",
+      "run_storya_e1_anchor.py": "13233c7ad09516feb7dfbdb04a6a347c",
+      "run_storya_v21_main12.py": "21dd7b88583d7bc5a65ce2a1c519d0c6"
+    },
+    "timestamp": "2026-09-12 02:19:30",
+    "selection_json": "artifacts/storya_cpre_select/selection.json",
+    "selection_json_md5": "0a853e6909a15319b888bb8a1218b2eb",
+    "columns_md5": "0ac94cf67e6157b35edb56010771f512",
+    "n_inputs": 48,
+    "study_db": "experiments/storya_v21_tune/studies/CPRE_L0.db"
+  }
+}

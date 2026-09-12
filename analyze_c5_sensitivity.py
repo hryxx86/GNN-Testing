@@ -513,12 +513,22 @@ def write_md(universe: str, out_dir: str, comp: pd.DataFrame, paired: list, inte
                  f"(largest single-fold contribution in {largest or 'none'}{'; ' + ', '.join(others) if others else ''})\n")
         L.append('| universe | fold ΔIC (excluded fold) | share of pooled ΔIC | ΔIC ex-fold | 95% block-boot CI | HLN p | HLN p (lag 21) | MDE (≈2.8×SE) | T |')
         L.append('|---|---|---|---|---|---|---|---|---|')
+        # the share ratio is undefined in practice when the pooled contrast is itself ≈ 0 (|pooled| < its block SE):
+        # print "n/a" then (the CSV keeps the raw ratio) and give the fold's contribution rank instead
+        se_by_u = {r.universe: float(r.SE_block) for r in comp.itertuples()}
+        pooled_by_u = {r.universe: float(r.mean_delta_IC) for r in comp.itertuples()}
+        def _share(r):
+            u = r['universe']
+            if abs(pooled_by_u.get(u, 0.0)) < se_by_u.get(u, 0.0):
+                return f"n/a (pooled ΔIC {pooled_by_u[u]:+.4f} ≈ 0; contribution rank {r['excluded_fold_contribution_rank']}/{N_FOLDS})"
+            return f"{r['excluded_fold_share']:.0%}"
         for r in ex_rows:
-            L.append(f"| {r['universe']} | {r['excluded_fold_delta_IC']:+.4f} | {r['excluded_fold_share']:.0%} | {r['mean_delta_IC_ex']:+.4f} | "
+            L.append(f"| {r['universe']} | {r['excluded_fold_delta_IC']:+.4f} | {_share(r)} | {r['mean_delta_IC_ex']:+.4f} | "
                      f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}] | {r['HLN_p_t']:.3f} | {r['HLN_p_t_lag21']:.3f} | {r['MDE_2p8xSE']:.4f} | {r['T_ex']} |")
-        shares = ', '.join(f"{r['universe']} {r['excluded_fold_share']:.0%}" for r in ex_rows)
+        shares = ', '.join(f"{r['universe']} {_share(r)}" for r in ex_rows)
         L.append(f'\n(source: {pfx}_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC): {shares}. '
-                 'A share near or above one half means the pooled contrast is not evenly persistent across quarters)\n')
+                 'A share near or above one half means the pooled contrast is not evenly persistent across quarters; the ratio is '
+                 'not meaningful when the pooled contrast is within one SE of zero)\n')
     if paired:
         L.append('## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional contrast — absolute change only)\n')
         L.append('| contrast | mean paired diff | 95% CI | HLN p | HLN p (lag 21) | SE_block | MDE (≈2.8×SE) | T |')
