@@ -37,7 +37,8 @@
 ### Session Handoffs
 - `session_handoff_2026-04-15.md` … `session_handoff_2026-07-03.md`（历史，按日期排列）
 - `session_handoff_2026-07-07.md`
-- `session_handoff_2026-09-11.md` ← 最新（C5 sensitivity 完成；待 H博士：论文改口径 / C-pre / push）
+- `session_handoff_2026-09-12.md` ← 最新（C5 + C-pre sensitivity 完成；待 H博士：论文改口径 / push）
+- `session_handoff_2026-09-11.md` — C5 session 交接（冻结于其日期）
 
 ---
 
@@ -46,7 +47,7 @@
 | 文件 | 用途 | 产出于 | 状态 |
 |------|------|-------|------|
 | `analysis.md` | Tri-doc 分析记录（必读） | 持续更新 | active |
-| `session_handoff_2026-09-11.md` | 最新 session 交接（新窗口必读；历史 handoff 按日期排列） | 2026-09-11 | active |
+| `session_handoff_2026-09-12.md` | 最新 session 交接（新窗口必读；历史 handoff 按日期排列） | 2026-09-12 | active |
 | `project_findings_overview_2026-04-20.md` | 项目总纲 | 2026-04-20 | active |
 
 ---
@@ -65,3 +66,4 @@
 - **2026-07-28**: 新增下一篇论文 ideation 工作流三件套：`next_paper_ideation_index.md`（专门管理索引）+ `lit_scan_2026-07-26.md` + `idea_expansions_2026-07-28.md`；评审存档在 `artifacts/reviews/2026-07-28_codex_plan_A.md`（→ progress: 2026-07-28-c）
 - **2026-09-11**: 新增 `c5_rerun_brief_2026-09-10.md`（C5 任务简报 + 实施注记 + C-pre 提案）与 `session_handoff_2026-09-11.md`（→ progress: 2026-09-10-a, 2026-09-11-d）
 - **2026-09-11**: 新增 `c_pre_plan_2026-09-11.md`（C-pre 冻结方案，Codex TP1-A 通过，待 H博士 批准）（→ progress: 2026-09-11-g）
+- **2026-09-12**: 新增 `session_handoff_2026-09-12.md`（C-pre 完成后的交接；09-11 的 handoff 冻结）（→ progress: 2026-09-12-d）

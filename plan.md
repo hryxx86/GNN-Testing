@@ -8,7 +8,7 @@
 
 ## 2026-09-12-b: C-pre 完成（TP3 通过、analysis.md 2026-09-12-a）→ 剩余：论文 L1 改口径 + 插入 C-pre 段；push 待确认
 
-→ progress: 2026-09-12-c | plan: 2026-09-12-b | analysis: 2026-09-12-a | README: artifacts/README.md + experiments/README.md 2026-09-12
+→ progress: 2026-09-12-c/-d | plan: 2026-09-12-b | analysis: 2026-09-12-a | README: docs/README.md + artifacts/README.md + experiments/README.md 2026-09-12
 
 **结果一句话**：在只用 2022-06-30 前信息选出的 48 列基底上，MLP−LightGBM = −0.0024 [−0.0256, +0.0178]（区间含 0；两臂 IC 水平 0.006 / 0.003）；C/C5/B 上的正向点估计没有重现，但配对区间全含 0（欠功效）。不提供对 C 的独立确认，也不识别泄漏膨胀。措辞按 analysis.md 2026-09-12-a 的采用/禁用清单。
 

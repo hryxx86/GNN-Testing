@@ -181,16 +181,18 @@ MANIFEST_COLUMNS = ['cell_id', 'universe', 'arm', 'model', 'seed', 'fold',
 
 def cell_id(universe_idx: int, arm: str, fold_idx: int, seed_idx: int) -> int:
     """universe*1200 + arm_idx*120 + fold*10 + seed. Confirmatory (B=0, C=1) range [0, 2399];
-    sensitivity C5 (=2) range [2400, 3599]. Injective by radix (seed<10, fold<12→fold*10+seed<120,
+    each sensitivity universe u occupies [u*1200, u*1200+1199] (C5 → [2400, 3599], CPRE → [3600, 4799]).
+    Injective by radix (seed<10, fold<12→fold*10+seed<120,
     arm<10→arm*120<1200, universe<3)."""
     arm_idx = ARM_ORDER.index(arm)
     return universe_idx * 1200 + arm_idx * 120 + fold_idx * 10 + seed_idx
 
 
 def assert_cell_id_injective() -> None:
-    """Enumerate the FULL (3 universe × 10 arm × 12 fold × 10 seed) space; confirm injective and
-    range [0, 3599]; confirm the confirmatory block is still exactly [0, 2399] and the sensitivity
-    (C5) block lies strictly above it — validates the formula regardless of which arms run."""
+    """Enumerate the FULL (len(UNIVERSE_IDX) universe × 10 arm × 12 fold × 10 seed) space; confirm injective and
+    range [0, len(UNIVERSE_IDX)*1200 - 1]; confirm the confirmatory block is still exactly [0, 2399] and that EVERY
+    sensitivity universe's block lies strictly above it and the sensitivity blocks are pairwise disjoint — validates
+    the formula regardless of which arms or universes run. Injectivity needs arm_idx < 10, not a universe bound."""
     seen, conf, sens = set(), set(), {}
     for u_name, u in UNIVERSE_IDX.items():
         for arm in ARM_ORDER:
@@ -751,8 +753,18 @@ def main():
             top = subprocess.check_output(['git', '-C', repo, 'rev-parse', '--show-toplevel'], text=True).strip()
             # EXPL-CODE-12: `git status --porcelain` prints TOPLEVEL-relative paths → key everything on those
             top_rel = [os.path.relpath(p, top) for p in mod_paths]
+            # EXPL-CODE-02 (closeout 2026-09-12): `git status --porcelain -- <p>` is EMPTY for an IGNORED file, which
+            # would read as 'clean'. Probe tracked-ness explicitly so an untracked/ignored module fails source_clean.
+            tracked = set()
+            try:
+                tracked = set(subprocess.check_output(['git', '-C', top, 'ls-files', '--'] + top_rel, text=True).split())
+            except Exception:
+                pass
             st = subprocess.check_output(['git', '-C', top, 'status', '--porcelain', '--'] + top_rel, text=True)
             status = {ln[3:]: ln[:2].strip() for ln in st.splitlines()}
+            for _r in top_rel:
+                if _r not in tracked:
+                    status[_r] = '!!untracked-or-ignored'
             shas = subprocess.check_output(['git', '-C', top, 'hash-object'] + top_rel, text=True).split()
             for m, tr, sha in zip(mods, top_rel, shas):
                 src_state[m].update({'blob_sha': sha, 'git_status': status.get(tr, ''), 'toplevel_path': tr})

@@ -65,6 +65,10 @@ artifacts/**
 !experiments/storya_v21_main12_c5*/manifest.csv
 !experiments/storya_v21_main12_c5*/_*.json
 !experiments/storya_v21_main12_c5*/per_day_ic/*.npy
+# 2026-09-12 closeout EXPL-LEAK-02: the C-pre selector's grouping input (61 Plan-AAA groups) and the Plan-AAA
+# ranking it reuses — small text files, required to reproduce the selection from a clean clone
+!artifacts/plan_aaa/groups_168.json
+!artifacts/plan_aaa/ranking.csv
 # 2026-09-12 C-pre pre-evaluation re-selection sensitivity (post-hoc) — selector archive + stats + per-day IC arrays
 !artifacts/storya_cpre_select/*.csv
 !artifacts/storya_cpre_select/*.json

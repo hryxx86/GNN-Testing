@@ -1,0 +1,1073 @@
+{
+  "threshold": 0.6,
+  "clustering_method": "complete-link on 1 \u2212 |Spearman|",
+  "pooled_panel": true,
+  "pooled_panel_note": "Spearman computed on the (n_days \u00d7 n_valid_stocks) \u00d7 n_features pooled matrix. Inherited from Plan Z++ Part A protocol. ARI vs. fold-0 train slice (adjusted_rand_index.json) is the empirical robustness gate \u2014 concern flag fires if ARI < 0.85.",
+  "feature_order": [
+    "hc_ret_mean_5d",
+    "hc_ret_mean_10d",
+    "hc_ret_mean_21d",
+    "hc_ret_std_5d",
+    "hc_ret_std_10d",
+    "hc_ret_std_21d",
+    "hc_mom12m",
+    "hc_maxret",
+    "hc_dolvol",
+    "hc_CORR5",
+    "KMID",
+    "KLEN",
+    "KMID2",
+    "KUP",
+    "KUP2",
+    "KLOW",
+    "KLOW2",
+    "KSFT",
+    "KSFT2",
+    "OPEN0",
+    "HIGH0",
+    "LOW0",
+    "VWAP0",
+    "ROC5",
+    "MA5",
+    "STD5",
+    "BETA5",
+    "RSQR5",
+    "RESI5",
+    "MAX5",
+    "MIN5",
+    "QTLU5",
+    "QTLD5",
+    "RANK5",
+    "RSV5",
+    "IMAX5",
+    "IMIN5",
+    "IMXD5",
+    "CORR5",
+    "CORD5",
+    "CNTP5",
+    "CNTN5",
+    "CNTD5",
+    "SUMP5",
+    "SUMN5",
+    "SUMD5",
+    "VMA5",
+    "VSTD5",
+    "WVMA5",
+    "VSUMP5",
+    "VSUMN5",
+    "VSUMD5",
+    "ROC10",
+    "MA10",
+    "STD10",
+    "BETA10",
+    "RSQR10",
+    "RESI10",
+    "MAX10",
+    "MIN10",
+    "QTLU10",
+    "QTLD10",
+    "RANK10",
+    "RSV10",
+    "IMAX10",
+    "IMIN10",
+    "IMXD10",
+    "CORR10",
+    "CORD10",
+    "CNTP10",
+    "CNTN10",
+    "CNTD10",
+    "SUMP10",
+    "SUMN10",
+    "SUMD10",
+    "VMA10",
+    "VSTD10",
+    "WVMA10",
+    "VSUMP10",
+    "VSUMN10",
+    "VSUMD10",
+    "ROC20",
+    "MA20",
+    "STD20",
+    "BETA20",
+    "RSQR20",
+    "RESI20",
+    "MAX20",
+    "MIN20",
+    "QTLU20",
+    "QTLD20",
+    "RANK20",
+    "RSV20",
+    "IMAX20",
+    "IMIN20",
+    "IMXD20",
+    "CORR20",
+    "CORD20",
+    "CNTP20",
+    "CNTN20",
+    "CNTD20",
+    "SUMP20",
+    "SUMN20",
+    "SUMD20",
+    "VMA20",
+    "VSTD20",
+    "WVMA20",
+    "VSUMP20",
+    "VSUMN20",
+    "VSUMD20",
+    "ROC30",
+    "MA30",
+    "STD30",
+    "BETA30",
+    "RSQR30",
+    "RESI30",
+    "MAX30",
+    "MIN30",
+    "QTLU30",
+    "QTLD30",
+    "RANK30",
+    "RSV30",
+    "IMAX30",
+    "IMIN30",
+    "IMXD30",
+    "CORR30",
+    "CORD30",
+    "CNTP30",
+    "CNTN30",
+    "CNTD30",
+    "SUMP30",
+    "SUMN30",
+    "SUMD30",
+    "VMA30",
+    "VSTD30",
+    "WVMA30",
+    "VSUMP30",
+    "VSUMN30",
+    "VSUMD30",
+    "ROC60",
+    "MA60",
+    "STD60",
+    "BETA60",
+    "RSQR60",
+    "RESI60",
+    "MAX60",
+    "MIN60",
+    "QTLU60",
+    "QTLD60",
+    "RANK60",
+    "RSV60",
+    "IMAX60",
+    "IMIN60",
+    "IMXD60",
+    "CORR60",
+    "CORD60",
+    "CNTP60",
+    "CNTN60",
+    "CNTD60",
+    "SUMP60",
+    "SUMN60",
+    "SUMD60",
+    "VMA60",
+    "VSTD60",
+    "WVMA60",
+    "VSUMP60",
+    "VSUMN60",
+    "VSUMD60"
+  ],
+  "num_features": 168,
+  "num_groups": 61,
+  "groups": [
+    {
+      "group_id": 0,
+      "label": "hc_ret_mean_5d+6",
+      "members": [
+        "hc_ret_mean_5d",
+        "hc_ret_mean_10d",
+        "ROC10",
+        "BETA10",
+        "SUMP10",
+        "SUMN10",
+        "SUMD10"
+      ],
+      "members_idx": [
+        0,
+        1,
+        52,
+        55,
+        72,
+        73,
+        74
+      ],
+      "size": 7
+    },
+    {
+      "group_id": 1,
+      "label": "hc_ret_mean_21d+5",
+      "members": [
+        "hc_ret_mean_21d",
+        "BETA30",
+        "IMAX30",
+        "IMXD30",
+        "SUMP30",
+        "SUMD30"
+      ],
+      "members_idx": [
+        2,
+        113,
+        122,
+        124,
+        130,
+        132
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 2,
+      "label": "hc_ret_std_5d+1",
+      "members": [
+        "hc_ret_std_5d",
+        "hc_ret_std_10d"
+      ],
+      "members_idx": [
+        3,
+        4
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 3,
+      "label": "hc_ret_std_21d+1",
+      "members": [
+        "hc_ret_std_21d",
+        "hc_maxret"
+      ],
+      "members_idx": [
+        5,
+        7
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 4,
+      "label": "hc_mom12m",
+      "members": [
+        "hc_mom12m"
+      ],
+      "members_idx": [
+        6
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 5,
+      "label": "hc_dolvol",
+      "members": [
+        "hc_dolvol"
+      ],
+      "members_idx": [
+        8
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 6,
+      "label": "hc_CORR5+1",
+      "members": [
+        "hc_CORR5",
+        "CORR5"
+      ],
+      "members_idx": [
+        9,
+        38
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 7,
+      "label": "KMID+6",
+      "members": [
+        "KMID",
+        "KMID2",
+        "KSFT",
+        "KSFT2",
+        "OPEN0",
+        "HIGH0",
+        "VWAP0"
+      ],
+      "members_idx": [
+        10,
+        12,
+        17,
+        18,
+        19,
+        20,
+        22
+      ],
+      "size": 7
+    },
+    {
+      "group_id": 8,
+      "label": "KLEN",
+      "members": [
+        "KLEN"
+      ],
+      "members_idx": [
+        11
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 9,
+      "label": "KUP+1",
+      "members": [
+        "KUP",
+        "KUP2"
+      ],
+      "members_idx": [
+        13,
+        14
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 10,
+      "label": "KLOW+1",
+      "members": [
+        "KLOW",
+        "KLOW2"
+      ],
+      "members_idx": [
+        15,
+        16
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 11,
+      "label": "LOW0",
+      "members": [
+        "LOW0"
+      ],
+      "members_idx": [
+        21
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 12,
+      "label": "ROC5+5",
+      "members": [
+        "ROC5",
+        "BETA5",
+        "IMIN5",
+        "SUMP5",
+        "SUMN5",
+        "SUMD5"
+      ],
+      "members_idx": [
+        23,
+        26,
+        36,
+        43,
+        44,
+        45
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 13,
+      "label": "MA5+4",
+      "members": [
+        "MA5",
+        "QTLU5",
+        "QTLD5",
+        "RANK5",
+        "RESI10"
+      ],
+      "members_idx": [
+        24,
+        31,
+        32,
+        33,
+        57
+      ],
+      "size": 5
+    },
+    {
+      "group_id": 14,
+      "label": "STD5+1",
+      "members": [
+        "STD5",
+        "STD10"
+      ],
+      "members_idx": [
+        25,
+        54
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 15,
+      "label": "RSQR5",
+      "members": [
+        "RSQR5"
+      ],
+      "members_idx": [
+        27
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 16,
+      "label": "RESI5",
+      "members": [
+        "RESI5"
+      ],
+      "members_idx": [
+        28
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 17,
+      "label": "MAX5+5",
+      "members": [
+        "MAX5",
+        "RSV5",
+        "MAX10",
+        "QTLU10",
+        "RANK10",
+        "RSV10"
+      ],
+      "members_idx": [
+        29,
+        34,
+        58,
+        60,
+        62,
+        63
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 18,
+      "label": "MIN5+3",
+      "members": [
+        "MIN5",
+        "MA10",
+        "MIN10",
+        "QTLD10"
+      ],
+      "members_idx": [
+        30,
+        53,
+        59,
+        61
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 19,
+      "label": "IMAX5+1",
+      "members": [
+        "IMAX5",
+        "IMXD5"
+      ],
+      "members_idx": [
+        35,
+        37
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 20,
+      "label": "CORD5+1",
+      "members": [
+        "CORD5",
+        "CORD10"
+      ],
+      "members_idx": [
+        39,
+        68
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 21,
+      "label": "CNTP5+5",
+      "members": [
+        "CNTP5",
+        "CNTN5",
+        "CNTD5",
+        "CNTP10",
+        "CNTN10",
+        "CNTD10"
+      ],
+      "members_idx": [
+        40,
+        41,
+        42,
+        69,
+        70,
+        71
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 22,
+      "label": "VMA5+4",
+      "members": [
+        "VMA5",
+        "VSUMP5",
+        "VSUMN5",
+        "VSUMD5",
+        "VMA10"
+      ],
+      "members_idx": [
+        46,
+        49,
+        50,
+        51,
+        75
+      ],
+      "size": 5
+    },
+    {
+      "group_id": 23,
+      "label": "VSTD5",
+      "members": [
+        "VSTD5"
+      ],
+      "members_idx": [
+        47
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 24,
+      "label": "WVMA5",
+      "members": [
+        "WVMA5"
+      ],
+      "members_idx": [
+        48
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 25,
+      "label": "RSQR10",
+      "members": [
+        "RSQR10"
+      ],
+      "members_idx": [
+        56
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 26,
+      "label": "IMAX10+1",
+      "members": [
+        "IMAX10",
+        "IMXD10"
+      ],
+      "members_idx": [
+        64,
+        66
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 27,
+      "label": "IMIN10",
+      "members": [
+        "IMIN10"
+      ],
+      "members_idx": [
+        65
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 28,
+      "label": "CORR10",
+      "members": [
+        "CORR10"
+      ],
+      "members_idx": [
+        67
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 29,
+      "label": "VSTD10",
+      "members": [
+        "VSTD10"
+      ],
+      "members_idx": [
+        76
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 30,
+      "label": "WVMA10",
+      "members": [
+        "WVMA10"
+      ],
+      "members_idx": [
+        77
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 31,
+      "label": "VSUMP10+2",
+      "members": [
+        "VSUMP10",
+        "VSUMN10",
+        "VSUMD10"
+      ],
+      "members_idx": [
+        78,
+        79,
+        80
+      ],
+      "size": 3
+    },
+    {
+      "group_id": 32,
+      "label": "ROC20+4",
+      "members": [
+        "ROC20",
+        "IMIN20",
+        "SUMN20",
+        "IMIN30",
+        "SUMN30"
+      ],
+      "members_idx": [
+        81,
+        94,
+        102,
+        123,
+        131
+      ],
+      "size": 5
+    },
+    {
+      "group_id": 33,
+      "label": "MA20+5",
+      "members": [
+        "MA20",
+        "MIN20",
+        "QTLD20",
+        "MA30",
+        "MIN30",
+        "QTLD30"
+      ],
+      "members_idx": [
+        82,
+        88,
+        90,
+        111,
+        117,
+        119
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 34,
+      "label": "STD20+1",
+      "members": [
+        "STD20",
+        "STD30"
+      ],
+      "members_idx": [
+        83,
+        112
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 35,
+      "label": "BETA20+8",
+      "members": [
+        "BETA20",
+        "RANK20",
+        "RSV20",
+        "IMAX20",
+        "IMXD20",
+        "SUMP20",
+        "SUMD20",
+        "RANK30",
+        "RSV30"
+      ],
+      "members_idx": [
+        84,
+        91,
+        92,
+        93,
+        95,
+        101,
+        103,
+        120,
+        121
+      ],
+      "size": 9
+    },
+    {
+      "group_id": 36,
+      "label": "RSQR20",
+      "members": [
+        "RSQR20"
+      ],
+      "members_idx": [
+        85
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 37,
+      "label": "RESI20+1",
+      "members": [
+        "RESI20",
+        "RESI30"
+      ],
+      "members_idx": [
+        86,
+        115
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 38,
+      "label": "MAX20+3",
+      "members": [
+        "MAX20",
+        "QTLU20",
+        "MAX30",
+        "QTLU30"
+      ],
+      "members_idx": [
+        87,
+        89,
+        116,
+        118
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 39,
+      "label": "CORR20+1",
+      "members": [
+        "CORR20",
+        "CORR30"
+      ],
+      "members_idx": [
+        96,
+        125
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 40,
+      "label": "CORD20+1",
+      "members": [
+        "CORD20",
+        "CORD30"
+      ],
+      "members_idx": [
+        97,
+        126
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 41,
+      "label": "CNTP20+3",
+      "members": [
+        "CNTP20",
+        "CNTD20",
+        "CNTP30",
+        "CNTD30"
+      ],
+      "members_idx": [
+        98,
+        100,
+        127,
+        129
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 42,
+      "label": "CNTN20+1",
+      "members": [
+        "CNTN20",
+        "CNTN30"
+      ],
+      "members_idx": [
+        99,
+        128
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 43,
+      "label": "VMA20+3",
+      "members": [
+        "VMA20",
+        "VMA30",
+        "VMA60",
+        "VSTD60"
+      ],
+      "members_idx": [
+        104,
+        133,
+        162,
+        163
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 44,
+      "label": "VSTD20+1",
+      "members": [
+        "VSTD20",
+        "VSTD30"
+      ],
+      "members_idx": [
+        105,
+        134
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 45,
+      "label": "WVMA20+1",
+      "members": [
+        "WVMA20",
+        "WVMA30"
+      ],
+      "members_idx": [
+        106,
+        135
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 46,
+      "label": "VSUMP20+2",
+      "members": [
+        "VSUMP20",
+        "VSUMN20",
+        "VSUMD20"
+      ],
+      "members_idx": [
+        107,
+        108,
+        109
+      ],
+      "size": 3
+    },
+    {
+      "group_id": 47,
+      "label": "ROC30+5",
+      "members": [
+        "ROC30",
+        "MA60",
+        "MAX60",
+        "MIN60",
+        "QTLU60",
+        "QTLD60"
+      ],
+      "members_idx": [
+        110,
+        140,
+        145,
+        146,
+        147,
+        148
+      ],
+      "size": 6
+    },
+    {
+      "group_id": 48,
+      "label": "RSQR30",
+      "members": [
+        "RSQR30"
+      ],
+      "members_idx": [
+        114
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 49,
+      "label": "VSUMP30+2",
+      "members": [
+        "VSUMP30",
+        "VSUMN30",
+        "VSUMD30"
+      ],
+      "members_idx": [
+        136,
+        137,
+        138
+      ],
+      "size": 3
+    },
+    {
+      "group_id": 50,
+      "label": "ROC60+3",
+      "members": [
+        "ROC60",
+        "IMIN60",
+        "CNTN60",
+        "SUMN60"
+      ],
+      "members_idx": [
+        139,
+        152,
+        157,
+        160
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 51,
+      "label": "STD60+1",
+      "members": [
+        "STD60",
+        "RSQR60"
+      ],
+      "members_idx": [
+        141,
+        143
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 52,
+      "label": "BETA60+3",
+      "members": [
+        "BETA60",
+        "IMXD60",
+        "SUMP60",
+        "SUMD60"
+      ],
+      "members_idx": [
+        142,
+        153,
+        159,
+        161
+      ],
+      "size": 4
+    },
+    {
+      "group_id": 53,
+      "label": "RESI60",
+      "members": [
+        "RESI60"
+      ],
+      "members_idx": [
+        144
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 54,
+      "label": "RANK60+2",
+      "members": [
+        "RANK60",
+        "RSV60",
+        "IMAX60"
+      ],
+      "members_idx": [
+        149,
+        150,
+        151
+      ],
+      "size": 3
+    },
+    {
+      "group_id": 55,
+      "label": "CORR60",
+      "members": [
+        "CORR60"
+      ],
+      "members_idx": [
+        154
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 56,
+      "label": "CORD60",
+      "members": [
+        "CORD60"
+      ],
+      "members_idx": [
+        155
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 57,
+      "label": "CNTP60+1",
+      "members": [
+        "CNTP60",
+        "CNTD60"
+      ],
+      "members_idx": [
+        156,
+        158
+      ],
+      "size": 2
+    },
+    {
+      "group_id": 58,
+      "label": "WVMA60",
+      "members": [
+        "WVMA60"
+      ],
+      "members_idx": [
+        164
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 59,
+      "label": "VSUMP60",
+      "members": [
+        "VSUMP60"
+      ],
+      "members_idx": [
+        165
+      ],
+      "size": 1
+    },
+    {
+      "group_id": 60,
+      "label": "VSUMN60+1",
+      "members": [
+        "VSUMN60",
+        "VSUMD60"
+      ],
+      "members_idx": [
+        166,
+        167
+      ],
+      "size": 2
+    }
+  ],
+  "calibration_window_indices": [
+    0,
+    251
+  ],
+  "calibration_window_dates": [
+    "2021-01-29",
+    "2022-01-27"
+  ]
+}

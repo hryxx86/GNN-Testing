@@ -5,6 +5,10 @@ Frozen protocol: docs/c_pre_plan_2026-09-11.md §2–§3 (Codex Touchpoint-1 Rou
 This script only SELECTS columns; it trains nothing. Everything it reads is dated on or before 2022-06-30
 (label end) — strictly before the tuning-validation window (2022H2) and the 12-fold evaluation window
 (2023Q1–2025Q4). The decision to run it was taken after the paper's test results were known (post-hoc).
+SCOPE OF THE "PRE-EVALUATION" CLAIM (closeout EXPL-LEAK-03): only the selector's INPUTS are bounded by 2022-06-30.
+The RULE is not: the marginal-|IC| group score, the reused 61-group partition, the top-15 cut and the eligibility
+thresholds were carried over from analyze_plan_aaa_t1_diagnostic.py (whose own scoring window, the last 313 valid
+label days, lies inside the evaluation period) and from the test-informed Plan-AAA -> Universe C construction.
 
 Candidates (168 = artifacts/plan_aaa/groups_168.json feature_order):
   * 10 hc  — run_step3_plan_z_part_a.load_data_and_features()['features_np'] exactly as Plan AAA consumed them
@@ -18,6 +22,11 @@ Selector (§3):
                dates 2021-07-01 … 2022-05-31 whose 21d label ends ≤ 2022-06-30 (231 dates; asserted).
   eligible   = for feature f and date t: ≥ 30 stocks with a valid label and a finite feature value, feature
                cross-section non-constant (std > 1e-9) [same conditions as analyze_plan_aaa_t1_diagnostic].
+               NOTE (closeout EXPL-LEAK-01): BOTH candidate sources are NaN->0-filled at build time
+               (build_alpha158_features.py:362, before the _raw.npy save; run_step3_plan_z_part_a.py:113), so the
+               "finite" test is vacuous and missing observations enter as imputed zeros (build-time NaN rate for the
+               selected Alpha158 columns: median 1.7%, max 3.3%). In practice the coverage rule binds only through the
+               NON-CONSTANT test - which is exactly what excludes hc_mom12m (all-zero cross-sections before 2022-01-28).
   coverage   = n_eligible(f) / |D_sel|; scored iff coverage ≥ TAU (0.50); UNSCORED contributes nothing (undefined
                IC is never treated as 0). Known consequence: hc_mom12m (85/231 = 0.37) is UNSCORED.
   IC̄_f       = time-mean over f's eligible dates of the daily cross-sectional Spearman IC(feature_f(t,·), label(t,·)).
@@ -57,7 +66,9 @@ GROUPS_JSON = 'artifacts/plan_aaa/groups_168.json'
 OUT_DIR = 'artifacts/storya_cpre_select'
 TAU = 0.50                      # frozen minimum coverage (plan §3.3, decision D1)
 TAU_ROBUSTNESS = (0.0, 0.75)    # rankings only
-TOP_K = 15
+TOP_K = 15                      # cardinality carried over from the Plan-AAA -> Universe C construction (whose own top-15 was a
+                                # test-informed ranking); kept for width continuity, NOT re-optimised — the only residual
+                                # test-informed input of this selector (closeout EXPL-STAT-07, 2026-09-12); the ranking itself is pre-evaluation
 MIN_STOCKS = 30
 CONST_EPS = 1e-9
 EXPECTED_N_DATES = 231          # Codex TP1-B / Claude 2026-09-11 (asserted, not assumed)
@@ -86,8 +97,18 @@ def git_identity(paths: list) -> dict:
         out['git_rev'] = subprocess.check_output(['git', '-C', PROJECT_ROOT, 'rev-parse', 'HEAD'], text=True).strip()
         top = subprocess.check_output(['git', '-C', PROJECT_ROOT, 'rev-parse', '--show-toplevel'], text=True).strip()
         rel = [os.path.relpath(p, top) for p in paths]
+        # EXPL-CODE-02 (closeout 2026-09-12): `git status --porcelain -- <p>` is EMPTY for an IGNORED file, which
+        # would read as 'clean'. Probe tracked-ness explicitly so an untracked/ignored module fails source_clean.
+        tracked = set()
+        try:
+            tracked = set(subprocess.check_output(['git', '-C', top, 'ls-files', '--'] + rel, text=True).split())
+        except Exception:
+            pass
         st = subprocess.check_output(['git', '-C', top, 'status', '--porcelain', '--'] + rel, text=True)
         status = {ln[3:]: ln[:2].strip() for ln in st.splitlines()}
+        for _r in rel:
+            if _r not in tracked:
+                status[_r] = '!!untracked-or-ignored'
         shas = subprocess.check_output(['git', '-C', top, 'hash-object'] + rel, text=True).split()
         for p, r, sha in zip(paths, rel, shas):
             out['files'][os.path.relpath(p, PROJECT_ROOT)].update({'blob_sha': sha, 'git_status': status.get(r, '')})

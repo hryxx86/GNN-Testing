@@ -538,15 +538,15 @@ def build_universe_CPRE(prices: pd.DataFrame, returns: pd.DataFrame):
             col_src[n] = hc_all[:, :, hc_idx[n]]
         # the hc columns Universe C also carries must be numerically identical to C's construction
         phase5 = np.load(PATHS['phase5_npy'])
-        c_ref = {'hc_mom12m': np.nan_to_num(phase5[:, :, 0].astype(np.float32), 0.0),
-                 'hc_ret_std_5d': np.nan_to_num(returns.rolling(5).std().shift(1).values.astype(np.float32), 0.0),
-                 'hc_ret_std_10d': np.nan_to_num(returns.rolling(10).std().shift(1).values.astype(np.float32), 0.0)}
+        c_ref = {'hc_mom12m': np.nan_to_num(phase5[:, :, 0].astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0),
+                 'hc_ret_std_5d': np.nan_to_num(returns.rolling(5).std().shift(1).values.astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0),
+                 'hc_ret_std_10d': np.nan_to_num(returns.rolling(10).std().shift(1).values.astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)}
         for n in hc_names:
             if n in c_ref:
-                assert np.allclose(np.nan_to_num(col_src[n], 0.0), c_ref[n], atol=1e-6), f'{n}: part_a != Universe C construction'
+                assert np.allclose(np.nan_to_num(col_src[n], copy=True, nan=0.0, posinf=0.0, neginf=0.0), c_ref[n], atol=1e-6), f'{n}: part_a != Universe C construction'
 
     features = np.stack([col_src[n] for n in names], axis=-1).astype(np.float32)
-    features = np.nan_to_num(features, 0.0)
+    features = np.nan_to_num(features, nan=0.0, posinf=0.0, neginf=0.0)
     assert np.all(features[0] == 0.0), 'C-pre row 0 not zeroed (T-1 contract)'
     assert features.shape[2] == len(names)
     return features, names

@@ -12,17 +12,17 @@ _INPUT (primary): `experiments/storya_v21_main12_c5_t4` — device cuda (devices
 
 (source: family1_{dm_hln,ic_ci,mde}.csv in artifacts/storya_v21_family1_c5 for C5, artifacts/storya_v21_family1 for C, artifacts/storya_v21_family1 for B; c5_seed_robustness.csv for k/10, m/10)
 
-_Reading notes (computed from this run; closeout EXPL-STAT-01/02/03/05/06/10 checks). (i) The headline HLN p uses the Newey-West AUTO lag — an implementation default, NOT a protocol-specified choice; the label overlaps 21 days, so the horizon-matched lag-21 p is reported alongside. Nominal p < 0.05 at the auto lag: ['C5', 'C']; at lag 21: none. (ii) C5: the percentile CI excludes 0 although 1.96×SE_block (0.0138) exceeds |ΔIC| (0.0134) — a boundary case (percentile asymmetry), not a robust rejection. (iii) 5% verdicts per universe — C5: CI excludes 0, auto-lag p 0.008, lag-21 p 0.054; C: CI includes 0, auto-lag p 0.011, lag-21 p 0.063, BH reject; B: CI includes 0, auto-lag p 0.052, lag-21 p 0.181, BH no-reject. |ΔIC| below its own ≈2.8×SE MDE: ['C5', 'C', 'B']. (iv) The smallest nominal p (C5, 0.008) accompanies the smallest |ΔIC| — the ordering is variance-driven (SE_block C5 0.0070, C 0.0079, B 0.0098), not a larger effect. (v) k/10 = 10/10 is a seed/initialisation stability check on the SAME data (not independent replication); m = 0 LOSO flips is implied by k = n. (vi) The CI is for the seed-averaged ensemble (day-to-day variance only; per-seed ΔIC in C5 spans +0.0029…+0.0249). Per-arm IC levels are conditional on the test-informed selection and are not out-of-sample performance figures._
+_Reading notes (computed from this run; closeout EXPL-STAT-01/02/03/05/06/10 checks). (i) The headline HLN p uses the Newey-West AUTO lag — an implementation default, NOT a protocol-specified choice; the label overlaps 21 days, so the horizon-matched lag-21 p is reported alongside. Nominal p < 0.05 at the auto lag: ['C5', 'C']; at lag 21: none. (ii) Percentile-CI boundary check — C5: CI excludes 0 although 1.96×SE_block (0.0138) exceeds |ΔIC| (0.0134) — a boundary case (percentile asymmetry), not a robust rejection; C: CI includes 0 (|ΔIC| 0.0148 vs 1.96×SE_block 0.0154); B: CI includes 0 (|ΔIC| 0.0143 vs 1.96×SE_block 0.0192). (iii) 5% verdicts per universe — C5: CI excludes 0, auto-lag p 0.008, lag-21 p 0.054; C: CI includes 0, auto-lag p 0.011, lag-21 p 0.063, BH reject; B: CI includes 0, auto-lag p 0.052, lag-21 p 0.181, BH no-reject. |ΔIC| below its own ≈2.8×SE MDE: ['C5', 'C', 'B']. (iv) The smallest nominal p (C5, 0.008) accompanies the smallest |ΔIC| — the ordering is variance-driven (SE_block C5 0.0070, C 0.0079, B 0.0098), not a larger effect. (v) k/10 = 10/10 is a seed/initialisation stability check on the SAME data (not independent replication); m = 0 LOSO flips is implied by k = n. (vi) The CI is for the seed-averaged ensemble (day-to-day variance only; per-seed ΔIC in C5 spans +0.0029…+0.0249). Per-arm IC levels are conditional on the test-informed selection and are not out-of-sample performance figures._
 
 ## Fold concentration — pooled statistics EXCLUDING fold 9 (largest single-fold contribution in ['C5', 'C']; B (rank 2; largest = fold 7))
 
 | universe | fold ΔIC (excluded fold) | share of pooled ΔIC | ΔIC ex-fold | 95% block-boot CI | HLN p | HLN p (lag 21) | MDE (≈2.8×SE) | T |
 |---|---|---|---|---|---|---|---|---|
-| C5 | +0.0862 | 53% | +0.0069 | [-0.0032, +0.0179] | 0.132 | 0.231 | 0.0153 | 687 |
-| C | +0.0785 | 44% | +0.0090 | [-0.0052, +0.0228] | 0.125 | 0.248 | 0.0203 | 687 |
-| B | +0.0529 | 31% | +0.0108 | [-0.0089, +0.0300] | 0.143 | 0.312 | 0.0283 | 687 |
+| C5 | +0.0862 | 53% (rank 1/12) | +0.0069 | [-0.0032, +0.0179] | 0.132 | 0.231 | 0.0153 | 687 |
+| C | +0.0785 | 44% (rank 1/12) | +0.0090 | [-0.0052, +0.0228] | 0.125 | 0.248 | 0.0203 | 687 |
+| B | +0.0529 | 31% (rank 2/12) | +0.0108 | [-0.0089, +0.0300] | 0.143 | 0.312 | 0.0283 | 687 |
 
-(source: c5_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC): C5 53%, C 44%, B 31%. A share near or above one half means the pooled contrast is not evenly persistent across quarters)
+(source: c5_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC): C5 53% (rank 1/12), C 44% (rank 1/12), B 31% (rank 2/12). A share near or above one half means the pooled contrast is not evenly persistent across quarters; the ratio is not meaningful when the pooled contrast is within one SE of zero, and its denominator carries the same uncertainty as the headline. The ex-fold series joins the retained observations across the removed quarter, so the HAC window and the 21-day blocks straddle one artificial seam — the ex-fold row is a diagnostic; the full-period row is primary)
 
 ## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional contrast — absolute change only)
 
@@ -48,9 +48,9 @@ _Data-derived checks (EXPL-CODE-04): |ΔIC| vs its own MDE — C5: BELOW, C: BEL
 | C | L0 | LightGBM | 51 | `{'num_leaves': 15, 'learning_rate': 0.027924746980950325, 'min_data_in_leaf': 100, 'lambda_l1': 1.1945711070427778e-07, 'lambda_l2': 0.04279834445098042}` | 0.0735 | — |
 | C | L1 | MLP | 51 | `{'lr': 0.0019531137875202621, 'weight_decay': 0.00024029526489767312, 'dropout': 0.1, 'hidden_channels': 128, 'num_layers': 1}` | 0.0597 | 31745 |
 
-(source: experiments/storya_v21_tune/frozen_hparams_c5.json + artifacts/storya_v21_tune/frozen_hparams.json; param count via run_storya_e1_anchor.make_nn_model at n_inputs)
+(source: experiments/storya_v21_tune/frozen_hparams_c5.json, artifacts/storya_v21_tune/frozen_hparams.json; param count via run_storya_e1_anchor.make_nn_model at n_inputs)
 
-_DISCLOSURE (TP2-B B-04 / TP3 R-A-04; values computed from the tune JSONs): L0: 5/5 finalists with negative 2022H2 val-IC (range -0.0122…-0.0121); L1: 5/5 finalists with negative 2022H2 val-IC (range -0.0453…-0.0448) — vs C L0 winner val-IC +0.0735, C L1 winner val-IC +0.0597; C5 MLP 2,337 params vs C MLP 31,745 (ratio 13.6×). The frozen HPs are protocol-consistent but not a validated optimum where the finalists are negative; the contrast (or its similarity to C) is not attributed to feature restriction/re-selection or capacity alone._
+_DISCLOSURE (TP2-B B-04 / TP3 R-A-04; values computed from the tune JSONs): L0: 5/5 finalists with negative 2022H2 val-IC (range -0.0122…-0.0121) — the 3 tuning seeds give identical val-IC for this arm (deterministic), so the 3-seed average carries no initialisation information here; L1: 5/5 finalists with negative 2022H2 val-IC (range -0.0453…-0.0448) — vs C L0 winner val-IC +0.0735, C L1 winner val-IC +0.0597; C5 MLP 2,337 params vs C MLP 31,745 (ratio 13.6×). The frozen HPs are protocol-consistent but not a validated optimum where the finalists are negative; the contrast (or its similarity to C) is not attributed to feature restriction/re-selection or capacity alone._
 
 ## Device replication — primary vs replicate result directories (same frozen HPs, same code)
 

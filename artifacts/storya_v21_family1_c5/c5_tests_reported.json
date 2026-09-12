@@ -1,5 +1,5 @@
 {
-  "note": "nominal, unadjusted HLN p-values published by this sensitivity run; no multiplicity correction applied",
+  "note": "p-values published by this sensitivity run: the rows marked \"this run\" are nominal, unadjusted HLN p-values (no multiplicity correction; no BH family opened); the rows marked \"republished\" are quoted from the confirmatory family1 tables (BH-family members at the auto lag) or from the earlier sensitivity run",
   "tests": [
     "C5 L1-L0 HLN p (auto lag)",
     "C L1-L0 HLN p (auto lag)",
@@ -36,7 +36,27 @@
     "paired (L1-L0)_C - (L1-L0)_C5 HLN p (lag 21)": 0.88202,
     "paired (L1-L0)_B - (L1-L0)_C5 HLN p (lag 21)": 0.93836
   },
+  "roles": {
+    "C5 L1-L0 HLN p (auto lag)": "this run: nominal",
+    "C L1-L0 HLN p (auto lag)": "republished: confirmatory family1 (BH-family member at auto lag)",
+    "B L1-L0 HLN p (auto lag)": "republished: confirmatory family1 (BH-family member at auto lag)",
+    "C5 L1-L0 HLN p (lag 21)": "this run: nominal",
+    "C L1-L0 HLN p (lag 21)": "republished: confirmatory family1 (BH-family member at auto lag)",
+    "B L1-L0 HLN p (lag 21)": "republished: confirmatory family1 (BH-family member at auto lag)",
+    "C5 L1-L0 ex-fold-9 HLN p (auto lag)": "this run: nominal",
+    "C L1-L0 ex-fold-9 HLN p (auto lag)": "this run: nominal",
+    "B L1-L0 ex-fold-9 HLN p (auto lag)": "this run: nominal",
+    "C5 L1-L0 ex-fold-9 HLN p (lag 21)": "this run: nominal",
+    "C L1-L0 ex-fold-9 HLN p (lag 21)": "this run: nominal",
+    "B L1-L0 ex-fold-9 HLN p (lag 21)": "this run: nominal",
+    "paired (L1-L0)_C - (L1-L0)_C5 HLN p (auto lag)": "this run: nominal",
+    "paired (L1-L0)_B - (L1-L0)_C5 HLN p (auto lag)": "this run: nominal",
+    "paired (L1-L0)_C - (L1-L0)_C5 HLN p (lag 21)": "this run: nominal",
+    "paired (L1-L0)_B - (L1-L0)_C5 HLN p (lag 21)": "this run: nominal"
+  },
   "n_tests_reported": 16,
+  "n_new_nominal_this_run": 12,
+  "n_republished": 4,
   "headline": "C5 L1-L0 HLN p (auto lag)",
   "headline_p": 0.00802,
   "smallest_p_test": "C5 L1-L0 HLN p (auto lag)",

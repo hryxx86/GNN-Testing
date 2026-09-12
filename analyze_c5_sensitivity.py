@@ -303,7 +303,7 @@ def paired_contrast(universe: str, main_dir: str, other: str, other_main: str, n
 # 3b. leave-one-fold-out pooled statistics for the dominant fold (FINGNN-R-A-01: 2025Q2 concentration)
 # ══════════════════════════════════════════════════════════════
 
-def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int) -> dict:
+def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int, calendar: dict | None = None) -> dict:
     """Pooled seed-averaged daily ΔIC statistics with one fold EXCLUDED (HLN both lags + 21d block CI + SE/MDE),
     plus the excluded fold's share of the pooled contrast and its rank among the per-fold contributions."""
     if ex_fold not in range(N_FOLDS):
@@ -313,15 +313,19 @@ def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int) -> di
     b = seed_avg_per_fold(collect_arm_matrix(pd_dir, universe, PAIR[1]))
     if a.get(ex_fold) is None or b.get(ex_fold) is None:
         raise ValueError(f'{universe}: fold {ex_fold} has no per-day data for L1/L0 — cannot exclude it')
-    parts, fold_delta, contrib = [], None, {}
+    parts, fold_delta, contrib, ex = [], None, {}, np.array([])
     for f in range(N_FOLDS):
         if a.get(f) is None or b.get(f) is None:
             continue
+        if calendar is not None:      # EXPL-CODE-05: same per-fold calendar assert as _delta_per_fold, both arms
+            assert len(a[f]) == len(b[f]) == calendar[f], \
+                f'{universe} fold {f}: L1 {len(a[f])} / L0 {len(b[f])} days != frozen calendar {calendar[f]}'
         n = min(len(a[f]), len(b[f]))
         dd = a[f][:n] - b[f][:n]
         contrib[f] = float(dd.sum())                     # n_f × fold ΔIC = contribution to the pooled sum
         if f == ex_fold:
             fold_delta = float(dd.mean())
+            ex = dd                                       # EXPL-CODE-05: reuse the truncated series, never re-subtract
             continue
         parts.append(dd)
     if not parts:
@@ -332,14 +336,24 @@ def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int) -> di
     m, lo, hi = stationary_bootstrap_ci(d, lambda x: float(np.mean(x)), n_boot=n_boot, block_size=BLOCK_SIZE)
     from arch.bootstrap import StationaryBootstrap
     se = float(np.std(StationaryBootstrap(BLOCK_SIZE, d, seed=86).apply(lambda x: float(np.mean(x)), n_boot).ravel(), ddof=1))
-    ex = (a[ex_fold] - b[ex_fold]) if (a.get(ex_fold) is not None and b.get(ex_fold) is not None) else np.array([])
     n_ex = len(ex)
     pooled_all = float(np.mean(np.concatenate(parts + ([ex] if n_ex else []))))
     share = (n_ex * fold_delta) / ((T + n_ex) * pooled_all) if (fold_delta is not None and pooled_all) else None
     order = sorted(contrib, key=lambda f: contrib[f], reverse=True)     # largest positive contribution first
+    # EXPL-CODE-01 (MAJOR, closeout 2026-09-12): the share RATIO is only meaningful when its denominator (the pooled
+    # contrast) is itself separated from 0 — otherwise it explodes and can even flip sign. Decide it HERE, emit the
+    # flag in the CSV, and let every consumer (stdout, markdown) read the flag instead of recomputing it.
+    from arch.bootstrap import StationaryBootstrap as _SB
+    se_pooled = float(np.std(_SB(BLOCK_SIZE, np.concatenate(parts + ([ex] if n_ex else [])), seed=86)
+                             .apply(lambda x: float(np.mean(x)), n_boot).ravel(), ddof=1))
+    share_ok = bool(share is not None and abs(pooled_all) >= se_pooled)
     return {'universe': universe, 'excluded_fold': ex_fold, 'excluded_fold_delta_IC': round(fold_delta, 5) if fold_delta is not None else None,
-            'excluded_fold_share': round(float(share), 4) if share is not None else None,
+            'pooled_delta_IC_all_folds': round(pooled_all, 5), 'pooled_SE_block_all_folds': round(se_pooled, 5),
+            'excluded_fold_share': (round(float(share), 4) if share_ok else None),
+            'excluded_fold_share_raw': round(float(share), 4) if share is not None else None,
+            'excluded_fold_share_is_meaningful': share_ok,
             'excluded_fold_contribution_rank': int(order.index(ex_fold) + 1), 'largest_contribution_fold': int(order[0]),
+            'n_folds_present': int(len(contrib)),
             'T_ex': int(T), 'mean_delta_IC_ex': round(float(m), 5), 'ci_lo': round(float(lo), 5), 'ci_hi': round(float(hi), 5),
             'HLN_stat_on_IC_diff': round(float(stat), 4), 'HLN_p_t': round(float(p), 5), 'HLN_p_t_lag21': round(float(p21), 5),
             'SE_block': round(se, 5), 'MDE_2p8xSE': round(MDE_FACTOR * se, 5)}
@@ -402,16 +416,18 @@ def _row(fam_dir: str, universe: str, seedrob: dict) -> dict:
 
 def hparam_report(universe: str, frozen_target: str, n_in_target: int,
                   frozen_conf: str = 'artifacts/storya_v21_tune/frozen_hparams.json',
-                  extra: list | None = None) -> list:
+                  extra: list | None = None, sources: list | None = None) -> list:
     """Tuned winners for the target universe (+ confirmatory C and any extra comparator for reference) and the MLP
     parameter count at the actual input width — CODEX-A-05: report capacity changes alongside the contrast."""
     import torch
     import run_storya_e1_anchor as anchor
-    rows = []
-    specs = [(universe, frozen_target, n_in_target), ('C', frozen_conf, 51)] + list(extra or [])
+    rows = []   # C width from the anchor's own name lists (EXPL-CODE-04: no hardcoded 51/20)
+    specs = [(universe, frozen_target, n_in_target), ('C', frozen_conf, len(anchor.UNIVERSE_C_ALPHA158_NAMES) + len(anchor.UNIVERSE_C_EXTRA_NAMES))] + list(extra or [])
     for tag, path, n_in in specs:
         if not os.path.exists(path):
             continue
+        if sources is not None and path not in sources:
+            sources.append(path)      # EXPL-CODE-04: the md source line names every frozen file actually read
         st = json.load(open(path))['studies']
         for arm in ['L0', 'L1']:
             k = f'{tag}_{arm}'
@@ -443,15 +459,17 @@ def reading_notes(universe: str, comp: pd.DataFrame, seedrob: dict) -> list:
     notes.append('(i) The headline HLN p uses the Newey-West AUTO lag — an implementation default, NOT a protocol-specified '
                  'choice; the label overlaps 21 days, so the horizon-matched lag-21 p is reported alongside. Nominal p < 0.05 '
                  f"at the auto lag: {sig_auto or 'none'}; at lag 21: {sig_21 or 'none'}.")
-    half = 1.96 * float(t.SE_block); excl = bool(t.delta_ci_lo > 0 or t.delta_ci_hi < 0)
-    if excl and abs(float(t.mean_delta_IC)) < half:
-        notes.append(f'(ii) {universe}: the percentile CI excludes 0 although 1.96×SE_block ({half:.4f}) exceeds |ΔIC| '
-                     f'({abs(float(t.mean_delta_IC)):.4f}) — a boundary case (percentile asymmetry), not a robust rejection.')
-    elif excl:
-        notes.append(f'(ii) {universe}: the percentile CI excludes 0 and |ΔIC| ({abs(float(t.mean_delta_IC)):.4f}) exceeds '
-                     f'1.96×SE_block ({half:.4f}).')
-    else:
-        notes.append(f'(ii) {universe}: the percentile CI includes 0 (|ΔIC| {abs(float(t.mean_delta_IC)):.4f} vs 1.96×SE_block {half:.4f}).')
+    parts_ii = []   # EXPL-STAT-04 (2026-09-12 closeout): the boundary-case check runs on EVERY row, target first
+    for rr in [t] + [r for r in comp.itertuples() if r.universe != universe]:
+        half = 1.96 * float(rr.SE_block); excl = bool(rr.delta_ci_lo > 0 or rr.delta_ci_hi < 0); a = abs(float(rr.mean_delta_IC))
+        if excl and a < half:
+            parts_ii.append(f'{rr.universe}: CI excludes 0 although 1.96×SE_block ({half:.4f}) exceeds |ΔIC| ({a:.4f}) — a boundary '
+                            'case (percentile asymmetry), not a robust rejection')
+        elif excl:
+            parts_ii.append(f'{rr.universe}: CI excludes 0 and |ΔIC| ({a:.4f}) exceeds 1.96×SE_block ({half:.4f})')
+        else:
+            parts_ii.append(f'{rr.universe}: CI includes 0 (|ΔIC| {a:.4f} vs 1.96×SE_block {half:.4f})')
+    notes.append('(ii) Percentile-CI boundary check — ' + '; '.join(parts_ii) + '.')
     verdicts = []
     for r in comp.itertuples():
         e = bool(r.delta_ci_lo > 0 or r.delta_ci_hi < 0)
@@ -481,7 +499,7 @@ def reading_notes(universe: str, comp: pd.DataFrame, seedrob: dict) -> list:
 
 def write_md(universe: str, out_dir: str, comp: pd.DataFrame, paired: list, integ: dict, seedrob: dict,
              hp_rows: list | None = None, ex_rows: list | None = None, dev: tuple | None = None,
-             fam_dirs: dict | None = None, frozen_target: str | None = None) -> None:
+             fam_dirs: dict | None = None, frozen_target: str | None = None, hp_sources: list | None = None) -> None:
     spec = SPECS[universe]; pfx = spec['prefix']
     inp = integ.get('inputs', {})
     L = [f"# {spec['title']}\n",
@@ -513,22 +531,21 @@ def write_md(universe: str, out_dir: str, comp: pd.DataFrame, paired: list, inte
                  f"(largest single-fold contribution in {largest or 'none'}{'; ' + ', '.join(others) if others else ''})\n")
         L.append('| universe | fold ΔIC (excluded fold) | share of pooled ΔIC | ΔIC ex-fold | 95% block-boot CI | HLN p | HLN p (lag 21) | MDE (≈2.8×SE) | T |')
         L.append('|---|---|---|---|---|---|---|---|---|')
-        # the share ratio is undefined in practice when the pooled contrast is itself ≈ 0 (|pooled| < its block SE):
-        # print "n/a" then (the CSV keeps the raw ratio) and give the fold's contribution rank instead
-        se_by_u = {r.universe: float(r.SE_block) for r in comp.itertuples()}
-        pooled_by_u = {r.universe: float(r.mean_delta_IC) for r in comp.itertuples()}
+        # EXPL-CODE-01: the meaningfulness flag is computed in ex_fold_stats and published in the CSV; read it here
         def _share(r):
-            u = r['universe']
-            if abs(pooled_by_u.get(u, 0.0)) < se_by_u.get(u, 0.0):
-                return f"n/a (pooled ΔIC {pooled_by_u[u]:+.4f} ≈ 0; contribution rank {r['excluded_fold_contribution_rank']}/{N_FOLDS})"
-            return f"{r['excluded_fold_share']:.0%}"
+            rank = f"rank {r['excluded_fold_contribution_rank']}/{r.get('n_folds_present', N_FOLDS)}"
+            if not r.get('excluded_fold_share_is_meaningful'):
+                return f"n/a (pooled ΔIC {r.get('pooled_delta_IC_all_folds'):+.4f} within one SE of 0; contribution {rank})"
+            return f"{r['excluded_fold_share']:.0%} ({rank})"
         for r in ex_rows:
             L.append(f"| {r['universe']} | {r['excluded_fold_delta_IC']:+.4f} | {_share(r)} | {r['mean_delta_IC_ex']:+.4f} | "
                      f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}] | {r['HLN_p_t']:.3f} | {r['HLN_p_t_lag21']:.3f} | {r['MDE_2p8xSE']:.4f} | {r['T_ex']} |")
         shares = ', '.join(f"{r['universe']} {_share(r)}" for r in ex_rows)
         L.append(f'\n(source: {pfx}_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC): {shares}. '
                  'A share near or above one half means the pooled contrast is not evenly persistent across quarters; the ratio is '
-                 'not meaningful when the pooled contrast is within one SE of zero)\n')
+                 'not meaningful when the pooled contrast is within one SE of zero, and its denominator carries the same uncertainty '
+                 'as the headline. The ex-fold series joins the retained observations across the removed quarter, so the HAC window '
+                 'and the 21-day blocks straddle one artificial seam — the ex-fold row is a diagnostic; the full-period row is primary)\n')
     if paired:
         L.append('## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional contrast — absolute change only)\n')
         L.append('| contrast | mean paired diff | 95% CI | HLN p | HLN p (lag 21) | SE_block | MDE (≈2.8×SE) | T |')
@@ -560,20 +577,26 @@ def write_md(universe: str, out_dir: str, comp: pd.DataFrame, paired: list, inte
         for r in hp_rows:
             L.append(f"| {r['universe']} | {r['arm']} | {r['model']} | {r['n_inputs']} | `{r['winner_params']}` | "
                      f"{r['winner_mean_val_ic_3seed']:.4f} | {r['mlp_n_params'] if r['mlp_n_params'] is not None else '—'} |")
-        L.append(f'\n(source: {frozen_target} + artifacts/storya_v21_tune/frozen_hparams.json; '
+        L.append(f"\n(source: {', '.join(hp_sources or [frozen_target])}; "
                  'param count via run_storya_e1_anchor.make_nn_model at n_inputs)\n')
         # EXPL-CODE-04: derive the disclosure from the actual finalist tables / winners, not literal text
-        fin = {}
+        fin, degenerate = {}, {}
         for arm in ('L0', 'L1'):
             fp_ = f'experiments/storya_v21_tune/{universe}_{arm}.json'
             if os.path.exists(fp_):
                 tt = json.load(open(fp_)).get('top_table', [])
                 vals = [x['mean_val_ic_3seed'] for x in tt]
                 fin[arm] = (len(vals), sum(v < 0 for v in vals), min(vals) if vals else None, max(vals) if vals else None)
+                # EXPL-STAT-05: a deterministic arm gives identical val-IC across the 3 tuning seeds → the "3-seed average"
+                # carries no initialisation information for that arm
+                seeds_ = [x.get('tune_seed_ics') for x in tt if x.get('tune_seed_ics')]
+                degenerate[arm] = bool(seeds_) and all(len({round(float(v), 8) for v in sx}) == 1 for sx in seeds_)
         c_val = {r['arm']: r['winner_mean_val_ic_3seed'] for r in hp_rows if r['universe'] == 'C'}
         np_t = next((r['mlp_n_params'] for r in hp_rows if r['universe'] == universe and r['arm'] == 'L1'), None)
         npc = next((r['mlp_n_params'] for r in hp_rows if r['universe'] == 'C' and r['arm'] == 'L1'), None)
         parts_ = [f"{arm}: {neg}/{n} finalists with negative 2022H2 val-IC (range {lo:+.4f}…{hi:+.4f})"
+                  + (' — the 3 tuning seeds give identical val-IC for this arm (deterministic), so the 3-seed average carries no '
+                     'initialisation information here' if degenerate.get(arm) else '')
                   for arm, (n, neg, lo, hi) in fin.items()]
         cap = (f"; {universe} MLP {np_t:,} params vs C MLP {npc:,} (ratio {npc / np_t:.1f}×)" if (np_t and npc) else '')
         cref = ', '.join(f"C {a} winner val-IC {v:+.4f}" for a, v in c_val.items())
@@ -610,6 +633,7 @@ def main() -> int:
     p.add_argument('--c5-main-dir', default=None,
                    help='C5: the target dir (legacy alias of --main-dir); CPRE: the C5 comparator dir')
     p.add_argument('--c5-family-dir', default=None, help='C5: legacy alias of --family-dir; CPRE: the C5 comparator family dir')
+    p.add_argument('--c5-frozen', default=None, help='CPRE only: the C5 comparator frozen_hparams json (default per SPECS)')
     p.add_argument('--replicate-main-dir', default=None,
                    help='optional replicate result dir → <p>_device_replication.{csv,md} (cell-level primary-vs-replicate)')
     p.add_argument('--ex-fold', type=int, default=None,
@@ -703,18 +727,24 @@ def main() -> int:
     fam_dirs = {U: family_dir, **{o: comp_dirs[o][1] for o in spec['comparators']}}
     comp = pd.DataFrame([_row(family_dir, U, seedrob[U])] + [_row(comp_dirs[o][1], o, seedrob[o]) for o in spec['comparators']])
     comp.to_csv(os.path.join(out_dir, f'{pfx}_comparison.csv'), index=False)
-    extra_hp = [('C5', SPECS['C5']['frozen'], 20)] if 'C5' in spec['comparators'] else None
-    hp_rows = hparam_report(U, frozen, int(integ['n_features']), extra=extra_hp)
+    import run_storya_e1_anchor as _anchor
+    extra_hp = ([('C5', args.c5_frozen or SPECS['C5']['frozen'], len(_anchor.UNIVERSE_C5_NAMES))]
+                if 'C5' in spec['comparators'] else None)
+    hp_sources = []
+    hp_rows = hparam_report(U, frozen, int(integ['n_features']), extra=extra_hp, sources=hp_sources)
     if hp_rows:
         pd.DataFrame(hp_rows).to_csv(os.path.join(out_dir, f'{pfx}_tuned_hparams.csv'), index=False)
     ex_rows = []
     if args.ex_fold is not None:
-        ex_rows = [ex_fold_stats(main_dir, U, args.ex_fold, n_boot)] + \
-                  [ex_fold_stats(comp_dirs[o][0], o, args.ex_fold, n_boot) for o in spec['comparators']]
+        _cal = integ['frozen_calendar_days_per_fold'] if not args.smoke else None
+        ex_rows = [ex_fold_stats(main_dir, U, args.ex_fold, n_boot, _cal)] + \
+                  [ex_fold_stats(comp_dirs[o][0], o, args.ex_fold, n_boot, _cal) for o in spec['comparators']]
         pd.DataFrame(ex_rows).to_csv(os.path.join(out_dir, f'{pfx}_ex_fold.csv'), index=False)
         for r in ex_rows:
-            print(f"  [ex-fold {r['excluded_fold']} {r['universe']}] fold ΔIC={r['excluded_fold_delta_IC']:+.4f} (share {r['excluded_fold_share']:.0%}, "
-                  f"contribution rank {r['excluded_fold_contribution_rank']}) → ex-fold ΔIC={r['mean_delta_IC_ex']:+.4f} "
+            _sh = (f"share {r['excluded_fold_share']:.0%}" if r['excluded_fold_share_is_meaningful']
+                   else f"share n/a (pooled {r['pooled_delta_IC_all_folds']:+.4f} within 1 SE of 0)")
+            print(f"  [ex-fold {r['excluded_fold']} {r['universe']}] fold ΔIC={r['excluded_fold_delta_IC']:+.4f} ({_sh}, "
+                  f"contribution rank {r['excluded_fold_contribution_rank']}/{r['n_folds_present']}) → ex-fold ΔIC={r['mean_delta_IC_ex']:+.4f} "
                   f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}] p={r['HLN_p_t']:.3f} (lag21 {r['HLN_p_t_lag21']:.3f})")
     dev = None
     if args.replicate_main_dir:
@@ -725,22 +755,33 @@ def main() -> int:
                     + '\n\n' + json.dumps(dev[1]) + '\n')
         print(dev[0].to_string(index=False)); print(dev[1])
     # EXPL-STAT-04 (closeout): inventory of every nominal p-value this run publishes (no BH family opened)
-    tests = ([(f'{r.universe} L1-L0 HLN p (auto lag)', float(r.HLN_p_t)) for r in comp.itertuples()]
-             + [(f'{r.universe} L1-L0 HLN p (lag 21)', float(r.HLN_p_t_lag21)) for r in comp.itertuples()]
-             + [(f"{r['universe']} L1-L0 ex-fold-{r['excluded_fold']} HLN p (auto lag)", float(r['HLN_p_t'])) for r in ex_rows]
-             + [(f"{r['universe']} L1-L0 ex-fold-{r['excluded_fold']} HLN p (lag 21)", float(r['HLN_p_t_lag21'])) for r in ex_rows]
-             + [(f"paired {q['contrast']} HLN p (auto lag)", float(q['HLN_p_t'])) for q in paired]
-             + [(f"paired {q['contrast']} HLN p (lag 21)", float(q['HLN_p_t_lag21'])) for q in paired])
+    # EXPL-STAT-06 (closeout 2026-09-12): each entry carries a ROLE — the comparator L1-L0 rows are RE-PUBLISHED
+    # (C/B: members of the confirmatory 20-test BH family at the auto lag, with their lag-21 column; C5: the earlier
+    # sensitivity run), only the target / ex-fold / paired rows are NEW nominal tests of this run.
+    def _role(u):
+        return ('republished: confirmatory family1 (BH-family member at auto lag)' if u in ('B', 'C')
+                else 'republished: earlier sensitivity run' if u != U else 'this run: nominal')
+    tests = ([(f'{r.universe} L1-L0 HLN p (auto lag)', float(r.HLN_p_t), _role(r.universe)) for r in comp.itertuples()]
+             + [(f'{r.universe} L1-L0 HLN p (lag 21)', float(r.HLN_p_t_lag21), _role(r.universe)) for r in comp.itertuples()]
+             + [(f"{r['universe']} L1-L0 ex-fold-{r['excluded_fold']} HLN p (auto lag)", float(r['HLN_p_t']), 'this run: nominal') for r in ex_rows]
+             + [(f"{r['universe']} L1-L0 ex-fold-{r['excluded_fold']} HLN p (lag 21)", float(r['HLN_p_t_lag21']), 'this run: nominal') for r in ex_rows]
+             + [(f"paired {q['contrast']} HLN p (auto lag)", float(q['HLN_p_t']), 'this run: nominal') for q in paired]
+             + [(f"paired {q['contrast']} HLN p (lag 21)", float(q['HLN_p_t_lag21']), 'this run: nominal') for q in paired])
     headline = f'{U} L1-L0 HLN p (auto lag)'
-    head_p = dict(tests)[headline]; min_name, min_p = min(tests, key=lambda t: t[1])
-    inv = {'note': 'nominal, unadjusted HLN p-values published by this sensitivity run; no multiplicity correction applied',
-           'tests': [t[0] for t in tests], 'p_values': {t[0]: t[1] for t in tests}, 'n_tests_reported': len(tests),
+    head_p = {t[0]: t[1] for t in tests}[headline]; min_name, min_p, _ = min(tests, key=lambda t: t[1])
+    n_new = sum(t[2].startswith('this run') for t in tests)
+    inv = {'note': ('p-values published by this sensitivity run: the rows marked "this run" are nominal, unadjusted HLN p-values '
+                    '(no multiplicity correction; no BH family opened); the rows marked "republished" are quoted from the '
+                    'confirmatory family1 tables (BH-family members at the auto lag) or from the earlier sensitivity run'),
+           'tests': [t[0] for t in tests], 'p_values': {t[0]: t[1] for t in tests}, 'roles': {t[0]: t[2] for t in tests},
+           'n_tests_reported': len(tests), 'n_new_nominal_this_run': n_new, 'n_republished': len(tests) - n_new,
            'headline': headline, 'headline_p': head_p, 'smallest_p_test': min_name, 'smallest_p': min_p,
            'smallest_p_is_headline': bool(min_name == headline)}
     with open(os.path.join(out_dir, f'{pfx}_tests_reported.json'), 'w') as f:
         json.dump(inv, f, indent=2)
-    print(f"[tests reported] {inv['n_tests_reported']} nominal p-values (no BH); smallest = {min_name} ({min_p:.4f})")
-    write_md(U, out_dir, comp, paired, integ, seedrob, hp_rows, ex_rows, dev, fam_dirs, frozen)
+    print(f"[tests reported] {inv['n_tests_reported']} p-values ({n_new} new nominal this run + {len(tests) - n_new} republished; no BH); "
+          f"smallest = {min_name} ({min_p:.4f})")
+    write_md(U, out_dir, comp, paired, integ, seedrob, hp_rows, ex_rows, dev, fam_dirs, frozen, hp_sources)
     print(comp[['universe', 'mean_delta_IC', 'delta_ci_lo', 'delta_ci_hi', 'HLN_p_t', 'IC_L0', 'IC_L1',
                 'MDE_2p8xSE', 'per_seed_same_sign', 'loso_flips']].to_string(index=False))
     print(f'[{U}] DONE → {out_dir}')

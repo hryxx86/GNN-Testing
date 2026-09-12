@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-09-12-d: Session Closeout Audit（4-agent 并行）— 0 CRITICAL，1 MAJOR + 20 CONCERN 全部当场修复；Verdict PASS
+
+- Scope: `git diff 6acd834..HEAD`（C-pre 选择器 + CPRE 接线 + 分析脚本泛化 + 图重画 + 四文档/README/.gitignore + C-pre 产物与评审）
+- Agents: explore-leakage / explore-statistics / explore-correctness / explore-doc-drift（独立上下文）
+- Full reviews: `artifacts/reviews/2026-09-12_explore-{leakage,statistics,correctness,doc-drift}_closeout.md`
+
+| Agent | CRITICAL | MAJOR | CONCERN | Verdict |
+|-------|----------|-------|---------|---------|
+| Leakage | 0 | 0 | 5 | PASS-WITH-CONCERNS |
+| Statistics | 0 | 0 | 8 | PASS-WITH-CONCERNS |
+| Correctness | 0 | 1 | 5 | PASS-WITH-CONCERNS |
+| Doc Drift | 0 | 0 | 7 | PASS-WITH-CONCERNS |
+
+- **三方独立复核一致**：泄漏 agent 从原始产物**完整重算了整个选择**（与 `feature_scores.csv` 的 IC 最大差 5.0e-7，top-15 组与 48 列完全相同）；把价格面板截断到 2022-06-30 重算 hc 与标签，231 个选择日上逐位相同；核实 `build_alpha158_features.py` 的全样本 p1/p99 winsorize 发生在保存 `_raw.npy` **之后**，管线读的是未 winsorize 的原始文件；T−1 roll 用实证相关性验证（原始列与当日收益相关 +0.551 / −0.486，roll 后 ≈0）。统计 agent 114 个数字全部逐一核对无误。
+- **MAJOR（当场修）** Correctness-01：`excluded_fold_share` 的守卫只在 markdown 里，CSV 与 stdout 仍输出原始比值——CPRE 是 +4.7441（"474%"），而该折其实是 12 折中**最负**的贡献，符号被接近零的负分母翻转。改为在 `ex_fold_stats` 里用全折 pooled 的 bootstrap SE 一次性判定，并把 `excluded_fold_share_is_meaningful` / `_raw` / `pooled_delta_IC_all_folds` / `pooled_SE_block_all_folds` / `n_folds_present` 写进 CSV，markdown 与 stdout 都读这个标志。
+- **CONCERN 全部修复**（要点）：选择器的"有限值"判断因上游 NaN→0 而形同虚设（披露：被选 43 列构建期 NaN 率中位 1.7%、最高 3.3%；真正起作用的是"非常数"判断）；"pre-evaluation" 只约束**输入**，规则（边际 |IC| 分数、61 组划分、top-15、合格阈值）沿用自评估期窗口的诊断与 test-informed 的 Plan-AAA 构造——已写进选择器头部与 analysis.md；top-15 切分只差 0.00048（重叠调整后的 SE ≈ 0.045，60 个可排名组全在一个 SE 内）；区间只含日度方差、per-seed 跨度更宽；C5 的 CI 排零是边界情形（在任何一次转载里都标注）；L0 三个调参 seed 的 val-IC 完全相同（确定性）；22 个 p 值分为 16 新算 + 6 转载（其中 C/B 的 auto-lag p 是 confirmatory BH 族成员）；ex-fold 序列跨被删季度拼接（人为接缝）；`source_clean` 对 ignored 文件会误判为干净 → 两处 git 身份块加 `git ls-files` 探测；`np.nan_to_num(x, 0.0)` 实为 `copy=0.0`（原地填充、inf 映射为 1.79e308）→ 新调用点改关键字形式；`ex_fold_stats` 补冻结日历断言并复用截断序列；C5 比较臂的 frozen 文件与宽度改为可配置/从 anchor 推导，md 源行列出实际读取的文件；cell_id 文档串更新；`artifacts/plan_aaa/{groups_168.json,ranking.csv}` 与 `run_plan_aaa_168_ranking.py` 纳入版本控制（否则干净克隆无法复现选择）；文档侧新建 `docs/session_handoff_2026-09-12.md`（09-11 的冻结回原状）、README 日期/索引/引用路径补全。
+- **产物重生成**：`artifacts/storya_v21_family1_cpre/` 与 `artifacts/storya_v21_family1_c5/` 用修复后的脚本重跑；C5 对照 `6acd834`：全部数值列逐字节一致（仅新增描述列与改写的说明文字）。**选择器未重跑**（`selection.json` 的 md5 已链进调参与 240 cell 的 provenance；披露不改变选择结果）。
+- **Verdict: PASS**（0 CRITICAL 未决、0 MAJOR 未决、0 CONCERN 未决）。
+
+→ progress: 2026-09-12-d | plan: 2026-09-12-b | analysis: 2026-09-12-a | README: docs/README.md + artifacts/README.md 2026-09-12
+
 ## 2026-09-12-c: C-pre 正式流水线完成 + Codex Review — Results (Touchpoint 3, Round A) PROCEED-WITH-FIXES → analysis.md 2026-09-12-a
 
 - 流水线（Mac，02:19→04:01，git 46ca6e3）：tune L0 35 s / L1 837 s → `frozen_hparams_cpre.json`（md5 a8fdfb8f）→ 240 cell（1.5 h）→ family1 `--sensitivity` → analyzer `--ex-fold 9`。integrity PASS（240/240、收敛、cell_id [3600, 3839]、48 列 == `UNIVERSE_CPRE_NAMES`、逐 cell 冻结日历全长、frozen 门 OK）。产物 commit `41ac83f`（含 analyzer 的 fold-share 显示守卫：pooled 在 1 SE 内时打印 n/a）。
