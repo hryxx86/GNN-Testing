@@ -200,8 +200,26 @@ UNIVERSE_C5_NAMES = [n for members in UNIVERSE_C5_GROUPS.values() for n in membe
 # groups → union of ALL members. The list below is COPIED from artifacts/storya_cpre_select/selection.json after
 # the committed selector ran; build_universe_CPRE re-asserts list + md5 against that file every time.
 UNIVERSE_CPRE_SELECTION_JSON = 'artifacts/storya_cpre_select/selection.json'
-UNIVERSE_CPRE_NAMES = None          # frozen after the selector run (ordered column names: hc_* and/or Alpha158)
-UNIVERSE_CPRE_COLUMNS_MD5 = None    # md5 of ','.join(UNIVERSE_CPRE_NAMES) as recorded in selection.json
+# Frozen 2026-09-12 from artifacts/storya_cpre_select/selection.json (selector source = its source_identity.git_rev; columns_md5 below).
+# 48 columns = union of the top-15 groups' members, group by group (rank order), member order per groups_168.json.
+UNIVERSE_CPRE_NAMES = [
+    'hc_ret_std_5d', 'hc_ret_std_10d',   # #1 hc_ret_std_5d+1
+    'hc_dolvol',   # #2 hc_dolvol
+    'hc_ret_std_21d', 'hc_maxret',   # #3 hc_ret_std_21d+1
+    'STD5', 'STD10',   # #4 STD5+1
+    'KLEN',   # #5 KLEN
+    'MAX20', 'QTLU20', 'MAX30', 'QTLU30',   # #6 MAX20+3
+    'CNTN20', 'CNTN30',   # #7 CNTN20+1
+    'CNTP20', 'CNTD20', 'CNTP30', 'CNTD30',   # #8 CNTP20+3
+    'BETA20', 'RANK20', 'RSV20', 'IMAX20', 'IMXD20', 'SUMP20', 'SUMD20', 'RANK30', 'RSV30',   # #9 BETA20+8
+    'MAX5', 'RSV5', 'MAX10', 'QTLU10', 'RANK10', 'RSV10',   # #10 MAX5+5
+    'STD20', 'STD30',   # #11 STD20+1
+    'WVMA60',   # #12 WVMA60
+    'CNTP5', 'CNTN5', 'CNTD5', 'CNTP10', 'CNTN10', 'CNTD10',   # #13 CNTP5+5
+    'ROC20', 'IMIN20', 'SUMN20', 'IMIN30', 'SUMN30',   # #14 ROC20+4
+    'RESI60',   # #15 RESI60
+]
+UNIVERSE_CPRE_COLUMNS_MD5 = '0ac94cf67e6157b35edb56010771f512'    # md5 of ','.join(UNIVERSE_CPRE_NAMES) as recorded in selection.json
 
 
 # ══════════════════════════════════════════════════════════════
