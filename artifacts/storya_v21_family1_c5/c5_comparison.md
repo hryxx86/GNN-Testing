@@ -10,11 +10,11 @@ _INPUT (primary): `experiments/storya_v21_main12_c5_t4` — device cuda (devices
 | C | confirmatory (BH over 20-test family) | +0.0148 | [-0.0004, +0.0304] | 0.011 | 0.063 | 0.0195 [-0.0070, 0.0481] | 0.0343 [0.0044, 0.0669] | 0.0220 | 10/10 | 0/10 |
 | B | confirmatory (BH over 20-test family) | +0.0143 | [-0.0051, +0.0341] | 0.052 | 0.181 | 0.0228 [0.0024, 0.0429] | 0.0371 [0.0118, 0.0630] | 0.0275 | 10/10 | 0/10 |
 
-(source: family1_{dm_hln,ic_ci,mde}.csv in artifacts/storya_v21_family1_c5 for C5 and artifacts/storya_v21_family1 for C/B; c5_seed_robustness.csv for k/10, m/10)
+(source: family1_{dm_hln,ic_ci,mde}.csv in artifacts/storya_v21_family1_c5 for C5, artifacts/storya_v21_family1 for C, artifacts/storya_v21_family1 for B; c5_seed_robustness.csv for k/10, m/10)
 
-_Reading notes (closeout EXPL-STAT-01/02/03/05/06/10). (i) The headline HLN p uses the Newey-West AUTO lag (≈6 at T=749) — an implementation default, NOT a protocol-specified choice; the label overlaps 21 days and the ΔIC autocorrelation is still ≈0.3 at lag 6, so the horizon-matched lag-21 p is reported alongside: under lag 21 NONE of C5 / C / B reaches nominal 0.05. (ii) The lag-21 HAC SE and the 21d block-bootstrap SE agree (C5: 0.0068 vs 0.0070) but their 5% verdicts differ marginally for C5: the percentile CI excludes 0 while lag-21 p = 0.054; 1.96×SE (0.0138) exceeds ΔIC (0.0134), so the exclusion is a boundary case, not a robust rejection. (iii) C5 rejects at 5% only under the auto-lag / percentile-CI reading; C is BH-significant at the auto lag but its block-boot CI includes 0; B is a non-detection. All three point estimates sit below the ≈2.8×SE 80%-power threshold. (iv) C5 has the smallest nominal p at the smallest point estimate — the ordering is variance-driven (SE 0.0070 vs 0.0079 / 0.0098), not a larger effect. (v) k/10 is a seed/initialisation stability check on the SAME data (not independent replication), and m = 0 LOSO flips is implied by k = 10. (vi) The CI is for the seed-averaged ensemble (day-to-day variance only; per-seed ΔIC in C5 spans +0.0029…+0.0250). Per-arm IC levels are conditional on the test-informed selection and are not out-of-sample performance figures._
+_Reading notes (computed from this run; closeout EXPL-STAT-01/02/03/05/06/10 checks). (i) The headline HLN p uses the Newey-West AUTO lag — an implementation default, NOT a protocol-specified choice; the label overlaps 21 days, so the horizon-matched lag-21 p is reported alongside. Nominal p < 0.05 at the auto lag: ['C5', 'C']; at lag 21: none. (ii) C5: the percentile CI excludes 0 although 1.96×SE_block (0.0138) exceeds |ΔIC| (0.0134) — a boundary case (percentile asymmetry), not a robust rejection. (iii) 5% verdicts per universe — C5: CI excludes 0, auto-lag p 0.008, lag-21 p 0.054; C: CI includes 0, auto-lag p 0.011, lag-21 p 0.063, BH reject; B: CI includes 0, auto-lag p 0.052, lag-21 p 0.181, BH no-reject. |ΔIC| below its own ≈2.8×SE MDE: ['C5', 'C', 'B']. (iv) The smallest nominal p (C5, 0.008) accompanies the smallest |ΔIC| — the ordering is variance-driven (SE_block C5 0.0070, C 0.0079, B 0.0098), not a larger effect. (v) k/10 = 10/10 is a seed/initialisation stability check on the SAME data (not independent replication); m = 0 LOSO flips is implied by k = n. (vi) The CI is for the seed-averaged ensemble (day-to-day variance only; per-seed ΔIC in C5 spans +0.0029…+0.0249). Per-arm IC levels are conditional on the test-informed selection and are not out-of-sample performance figures._
 
-## Fold concentration — pooled statistics EXCLUDING fold 9 (2025Q2; the largest single-fold contribution in C5 and C, second-largest in B)
+## Fold concentration — pooled statistics EXCLUDING fold 9 (largest single-fold contribution in ['C5', 'C']; B (rank 2; largest = fold 7))
 
 | universe | fold ΔIC (excluded fold) | share of pooled ΔIC | ΔIC ex-fold | 95% block-boot CI | HLN p | HLN p (lag 21) | MDE (≈2.8×SE) | T |
 |---|---|---|---|---|---|---|---|---|
@@ -22,22 +22,22 @@ _Reading notes (closeout EXPL-STAT-01/02/03/05/06/10). (i) The headline HLN p us
 | C | +0.0785 | 44% | +0.0090 | [-0.0052, +0.0228] | 0.125 | 0.248 | 0.0203 | 687 |
 | B | +0.0529 | 31% | +0.0108 | [-0.0089, +0.0300] | 0.143 | 0.312 | 0.0283 | 687 |
 
-(source: c5_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC). The excluded quarter carries about half of the pooled contrast in C5 and C and about a third in B (where fold 7 is the largest); the C5 contrast is not evenly persistent)
+(source: c5_ex_fold.csv; share = n_days(fold) × fold ΔIC / (T × pooled ΔIC): C5 53%, C 44%, B 31%. A share near or above one half means the pooled contrast is not evenly persistent across quarters)
 
-## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional subset contrast)
+## Paired daily contrast (seed-averaged daily ΔIC, same test days; conditional contrast — absolute change only)
 
 | contrast | mean paired diff | 95% CI | HLN p | HLN p (lag 21) | SE_block | MDE (≈2.8×SE) | T |
 |---|---|---|---|---|---|---|---|
 | (L1-L0)_C - (L1-L0)_C5 | +0.0013 | [-0.0159, +0.0189] | 0.838 | 0.882 | 0.0088 | 0.0245 | 749 |
 | (L1-L0)_B - (L1-L0)_C5 | +0.0008 | [-0.0186, +0.0200] | 0.915 | 0.938 | 0.0098 | 0.0276 | 749 |
 
-_(L1-L0)_C - (L1-L0)_C5: CI includes 0; paired MDE 0.0245 > |C contrast| 0.0148 → the interval does NOT exclude a halving or a doubling of the contrast; equivalence is not established (underpowered non-rejection)._
+_(L1-L0)_C - (L1-L0)_C5: CI includes 0; paired SE 0.0088 → paired MDE 0.0245 > |C contrast| 0.0148. Read the absolute point estimate with its interval; equivalence is not tested and a non-rejection is not equivalence (paired MDE exceeds the comparator contrast: underpowered comparison)._
 
-_(L1-L0)_B - (L1-L0)_C5: CI includes 0; paired MDE 0.0276 > |C contrast| 0.0148 → the interval does NOT exclude a halving or a doubling of the contrast; equivalence is not established (underpowered non-rejection)._
+_(L1-L0)_B - (L1-L0)_C5: CI includes 0; paired SE 0.0098 → paired MDE 0.0276 > |B contrast| 0.0143. Read the absolute point estimate with its interval; equivalence is not tested and a non-rejection is not equivalence (paired MDE exceeds the comparator contrast: underpowered comparison)._
 
-(source: c5_paired_contrast.csv; positive = the confirmatory universe's L1−L0 exceeds the C5 one. Conditional subset contrast — feature restriction + re-tuning; NOT an identified leakage-inflation effect: C5's columns were selected with evaluation-period outcomes, brief §9.9)
+(source: c5_paired_contrast.csv; positive = the comparator's L1−L0 exceeds the C5 one. Conditional contrast — not an identified leakage-inflation effect (C5 selection is test-informed); no proportional (halved/doubled) inference)
 
-_Data-derived checks (EXPL-CODE-04): |ΔIC| vs MDE — C5: BELOW, C: BELOW, B: BELOW._
+_Data-derived checks (EXPL-CODE-04): |ΔIC| vs its own MDE — C5: BELOW, C: BELOW, B: BELOW._
 
 ## Tuned winners (30 trials, top-5 × 3 tuning seeds) and MLP capacity at the actual input width
 
@@ -50,7 +50,7 @@ _Data-derived checks (EXPL-CODE-04): |ΔIC| vs MDE — C5: BELOW, C: BELOW, B: B
 
 (source: experiments/storya_v21_tune/frozen_hparams_c5.json + artifacts/storya_v21_tune/frozen_hparams.json; param count via run_storya_e1_anchor.make_nn_model at n_inputs)
 
-_DISCLOSURE (TP2-B B-04 / TP3 R-A-04; values computed from the tune JSONs): L0: 5/5 finalists with negative 2022H2 val-IC (range -0.0122…-0.0121); L1: 5/5 finalists with negative 2022H2 val-IC (range -0.0453…-0.0448) — vs C L0 winner val-IC +0.0735, C L1 winner val-IC +0.0597; C5 MLP 2,337 params vs C MLP 31,745 (ratio 13.6×). The frozen HPs are protocol-consistent but not a validated optimum where the finalists are negative; the contrast (or its similarity to C) is not attributed to feature restriction or capacity alone._
+_DISCLOSURE (TP2-B B-04 / TP3 R-A-04; values computed from the tune JSONs): L0: 5/5 finalists with negative 2022H2 val-IC (range -0.0122…-0.0121); L1: 5/5 finalists with negative 2022H2 val-IC (range -0.0453…-0.0448) — vs C L0 winner val-IC +0.0735, C L1 winner val-IC +0.0597; C5 MLP 2,337 params vs C MLP 31,745 (ratio 13.6×). The frozen HPs are protocol-consistent but not a validated optimum where the finalists are negative; the contrast (or its similarity to C) is not attributed to feature restriction/re-selection or capacity alone._
 
 ## Device replication — primary vs replicate result directories (same frozen HPs, same code)
 

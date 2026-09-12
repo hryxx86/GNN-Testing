@@ -324,6 +324,8 @@ def ex_fold_stats(main_dir: str, universe: str, ex_fold: int, n_boot: int) -> di
             fold_delta = float(dd.mean())
             continue
         parts.append(dd)
+    if not parts:
+        raise ValueError(f'{universe}: no fold left after excluding fold {ex_fold} (only {sorted(contrib)} present)')
     d = np.concatenate(parts)
     stat, p, T = hln_test(d)
     _, p21, _ = hln_test(d, lag=HORIZON)

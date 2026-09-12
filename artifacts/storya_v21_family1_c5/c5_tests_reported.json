@@ -18,6 +18,28 @@
     "paired (L1-L0)_C - (L1-L0)_C5 HLN p (lag 21)",
     "paired (L1-L0)_B - (L1-L0)_C5 HLN p (lag 21)"
   ],
+  "p_values": {
+    "C5 L1-L0 HLN p (auto lag)": 0.00802,
+    "C L1-L0 HLN p (auto lag)": 0.01085,
+    "B L1-L0 HLN p (auto lag)": 0.05236,
+    "C5 L1-L0 HLN p (lag 21)": 0.05373,
+    "C L1-L0 HLN p (lag 21)": 0.06319,
+    "B L1-L0 HLN p (lag 21)": 0.18121,
+    "C5 L1-L0 ex-fold-9 HLN p (auto lag)": 0.13203,
+    "C L1-L0 ex-fold-9 HLN p (auto lag)": 0.12475,
+    "B L1-L0 ex-fold-9 HLN p (auto lag)": 0.14274,
+    "C5 L1-L0 ex-fold-9 HLN p (lag 21)": 0.23074,
+    "C L1-L0 ex-fold-9 HLN p (lag 21)": 0.24839,
+    "B L1-L0 ex-fold-9 HLN p (lag 21)": 0.31227,
+    "paired (L1-L0)_C - (L1-L0)_C5 HLN p (auto lag)": 0.83789,
+    "paired (L1-L0)_B - (L1-L0)_C5 HLN p (auto lag)": 0.91491,
+    "paired (L1-L0)_C - (L1-L0)_C5 HLN p (lag 21)": 0.88202,
+    "paired (L1-L0)_B - (L1-L0)_C5 HLN p (lag 21)": 0.93836
+  },
   "n_tests_reported": 16,
-  "smallest_p_is_headline": "the headline C5 auto-lag p is the smallest of the set; see reading note (iv)"
+  "headline": "C5 L1-L0 HLN p (auto lag)",
+  "headline_p": 0.00802,
+  "smallest_p_test": "C5 L1-L0 HLN p (auto lag)",
+  "smallest_p": 0.00802,
+  "smallest_p_is_headline": true
 }

@@ -1,4 +1,5 @@
 {
+  "universe": "C5",
   "n_results_rows": 240,
   "n_expected": 240,
   "universes": [
@@ -13,6 +14,11 @@
     2400,
     2639
   ],
+  "cell_id_block_expected": [
+    2400,
+    3599
+  ],
+  "cell_id_inside_block": true,
   "cell_id_disjoint_from_confirmatory_0_2399": true,
   "manifest_status_counts": {
     "completed": 240
@@ -48,6 +54,7 @@
   "frozen_calendar_total": 749,
   "cells_not_full_calendar_length": [],
   "n_features": 20,
+  "n_features_expected": 20,
   "feature_names": [
     "ROC30",
     "MA60",
@@ -72,7 +79,8 @@
   ],
   "feature_names_match_UNIVERSE_C5_NAMES": true,
   "inputs": {
-    "c5_main_dir": "experiments/storya_v21_main12_c5_t4",
+    "universe": "C5",
+    "main_dir": "experiments/storya_v21_main12_c5_t4",
     "conf_results_csv": "experiments/storya_v21_main12_tuned/results.csv",
     "results_csv_md5": "eaa8af1de0e50168b439cb9eb0d7eee7",
     "manifest_csv_md5": "50986847355c27edb476e791a94d854d",
@@ -89,7 +97,13 @@
     "devices_seen": [
       "cuda"
     ],
-    "multi_device_warning": false
+    "multi_device_warning": false,
+    "selector_inputs_md5": {
+      "artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv": null,
+      "artifacts/plan_aaa/ranking.csv": null,
+      "alpha158_meta": "ca02447423c3785878a52743faf224c9",
+      "alpha158_npy": "0a2cd862eb1e94a8b132c12d858591ab"
+    }
   },
   "frozen_hparams_path": "experiments/storya_v21_tune/frozen_hparams_c5.json",
   "frozen_present": true,
