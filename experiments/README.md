@@ -26,6 +26,10 @@
 - [`storya_v21_main12_c5/`](storya_v21_main12_c5/) — **Mac M4 设备复现**（同 frozen、同代码；L0 逐位相同、L1 cell corr 0.951），同一套文件
 - `storya_v21_tune/C5_{L0,L1}.json` + `frozen_hparams_c5.json` — C5 两臂 30-trial 调参冠军与冻结文件（副本+md5 在 `artifacts/storya_v21_tune/`）
 
+### C-pre sensitivity（2026-09-12，post-hoc、PRE-EVALUATION 选择；方案 `docs/c_pre_plan_2026-09-11.md`）
+- [`storya_v21_main12_cpre/`](storya_v21_main12_cpre/) — L0/L1 × 10 seeds × 12 folds = 240 cell（cell_id 3600–3839），**Mac M4 主运行**（未提供 T4）；同一套文件（`results.csv` / `manifest.csv` / `per_day_ic/` / `_universe_cpre.json` / `_run_provenance.json` 含 selection.json md5）
+- `storya_v21_tune/CPRE_{L0,L1}.json` + `frozen_hparams_cpre.json` — C-pre 两臂 30-trial 调参冠军与冻结文件（副本+md5 在 `artifacts/storya_v21_tune/`）
+
 ---
 
 ## 论文级主表
@@ -69,3 +73,4 @@
 - **2026-04-20**: 新增 README。严格遵循 Rule 5 narrow：只索引论文级主表（9 个 CSV）+ 子目录；诊断 CSV/日志/per-seed NPY 不在此登记（→ progress: 2026-04-20-d, 2026-04-20-e）
 - **2026-09-10**: 新增 `storya_v21_main12_c5/`（C5 test-informed subset sensitivity，240 cell）+ `storya_v21_tune/C5_*.json`/`frozen_hparams_c5.json`（→ progress: 2026-09-10-c）
 - **2026-09-11**: `storya_v21_main12_c5_t4/` 定为 C5 主结果目录（T4），`storya_v21_main12_c5/` 改标为 Mac 复现（→ progress: 2026-09-11-b/-c）
+- **2026-09-12**: 新增 `storya_v21_main12_cpre/`（C-pre pre-evaluation re-selection sensitivity，240 cell，Mac 主运行）+ `storya_v21_tune/CPRE_*.json`/`frozen_hparams_cpre.json`（→ progress: 2026-09-12-a）

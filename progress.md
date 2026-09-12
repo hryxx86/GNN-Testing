@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-09-12-b: Codex Review — Code (Touchpoint 2, Round A) + Plan (Touchpoint 1, Round B) — C-pre 实现；PASS-WITH-CONCERNS → 正式流水线启动
+
+- Target: `run_storya_cpre_select.py`、`run_storya_e1_anchor.py`、`run_storya_v21_main12.py`、`run_storya_v21_tune.py`、`analyze_c5_sensitivity.py`（HEAD `e80c6ac`，全部已提交）+ `docs/c_pre_plan_2026-09-11.md`（Round B）
+- Reviewer: codex（gpt-6-astra xhigh，≈7.5 min，无额度中断）
+- Full review: `artifacts/reviews/2026-09-12_codex_code_A.md`
+- **Plan Round B**：TP1-A 四条（A-01..A-04）Codex 逐条确认 FIXED → Touchpoint 1 关闭。
+- **Code Round A**：0 CRITICAL + 0 MAJOR + 1 CONCERN；Verdict **PASS-WITH-CONCERNS**，"the production run may start"。Codex 独立复算：选择窗 231 日（最后标签终点 2022-06-30）；Alpha158 原始 npy 在全面板 winsorize 之前保存（不污染选择）；167×231 合格日与 `hc_mom12m` 85 日与归档逐特征合格日列表完全一致；61 组划分 168 候选；用未四舍五入分数重排名整个排名不变；CPRE 构建张量与选择器所选列逐元素相同、与 C 共享的 22 列逐位相同；输入/轴/源码哈希与 `044dd09` 一致；4,800 个 cell_id 枚举三块不交；`both` 仍 = B,C，confirmatory 路径未变；C5 回归对照 `6acd834` 核实（9 个 CSV 逐字节一致）。
+- Resolutions：A-01 CONCERN（设备复现段落仍是字面因果归因 + "推断不受影响"断言；合成反例照样输出）→ **FIXED**：改为纯描述统计（两目录 pooled ΔIC 同号/异号与差距、逐臂 cell-IC corr / mean|diff| / max|diff| / 相同 cell 数），并注明推断是否一致须看复现目录自己的 family1/analysis；已发布 C5 产物重生成（数字不变）。
+- smoke 目录已删除；正式流水线（Mac 主运行）在提交后启动：tune L0/L1 30 trials → merge → 240 cell → family1 `--sensitivity` → analyzer `--ex-fold 9`（预计 ≈ 3 h）。
+
+→ progress: 2026-09-12-b | plan: 2026-09-11-b | analysis: N/A
+
+## 2026-09-12-a: C-pre 实施（H博士 go）— 选择器 + CPRE 管线接线 + 分析脚本泛化；选择器在已提交源码上运行 → 48 列冻结
+
+- H博士 2026-09-12 对 `docs/c_pre_plan_2026-09-11.md` 回复 "go"（D1–D6 默认冻结；未提供 T4 hostname → Mac 主运行）。
+- **代码**（commit `b969a62`）：`run_storya_cpre_select.py`（新；方案 §3 逐条实现：D_sel = TUNE_FOLD train 段 231 日断言、168 候选 = part_a 10 hc + Alpha158 T−1 roll、合格日 ≥30 股 & 非常数、τ=0.50、组分数 = 成员 |时间均值 IC| 均值、tie-break、top-15 并集；归档含逐特征合格日索引、输入 md5（alpha158/phase5/prices/sectors/news ticker 集/groups_168）、ticker/日期轴、源码 git 身份、τ 稳健性表）；anchor `SENSITIVITY_UNIVERSES += CPRE` + `build_universe_CPRE`（Alpha158 按名 + 与 C 相同的 roll/零行断言；hc 取 part_a 张量并对 C 也有的三列断言相等；对 selection.json 的列表+md5 门）；main12 `UNIVERSE_IDX['CPRE']=3`（cell_id [3600, 4799]，守卫改为每个 sensitivity 块均 > 2399 且两两不交）+ sensitivity 构建/provenance 块泛化（C5 输出不变；CPRE 记 selection.json md5）；tune CPRE 分派 + execution 块链接 selection md5；`analyze_c5_sensitivity.py` 泛化 `--universe {C5,CPRE}`，所有结论性文字改为按数据计算（reading notes、fold 集中标题按贡献排名、paired 只报绝对变化、tests 清单的最小 p 标记）；`.gitignore` 白名单。
+- **C5 回归**：泛化后的分析脚本在已发布 C5 目录上重跑，全部数值 CSV 逐字节一致（ex_fold 新增 2 个描述列；paired 的 note 文字变更）；已发布 `artifacts/storya_v21_family1_c5/` 用其重生成（数字不变，文字改为计算生成，"halved/doubled" 句移除，commit `e80c6ac`）。
+- **选择器运行**：首次运行发现 `run_step3_plan_z_part_a.py`（Plan AAA 的 hc 来源）从未纳入版本控制 → 纳入并与冻结列表一起提交（`044dd09`），在干净源码上重跑（source_clean=True，7 s）→ `artifacts/storya_cpre_select/`（commit `34c4d40`）。**结果**：选择窗 231 日 2021-07-01→2022-05-31；167 特征满覆盖、`hc_mom12m` 85/231 UNSCORED；top-15 组 = hc_ret_std_5d+1 / hc_dolvol / hc_ret_std_21d+1 / STD5+1 / KLEN / MAX20+3 / CNTN20+1 / CNTP20+3 / BETA20+8 / MAX5+5 / STD20+1 / WVMA60 / CNTP5+5 / ROC20+4 / RESI60 → **C-pre = 48 列（5 hc + 43 Alpha158）**，与 C 重叠 22 列、与 C5 重叠 4 列；τ=0.75 排名与 τ=0.50 相同，τ=0 会让 `hc_mom12m` 以 85 日分数排第一并挤掉 RESI60（14/15）——冻结规则不变（source: `artifacts/storya_cpre_select/{selection.json,selector_robustness.csv}`）。
+- **Smoke**（2-trial 调参 → 2 cell → family1 `--smoke` → analyzer `--smoke`）全链通；一处修复：`ex_fold_stats` 在排除后无折时给出明确错误（smoke 只有 fold 0）。
+- 下一步：Codex TP2（含方案 Round B）→ 正式流水线（Mac）。
+
+→ progress: 2026-09-12-a | plan: 2026-09-11-b | analysis: N/A | README: README.md + experiments/README.md + artifacts/README.md 2026-09-12
+
 ## 2026-09-11-g: Codex Review — Plan (Touchpoint 1, Round A) — C-pre 冻结方案 `docs/c_pre_plan_2026-09-11.md`
 
 - Target: `docs/c_pre_plan_2026-09-11.md`（把简报 §9.10 的一段提案冻结成完整协议：选择窗 = TUNE_FOLD train 段 2021-07-01→2022-05-31（231 日，标签终点 ≤ 2022-06-30）；覆盖规则 τ=0.50（`hc_mom12m` 85/231=0.368 → UNSCORED，其余 167 个 231/231）；组分数 = 成员 |时间均值 IC| 的均值；复用 `groups_168.json` 61 组；全 168 候选、不与 C 求交、列数由数据决定；下游与 C5 完全相同，cell_id 块 [3600, 4799]；配对对比 C / B / C5）

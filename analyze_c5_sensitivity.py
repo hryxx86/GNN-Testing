@@ -577,10 +577,16 @@ def write_md(universe: str, out_dir: str, comp: pd.DataFrame, paired: list, inte
         df_dev, extra = dev
         L.append('## Device replication — primary vs replicate result directories (same frozen HPs, same code)\n')
         L.append(df_dev.to_markdown(index=False))
+        # CODEX TP2-A A-01 (2026-09-12): descriptive only — no causal attribution of cell-level divergence and no claim
+        # about inference (the replicate's own inferential statistics live in its own family1/analysis run, if any).
+        same_sign = (np.sign(extra['pooled_delta_L1_L0_primary']) == np.sign(extra['pooled_delta_L1_L0_replicate']))
+        per_arm = '; '.join(f"{r['arm']}: cell-IC corr {r['corr_cell_IC']:.3f}, mean |diff| {r['mean_abs_diff']:.4f}, "
+                            f"max |diff| {r['max_abs_diff']:.4f}, {r['n_identical']}/{r['n_cells']} identical" for r in df_dev.to_dict('records'))
         L.append(f"\n_{extra['primary_dir']} (primary) vs {extra['replicate_dir']} (replicate): pooled ΔIC L1−L0 "
-                 f"{extra['pooled_delta_L1_L0_primary']:+.5f} vs {extra['pooled_delta_L1_L0_replicate']:+.5f}. L1 cell-level "
-                 f"divergence is backend nondeterminism amplified by early stopping on a flat validation curve; the pooled inference "
-                 f"is insensitive to it (source: {pfx}_device_replication.csv)._\n")
+                 f"{extra['pooled_delta_L1_L0_primary']:+.5f} vs {extra['pooled_delta_L1_L0_replicate']:+.5f} "
+                 f"({'same' if same_sign else 'DIFFERENT'} sign; absolute gap {abs(extra['pooled_delta_L1_L0_primary'] - extra['pooled_delta_L1_L0_replicate']):.5f}). "
+                 f"Per arm — {per_arm}. These are descriptive replication statistics; whether the replicate's inference agrees is read "
+                 f"from the replicate's own family1/analysis outputs, not from this table (source: {pfx}_device_replication.csv)._\n")
     with open(os.path.join(out_dir, f'{pfx}_comparison.md'), 'w') as f:
         f.write('\n'.join(L))
 

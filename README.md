@@ -72,6 +72,10 @@
 ### C5 sensitivity（.py, 1, 2026-09-11；详见 `docs/c5_rerun_brief_2026-09-10.md` §9 + `docs/analysis.md` 2026-09-11-a）
 - `analyze_c5_sensitivity.py` — C5（20 列 test-informed 子集）L1−L0 的 post-hoc 统计：strict integrity 门（逐 cell 冻结日历长度 + provenance md5）、per-seed 符号/LOSO、paired 日度对比（含 SE/MDE）、ex-fold 行、设备复现、并列表；配合 `compute_family1_ladder.py --universes C5 --arms L0,L1 --sensitivity`
 
+### C-pre sensitivity（.py, 1 新 + 1 泛化, 2026-09-12；方案 `docs/c_pre_plan_2026-09-11.md`，Codex TP1-A 通过、H博士 go）
+- `run_storya_cpre_select.py` — **pre-evaluation 特征重选器**：在调参 train 段 2021-07-01→2022-05-31（231 日，标签终点 ≤ 2022-06-30）对 168 候选（10 hc + 158 Alpha158 T−1）算单特征日度 Spearman IC，τ=0.50 最小覆盖（`hc_mom12m` UNSCORED），按 Plan-AAA 61 组取"成员 |时间均值 IC| 均值"排名，top-15 组成员并集 → C-pre 列集（48 列）；归档到 `artifacts/storya_cpre_select/`（selection.json 含输入 md5、ticker/日期轴、已提交源码 git rev）。只做选择，不训练。
+- `analyze_c5_sensitivity.py` — 泛化为 `--universe {C5,CPRE}`：CPRE 与 C / B / C5 并列 + 配对（只报绝对变化）；所有结论性文字按数据生成。
+
 ### Sanity-Check Suite (.py, 3, 2026-06-11)
 管线证伪套件（E0–E4），发布 Story A null 前falsify"null 是破管线伪影"。import-only 复用 `run_storya_e1_anchor.py`，零改动 anchor。详见 `docs/analysis.md` 2026-06-11-a。
 - `run_sanity.py` — E0 wiring/provenance canary + E1/E1b/E2/E3 runner（`--experiment/--graph_type/--smoke/--resume`）
@@ -104,3 +108,4 @@
 - **2026-04-27**: 新增 `run_local_stage1_segmented.sh`（本地 12h+1h segmented runner）；patched `analyze_loss_horserace.py:247` (sm.stats.norm → scipy.stats.norm fix for statsmodels 0.14 API)（→ progress: 2026-04-27-a）
 - **2026-05-21**: 根目录 .py 32 → 14（18 files 归档到 `archived/scripts/2026-05-21/`），重写根脚本索引（→ progress: 2026-05-21-a）
 - **2026-09-11**: 新增 `analyze_c5_sensitivity.py`（C5 sensitivity 分析）；`run_storya_v21_main12.py`/`run_storya_v21_tune.py` 支持显式 `--universe C5`；`compute_family1_ladder.py` 加 `--universes/--arms/--sensitivity`；新子目录 `experiments/storya_v21_main12_c5{,_t4}/`、`artifacts/storya_v21_family1_c5{,_mac}/`（→ progress: 2026-09-10-a, 2026-09-11-c/-d）
+- **2026-09-12**: 新增 `run_storya_cpre_select.py`（C-pre 选择器）；anchor 加 `build_universe_CPRE` + 冻结 `UNIVERSE_CPRE_NAMES`；main12/tune 支持 `--universe CPRE`（cell_id [3600, 4799]）；`analyze_c5_sensitivity.py` 泛化 `--universe`；`run_step3_plan_z_part_a.py` 首次纳入版本控制（选择器的 hc 来源）（→ progress: 2026-09-12-a）
