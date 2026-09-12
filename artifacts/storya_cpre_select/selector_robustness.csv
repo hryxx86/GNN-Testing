@@ -1,0 +1,4 @@
+tau,frozen,n_scored_features,top15_overlap_with_frozen,identical_to_frozen,top15_groups
+0.0,False,168,14,False,"hc_mom12m,hc_ret_std_5d+1,hc_dolvol,hc_ret_std_21d+1,STD5+1,KLEN,MAX20+3,CNTN20+1,CNTP20+3,BETA20+8,MAX5+5,STD20+1,WVMA60,CNTP5+5,ROC20+4"
+0.5,True,167,15,True,"hc_ret_std_5d+1,hc_dolvol,hc_ret_std_21d+1,STD5+1,KLEN,MAX20+3,CNTN20+1,CNTP20+3,BETA20+8,MAX5+5,STD20+1,WVMA60,CNTP5+5,ROC20+4,RESI60"
+0.75,False,167,15,True,"hc_ret_std_5d+1,hc_dolvol,hc_ret_std_21d+1,STD5+1,KLEN,MAX20+3,CNTN20+1,CNTP20+3,BETA20+8,MAX5+5,STD20+1,WVMA60,CNTP5+5,ROC20+4,RESI60"
