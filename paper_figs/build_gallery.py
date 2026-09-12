@@ -122,18 +122,18 @@ FIGS = [
     ),
     dict(
         id="plan_aaa_t1", tag="§5.7", cls="expl", png="plan_aaa_t1_stability.png",
-        title="Plan-AAA T−1 basis 基础脆弱性",
+        title="Plan-AAA basis 两种重要性度量的分歧",
         script="paper_figs/fig_plan_aaa_t1.py",
         data="artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv",
-        key="原 top-15 中 5 个存活 T−1（ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60）",
+        key="Plan-AAA top-15 中 5 个也在单特征 |IC| proxy top-15（ROC30+5 / KMID+6 / KUP+1 / CNTP20+3 / CORR60）；proxy top-15 有无 T−1 shift 完全相同",
         zh=dict(
-            what="<b>探索性 caveat 图（Limitation L1）</b>。C 池的特征来自早期 Plan-AAA 的 top-15 Alpha158 组，原排名在<b>当日 OHLC</b> 口径下算的。本图把“原排名”对“严格 T−1 修正后排名”作散点。",
-            read="横轴=原 Plan-AAA 排名，纵轴=T−1 修正后排名；阴影框=top-15 区，虚线=完美稳定。<b>绿星=T−1 后仍留 top-15（5 个）</b>，灰圆=掉出（10 个）。",
-            take="<b>原 top-15 只有 5 个 T−1 后仍 top-15</b> → C 池特征的<b>选取基础脆弱</b>（L1）。<span class='flag'>注意</span>：运行时特征<b>确实在 T−1</b>取值（无泄露），脆弱的只是“当初凭什么选这些”的基础。探索性。"),
+            what="<b>探索性 caveat 图（Limitation L1）</b>。C 池特征来自早期 Plan-AAA 的 top-15 Alpha158 组（NN permutation ΔIC，当日 OHLC，5 折测试季 2024-04→2025-06）。本图把该排名对<b>单特征 |IC| proxy 排名（T−1 特征，最后 313 个标签日）</b>作散点。2026-09-11 重画：旧标题 “5/15 survive T−1 leak correction” 是误表述——proxy top-15 集合有无 T−1 shift 完全相同。",
+            read="横轴=Plan-AAA 排名，纵轴=proxy 排名（T−1）；阴影框=top-15 区，虚线=完全一致。<b>绿星=也在 proxy top-15（5）</b>，灰圆=不在（8），<b>橙空方=proxy 无法打分的纯 hc 组（2）</b>；每点的灰色短横=不 shift 时的 proxy 排名（只差几位，top-15 集合不变）。",
+            take="<b>两种重要性度量只在 5/15 上一致</b>——差异来自度量方法（permutation ΔIC vs 单特征 IC），<b>不是</b> T−1 修正之果。两种排名都用了评估窗内的季度（test-informed），所以本图<b>不能界定</b> C 池的选择泄漏；C 池运行时特征本身在 T−1 取值。探索性。"),
         en=dict(
-            what="<b>Exploratory caveat figure (Limitation L1)</b>. Universe C is built from the earlier Plan-AAA top-15 Alpha158 groups, originally ranked under a <b>same-day-OHLC</b> procedure. This scatters the original rank against the rank after strict T−1 leak correction.",
-            read="x = original Plan-AAA rank, y = rank after T−1 correction; shaded box = top-15 region, dashed line = perfect stability. <b>Green stars = stay in the top 15 after T−1 (5)</b>, grey circles = drop out (10).",
-            take="<b>Only 5 of the original top 15 stay in the top 15</b> after T−1 correction → the Universe-C selection <b>basis is fragile</b> (L1). <span class='flag'>Note</span>: runtime features <b>are</b> evaluated at T−1 (not leaked); only the basis for choosing them is fragile. Exploratory."),
+            what="<b>Exploratory caveat figure (Limitation L1)</b>. Universe C is built from the earlier Plan-AAA top-15 Alpha158 groups (NN permutation ΔIC, same-day OHLC, 5-fold test quarters 2024-04→2025-06). This scatters that ranking against a <b>single-feature |IC| proxy ranking on T−1 features</b> (last 313 label days). Redrawn 2026-09-11: the old title “5/15 survive T−1 leak correction” was a misstatement — the proxy top-15 set is identical with and without the T−1 shift.",
+            read="x = Plan-AAA rank, y = proxy rank (T−1); shaded box = top-15 region, dashed line = perfect agreement. <b>Green stars = also in the proxy top-15 (5)</b>, grey circles = not (8), <b>open orange squares = pure-hc groups the proxy cannot score (2)</b>; the grey tick at each point = proxy rank without the shift (a few places, same top-15 set).",
+            take="<b>The two importance measures agree on only 5/15</b> — the disagreement comes from the measure (permutation ΔIC vs single-feature IC), <b>not</b> from the T−1 correction. Both rankings use quarters inside the evaluation window (test-informed), so the figure <b>cannot bound</b> Universe C's selection leakage; runtime features are evaluated at T−1. Exploratory."),
     ),
 ]
 

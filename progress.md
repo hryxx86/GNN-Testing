@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-09-11-g: Codex Review — Plan (Touchpoint 1, Round A) — C-pre 冻结方案 `docs/c_pre_plan_2026-09-11.md`
+
+- Target: `docs/c_pre_plan_2026-09-11.md`（把简报 §9.10 的一段提案冻结成完整协议：选择窗 = TUNE_FOLD train 段 2021-07-01→2022-05-31（231 日，标签终点 ≤ 2022-06-30）；覆盖规则 τ=0.50（`hc_mom12m` 85/231=0.368 → UNSCORED，其余 167 个 231/231）；组分数 = 成员 |时间均值 IC| 的均值；复用 `groups_168.json` 61 组；全 168 候选、不与 C 求交、列数由数据决定；下游与 C5 完全相同，cell_id 块 [3600, 4799]；配对对比 C / B / C5）
+- Reviewer: codex（gpt-6-astra xhigh；`codex exec --sandbox read-only … < /dev/null`，≈5 min，无额度中断）
+- Full review: `artifacts/reviews/2026-09-11_codex_plan_A.md`
+- Summary: 0 CRITICAL + 2 MAJOR + 2 CONCERN；**D1–D6 六项决定 Codex 全部 AGREE**；Codex 独立核对：选择窗 231 日、val 106 日（2022-07-01→2022-11-30，标签终点 2022-12-30）、167 特征 231/231、`hc_mom12m` 85/231、61 组覆盖 168 特征、anchor 与 part_a 的 501 ticker 轴一致；分组校准与其标签掩码均在 cutoff 前
+- Verdict: PROCEED-WITH-FIXES
+- Resolutions（4/4 FIXED，全部亲自读码核实后改在方案文本）：A-01（结局分支不穷尽、预设 "MDE 超过所有效应"）→ 三分支（CI 全正 / 全负 / 含 0）+ MDE 按 C-pre 自身 bootstrap SE 算（`compute_family1_ladder.py:329-345` 本就逐对算）+ CI 与 HLN 不一致时如实报告；A-02（"halved/doubled" 不是被检验的命题；`analyze_c5_sensitivity.py:431-439` 由 paired MDE > |C| 推出该句）→ C-pre 只报绝对配对变化、禁止比例推断（C5 论文段里这句也应改为描述性）；A-03（model-free ≠ 架构中性）→ "不用任一评估模型的重要性与评估期表现；结果以共同选择规则为条件"；A-04（选择器归档缺源码快照、ticker/日期轴、逐特征合格日索引、sectors/news 成员输入哈希）→ §3.6 补齐 + 选择器运行前先提交。Codex 另点出 TP2 要点：`analyze_c5_sensitivity.py` 的 reading notes（:401）与 `smallest_p_is_headline`（:597）是字面文本，泛化到 CPRE 必须改为按数据生成——已写入方案 §5.6。
+- 我在本机核实的方案事实（评审前）：D_sel 231 日 2021-07-01→2022-05-31；val 106 日 2022-07-01→2022-11-30；168 候选中只有 `hc_mom12m` 覆盖率 < 1.0（0.368）→ τ=0.75 排名 ≡ τ=0.50，τ=0 只多 `hc_mom12m`。
+- Round B：待 H博士 批准后与 TP2 一并进行（不为可能不跑的方案再耗评审额度）。方案未经 H博士 批准前不写代码（Rule 2）。
+
+→ progress: 2026-09-11-g | plan: 2026-09-11-b | analysis: N/A | README: docs/README.md 2026-09-11
+
+## 2026-09-11-f: 重画 `plan_aaa_t1_stability`（旧标题 "only 5/15 … after T−1 leak correction" 为误表述）+ 同步论文副本与 gallery
+
+- 触发：H博士 转来论文侧待办——图标题仍写 "survives / after strict T−1 leak correction"，与 2026-09-11-a 已核实的事实矛盾（`group_ranking_comparison.csv`：`proxy_rank_raw<=15` 与 `proxy_rank_t1<=15` 的 15 组集合完全相同；5/15 = Plan-AAA permutation top-15 ∩ 单特征 |IC| proxy top-15；两个纯 hc 组 proxy 无法打分、被 `na_option="bottom"` 钉在 58 名）。
+- 改动（`paper_figs/fig_plan_aaa_t1.py` 重写）：标题 → "Two importance measures disagree: 5/15 Plan-AAA top groups are also top-15 under the single-feature-IC proxy"；x 轴标 "Plan-AAA rank (NN permutation ΔIC, same-day OHLC)"、y 轴标 "proxy rank (single-feature |IC|, T−1 features)"；hc_mom12m / hc_ret_std_5d+1 改为独立类别 "not scored by proxy: hc (2)"（橙空方），不再算作 "drops out"；每点加灰色短横 = 不 shift 的 proxy 排名（只差几位）；脚注改为 "proxy top-15 identical with/without the T−1 shift; both rankings scored inside the evaluation window; exploratory (L1); runtime features at T−1"；脚本启动断言 proxy top-15 集合有无 shift 相同（数据变了会直接报错）。
+- 产物：`figures/plan_aaa_t1_stability.{pdf,png}` 重生；`paper/iclr2027/figures/plan_aaa_t1_stability.pdf` 同步（md5 一致）；`paper_figs/build_gallery.py` 该条目 zh/en 文案重写 + `figures/figure_gallery.html` 重生（对已提交的 family2 PNG 重生，未混入工作树里未提交的 family2 改动）；`figures/README.md` 行 + 变更日志。
+- **未动** `paper/iclr2027/main.tex`（:290 L1、:998 附录句、:1012 caption 仍是旧口径）——论文侧另一台机器在改，避免冲突；新 caption 建议见本条对应的回复 / `docs/c5_sensitivity_report_2026-09-11.md` §6.1。
+- Colab runtime `degrees-competitions-medical-earrings` 已失效（hostname 不再解析，2026-09-11 核实）。
+
+→ progress: 2026-09-11-f | plan: 2026-09-11-a | analysis: 2026-09-11-a | README: figures/README.md 2026-09-11
+
 ## 2026-09-11-e: Session Closeout Audit（4-agent 并行）— 2 CRITICAL（README 索引）当场修，8 MAJOR 全修；Verdict PASS
 
 - Scope: `git diff --name-only eb8314e..a903c5e`（6 个 C5 代码文件 + 46b3b8c 补交的 3 个 + 四文档/README/.gitignore + C5 产物与评审）

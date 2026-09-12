@@ -6,6 +6,26 @@
 
 ---
 
+## 2026-09-11-b: C-pre 方案冻结 + Codex TP1-A PROCEED → 待 H博士 go；图 plan_aaa_t1 已重画；本机 commit 已 push
+
+→ progress: 2026-09-11-f/-g | plan: 2026-09-11-b | analysis: N/A | README: docs/README.md + figures/README.md 2026-09-11
+
+**H博士 转来三项（2026-09-11）**：(1) 要不要跑 C-pre（教授要 "无泄漏重选"；B 锚 + C5 都回答不了）；(2) 图 `plan_aaa_t1_stability` 标题仍写 "survives / after strict T−1 leak correction"，要重画；(3) 本机 commit 未 push。
+
+**已做**：
+- (2) 图重画（progress 2026-09-11-f）：标题 → "Two importance measures disagree: 5/15 Plan-AAA top groups are also top-15 under the single-feature-IC proxy"；两个纯 hc 组标为 proxy unscored（不再算 "drops out"）；每点标不 shift 的 proxy 排名；脚本断言 proxy top-15 有无 shift 相同；`paper/iclr2027/figures/` 副本、gallery、figures/README 同步。**`main.tex` 未动**（:290 / :998 / :1012 仍旧口径，论文侧机器在改；caption 建议已随回复给出）。
+- (1) C-pre 冻结方案 `docs/c_pre_plan_2026-09-11.md`（取代简报 §9.10）：选择窗 = TUNE_FOLD train 段 231 日（2021-07-01→2022-05-31，标签终点 ≤ 2022-06-30，val 2022H2 与测试期都在其后）；覆盖规则 τ=0.50（`hc_mom12m` 0.368 → UNSCORED；其余 167 个满覆盖）；组分数 = 成员 |时间均值 IC| 均值；复用 61 组；全 168 候选不与 C 求交；下游 = C5 流程，cell_id [3600, 4799]；三分支穷尽措辞、MDE 按自身 SE、不做 halved/doubled 推断；配对 C/B/C5。Codex TP1-A **PROCEED-WITH-FIXES（0 C / 2 M / 2 Cn，D1–D6 全 AGREE）**，修复已落入方案（progress 2026-09-11-g）。
+- (3) push：C5 六个 commit + 本次 commit 推到 origin/main。
+
+**建议：跑 C-pre。** 它是能正面回答 "无泄漏重选" 的最小实验；选择器信息边界 ≤ 2022-06-30，Codex 独立核对边界干净；成本 Mac ≈ 3 h（选择器 5 min + 调参 ≤ 40 min + 240 cell 2–3 h）或 T4 ≈ 1.5 h + TP2/TP3/closeout。**边界**（写进方案 §0）：只回答 L1−L0 的特征选择成分；不重评图/边对比；L8 面板构成限制不变；post-hoc、nominal p；结果不能把 C 的原结果变成干净的 confirmatory 证据。
+
+**待 H博士**：
+1. **C-pre go / no-go** + 确认 §8 D1–D6（默认已冻结；改任一项需重跑 TP1）。go 后顺序：TP2（含 Codex Round B）→ 提交选择器 → 选择 → 冻结 `UNIVERSE_CPRE_NAMES` → 调参 → 240 cell（Mac；给 T4 hostname 则 T4 主 + Mac 复现）→ 统计 → TP3 → 文档 → closeout。
+2. 论文侧：main.tex:290 / :998 / :1012 改口径（`docs/c5_sensitivity_report_2026-09-11.md` §6.1）+ 新图 caption；C5 段落里 "does not distinguish an unchanged contrast from a halved or doubled one" 改为描述性或删去（Codex A-02）。
+3. L2 层：仍建议不跑。
+
+---
+
 ## 2026-09-11-a: C5 sensitivity 完成 → 待 H博士 的三项决定（论文改口径 / C-pre / L2 层）；主线回到 9/25 全文截稿
 
 → progress: 2026-09-11-a/-b/-c/-d/-e | plan: 2026-09-11-a | analysis: 2026-09-11-a | README: README.md + docs/README.md + experiments/README.md + artifacts/README.md 2026-09-11
@@ -2110,10 +2130,13 @@ Paper v2 (`docs/paper_draft_2026-05-18_v2.md`) requires substantial rewrite for 
 | 2026-09-11 | **T4 = C5 主结果（结果前预先声明），Mac = 设备复现** | H博士 指示 "gpu完全没在用"；两份 pooled ΔIC 0.0134 vs 0.0132 一致（L0 逐位相同，L1 cell corr 0.951） |
 | 2026-09-11 | **C5 结果措辞按 TP3（fallback）许可/禁止清单：CI 先行 + 双 HAC lag + < MDE + fold-9 集中 + 负 val-IC 披露 + 不解决泄漏；C5h 不必要；C-pre 仅在要量化泄漏时** | TP3 0 C + 4 M + 3 Cn 全部亲自核实（ex-fold-9 +0.0069 p 0.13；paired MDE 0.025 > C 效应；决赛配置 val-IC 全负；Plan AAA 用 NN permutation 重要性） |
 | 2026-09-11 | **Codex 额度中断（"try again at 4:40 AM"）→ TP2-B、TP3 走 finance-gnn-reviewer fallback（如实记录）** | Rule 9 Fallback 条款；第一次 fallback 又撞 Claude 月度 429，重置后完成 |
+| 2026-09-11 | **图 `plan_aaa_t1_stability` 改题：由 "only 5/15 … after T−1 leak correction" 改为 "两种重要性度量分歧（5/15 也在 proxy top-15）"；hc 两组标 proxy unscored；main.tex 三处口径留给论文侧** | proxy top-15 集合有无 T−1 shift 完全相同（CSV 亲自核实，脚本内断言）；旧标题把度量分歧误归因为泄漏修正 |
+| 2026-09-11 | **C-pre 规则冻结（待 H博士 批准）：选择窗 = TUNE_FOLD train 段 231 日；τ=0.50 最小覆盖（`hc_mom12m` UNSCORED）；组分数 = 成员 \|时间均值 IC\| 均值；复用 groups_168 61 组；全 168 候选不与 C 求交；cell_id [3600, 4799]；三分支穷尽措辞、MDE 按自身 SE、不做 halved/doubled 推断；选择器运行前先提交** | Codex TP1-A PROCEED-WITH-FIXES，D1–D6 全 AGREE，4/4 发现已落实；Codex 独立核对选择窗 / 合格日 / 分组 / ticker 轴；Round B 与 TP2 合并 |
+| 2026-09-11 | **push：C5 六个 commit + 图重画/C-pre 方案 commit 推到 origin/main** | H博士 转来 "实验机上 commit 还没 push"；论文侧机器与 Colab bootstrap 都依赖 origin/main |
 
 → progress: 2026-05-28-a..f | analysis: N/A
 → progress: 2026-06-10-a/c, 2026-06-11-a/b | analysis: 2026-06-11-a
 → progress: 2026-06-21-a | analysis: 2026-06-21-a
 → progress: 2026-06-26-a | analysis: 2026-06-26-a
 
-*Last updated: 2026-09-11 (C5 sensitivity 完成 → 论文改口径 / C-pre / L2 待 H博士；上一版：2026-07-09 (Lv 回信 → venue 定 ICLR 2027，arXiv 推迟至中稿后，主线 = ICLR 模板改稿 + 等详细意见；上一版：2026-07-08 (venue pivot ICAIF→期刊 + 导师邮件起草)；上一版：2026-07-07 (R1/R2 补引落地 + closeout PASS)；上一版：2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*
+*Last updated: 2026-09-11 (C-pre 冻结方案 TP1-A PROCEED + 图 plan_aaa_t1 重画 + push → 待 H博士 go；上一版：2026-09-11 (C5 sensitivity 完成 → 论文改口径 / C-pre / L2 待 H博士；上一版：2026-07-09 (Lv 回信 → venue 定 ICLR 2027，arXiv 推迟至中稿后，主线 = ICLR 模板改稿 + 等详细意见；上一版：2026-07-08 (venue pivot ICAIF→期刊 + 导师邮件起草)；上一版：2026-07-07 (R1/R2 补引落地 + closeout PASS)；上一版：2026-06-26 (PaperJury Round-1 全部处置 — 15 MAJOR + 9 minor applied/disclosed/QUEUE; M10 实测缺口 14.8%/8.2% → 披露不重建; M2/M12/conf-net 已核实只澄清; Rule9 TP2/TP3 PROCEED; 4 个预存 caption brace bug 修复. NEXT = Overleaf 首编 + author metadata + 可选 PaperJury Round-2.)*

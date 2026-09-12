@@ -1,11 +1,12 @@
 ---
 handoff_date: 2026-09-11
-last_completed: "2026-09-11-e: 4-agent session closeout audit PASS (2 CRITICAL README-index + 8 MAJOR fixed on the spot); artifacts regenerated; final commit"
+last_completed: "2026-09-11-g: C-pre plan frozen (docs/c_pre_plan_2026-09-11.md) + Codex TP1 Round A PROCEED-WITH-FIXES applied; 2026-09-11-f: plan_aaa_t1_stability figure redrawn; commits pushed to origin/main"
 in_flight: []
 open_questions:
-  - "Paper L1 / appendix rewording (main.tex:290, :998, :1012): 'only 5 of 15 groups survive strict T-1 re-ranking' is a misstatement (proxy top-15 identical with/without the shift; 5/15 = permutation top-15 ∩ proxy top-15) and the 'definitive check' promise cannot be discharged by C5 (its selection is test-informed) — H博士 to rewrite before inserting any C5 paragraph"
+  - "C-pre GO / NO-GO: docs/c_pre_plan_2026-09-11.md §8 D1-D6 (frozen defaults; Codex TP1-A agreed on all six); if GO → TP2 (+ Codex Round B) → commit selector → select → freeze UNIVERSE_CPRE_NAMES → tune → 240 cells (Mac, or T4 if a hostname is given) → stats → TP3; Mac ≈ 3 h compute"
+  - "Paper L1 / appendix rewording (main.tex:290, :998, :1012) AND the figure caption (figure redrawn 2026-09-11-f; main.tex untouched here): 'only 5 of 15 groups survive strict T-1 re-ranking' is a misstatement (proxy top-15 identical with/without the shift; 5/15 = permutation top-15 ∩ proxy top-15) and the 'definitive check' promise cannot be discharged by C5 (its selection is test-informed) — H博士 to rewrite before inserting any C5 paragraph"
   - "C-pre (pre-test selector, brief §9.10): only needed if the paper wants a quantitative statement about leakage in C (TP3); requires freezing the coverage rule for hc_mom12m warm-up (Codex TP1-B B-01), the group-score definition, and grouping reuse vs re-clustering; then its own TP1"
-  - "Push: 5 local commits (46b3b8c, 9008dbe, 14c284a, a903c5e, + closeout commit) are NOT pushed to origin/main — H博士 to confirm"
+  - "Push: DONE 2026-09-11 (C5 commits + report + figure/C-pre-plan commit are on origin/main)"
   - "Optional L2 layer on C5 (T4 idle, deps installed): recommended NOT to run (weak bearing on the paper's claim)"
 file_state:
   modified_since_last_commit:
@@ -25,9 +26,10 @@ rule9_status:
   touchpoint_1_plan: PASSED        # Codex Round A BLOCK-EXECUTION → re-scoped → Round B PROCEED-WITH-FIXES (closures applied)
   touchpoint_2_code: PASSED        # Codex Round A PROCEED-WITH-FIXES (5/5 fixed) → finance-gnn-reviewer Round B fallback (Codex usage limit) PROCEED-WITH-FIXES (4/4 fixed)
   touchpoint_3_results: PASSED     # finance-gnn-reviewer Round A fallback (Codex usage limit) PROCEED-WITH-FIXES (4 M fixed, 3 Cn accepted)
+  cpre_touchpoint_1_plan: PASSED-ROUND-A   # Codex 2026-09-11 PROCEED-WITH-FIXES (0 C / 2 M / 2 Cn, all applied); Round B deferred to TP2 after H博士 approval
   closeout_audit: PASSED           # 4 Explore agents; artifacts/reviews/2026-09-11_explore-*_closeout.md; progress.md 2026-09-11-e
 next_actions:
-  - "H博士: decide the three open questions above (paper rewording is required before 9/25; C-pre optional; push)"
+  - "H博士: C-pre go/no-go (recommended: GO) and confirm D1-D6; paper rewording + new figure caption before 9/25"
   - "If C-pre approved: freeze coverage/group-score/grouping rules in brief §9.10 → /codex-plan-review → implement selector → tune L0/L1 → 240 cells (T4) → sensitivity stats + paired contrast"
   - "Insert the C5 sensitivity paragraph into the paper appendix ONLY with the permitted wording in docs/analysis.md 2026-09-11-a"
 ---

@@ -32,7 +32,7 @@
 | 文件 | 节 | 内容 | 脚本 | 源 |
 |---|---|---|---|---|
 | `loss_listmle_inversion` | §5.7 图7 | loss 家族 mean IC（ListMLE 翻转 −0.0458 vs MSE +0.0113） | `fig_loss_inversion.py` | experiments/loss_horserace/results.csv |
-| `plan_aaa_t1_stability` | §5.7 图8 | Plan-AAA orig vs T-1 rank（5/15 存活 → Univ-C 基础脆弱 L1） | `fig_plan_aaa_t1.py` | artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv |
+| `plan_aaa_t1_stability` | §5.7 图8 | Plan-AAA permutation rank vs 单特征 abs-IC proxy rank（5/15 一致；proxy top-15 有无 T−1 shift 相同 → 度量分歧、非泄漏修正；hc 组 unscored；L1） | `fig_plan_aaa_t1.py` | artifacts/plan_aaa_t1_diagnostic/group_ranking_comparison.csv |
 
 ## 待定（已决定去留）
 
@@ -44,3 +44,4 @@
 - **2026-06-23**: 清空全部旧图，仅保留新 `F9_spa_dm_confirmatory`；改用 nature-figure / scientific-schematics 在 confirmatory 数据上重建（→ progress: 2026-06-23-a）
 - **2026-06-23**: 重建 6 张 confirmatory 图（§5.1–§5.5 + 流程图），过三方 QA（→ progress: 2026-06-23-b）
 - **2026-06-24**: 新增 2 张 §5.7 exploratory 图（`loss_listmle_inversion`、`plan_aaa_t1_stability`），嵌入 confirmatory 草稿 v2（→ progress: 2026-06-24-a）；`build_gallery.py` 加 `.tag.expl` 灰色 tag + 2 entries，重生 `figure_gallery.html` = **8 张图**（6 confirmatory + 2 exploratory，base64 内嵌）（→ progress: 2026-06-24-b）
+- **2026-09-11**: 重画 `plan_aaa_t1_stability`（旧标题 "only 5/15 … after T−1 leak correction" 为误表述：proxy top-15 集合有无 T−1 shift 完全相同，5/15 = Plan-AAA permutation top-15 ∩ 单特征 IC proxy top-15；两个纯 hc 组标为 proxy unscored；脚本内断言该不变式）+ 同步 `paper/iclr2027/figures/` 副本 + gallery 文案重写（→ progress: 2026-09-11-f）

@@ -11,6 +11,7 @@
 
 ### C5 sensitivity（2026-09-10）
 - `c5_rerun_brief_2026-09-10.md` — H博士 C5 任务简报（§0–§8 原文）+ 实施注记 §9（偏离清单、TP1 处置 §9.9、C-pre 提案 §9.10）（→ progress: 2026-09-10-a/-b）
+- `c_pre_plan_2026-09-11.md` — **C-pre 冻结方案**（pre-evaluation 特征重选：选择窗 / 覆盖规则 / 组分数 / 分组 / 候选范围 / 下游协议 / 预设措辞 / 代码改动；取代 `c5_rerun_brief` §9.10；Codex TP1-A PROCEED-WITH-FIXES 已落实；**待 H博士 批准**）（→ progress: 2026-09-11-g）
 - `c5_sensitivity_report_2026-09-11.md` — **C5 完整报告**（摘要、定性问题、设计、结果表、解读边界、论文改法 + 英文附录段落草稿、后续选项、评审链、产物与复现命令）（→ progress: 2026-09-11-e）
 
 ### 文献对照
@@ -63,3 +64,4 @@
 - **2026-04-21**: 新增 `advisor_presentation_2026-04-21.md` + `_en.md`（导师汇报中英双版；图见 `plots/advisor/`）（→ progress: 2026-04-21-a）
 - **2026-07-28**: 新增下一篇论文 ideation 工作流三件套：`next_paper_ideation_index.md`（专门管理索引）+ `lit_scan_2026-07-26.md` + `idea_expansions_2026-07-28.md`；评审存档在 `artifacts/reviews/2026-07-28_codex_plan_A.md`（→ progress: 2026-07-28-c）
 - **2026-09-11**: 新增 `c5_rerun_brief_2026-09-10.md`（C5 任务简报 + 实施注记 + C-pre 提案）与 `session_handoff_2026-09-11.md`（→ progress: 2026-09-10-a, 2026-09-11-d）
+- **2026-09-11**: 新增 `c_pre_plan_2026-09-11.md`（C-pre 冻结方案，Codex TP1-A 通过，待 H博士 批准）（→ progress: 2026-09-11-g）
