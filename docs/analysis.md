@@ -4,6 +4,47 @@
 
 ---
 
+## 2026-09-12-a: C-pre（pre-evaluation 特征重选）敏感性 — 在只用 2022-06-30 前信息选出的 48 列基底上，MLP−LightGBM = −0.0024 [−0.0256, +0.0178]（区间含 0）；C/B/C5 上的正向点估计没有在 C-pre 上重现，但三个配对区间都含 0（欠功效）
+
+→ progress: 2026-09-12-a/-b/-c | plan: 2026-09-12-a/-b | analysis: 2026-09-12-a | README: README.md + experiments/README.md + artifacts/README.md 2026-09-12
+
+**问题**：论文 L1 把 C 池的正向结果定为 "suggestive pending leak-free re-selection"。C5（2026-09-11-a）的选择用了评估期信息，回答不了这句话。C-pre 把 C 池的特征基底用**只在 2022-06-30 之前的信息**重选一次（方案 `docs/c_pre_plan_2026-09-11.md`，Codex TP1 A/B 通过；H博士 2026-09-12 go），再按冻结协议重调 L0（LightGBM）/ L1（MLP）并在 12 折 × 10 seeds 上评估。它仍是 post-hoc（在看到测试结果之后设计）、nominal p、不进任何 confirmatory 表。用 Codex TP3 认可的一句话概括：We conducted a retrospective sensitivity analysis using feature re-selection whose scoring and grouping inputs were restricted to information through June 2022, conditional on the study's fixed stock panel, and re-tuned LightGBM and MLP under the existing evaluation protocol.
+
+**选择器**（`run_storya_cpre_select.py`，在已提交源码 044dd09 上运行）：168 候选（10 hc + 158 Alpha158，均 T−1）在调参 train 段 231 个特征日（2021-07-01→2022-05-31，标签终点 ≤ 2022-06-30）上算单特征日度 Spearman IC；τ=0.50 最小覆盖（`hc_mom12m` 85/231 未打分，其余 167 个满覆盖）；按 Plan-AAA 61 组取"成员 |时间均值 IC| 的均值"排名；top-15 组成员并集 → **48 列（5 hc + 43 Alpha158）**，与 C 的 51 列重叠 22 列、与 C5 重叠 4 列（source: `artifacts/storya_cpre_select/selection.json`）。τ=0.75 排名相同；τ=0 会把 `hc_mom12m` 排到第一（挤掉 RESI60）——冻结规则不变（source: `artifacts/storya_cpre_select/selector_robustness.csv`）。
+
+**运行**：Mac M4（mps，单次调用，git 46ca6e3，source_clean True），240/240 cell 完成且收敛，cell_id [3600, 3839]，每个 cell 都是冻结日历全长（749 天），frozen-HP 门通过（md5 a8fdfb8f）（source: `artifacts/storya_v21_family1_cpre/cpre_run_integrity.json`）。调参（30 trials，top-5 × 3 seeds，train ≤ 2022-06-30 / val 2022H2）：L0 冠军三 seed 平均 val-IC +0.0311（决赛 +0.0302…+0.0311），L1 +0.0135（决赛 +0.0014…+0.0135；L1 冠军单 seed 为 +0.034 / +0.012 / −0.006）；1 层 × 128，31,361 参数 vs C 的 31,745（source: `artifacts/storya_v21_family1_cpre/cpre_tuned_hparams.csv`, `experiments/storya_v21_tune/CPRE_L1.json`）。
+
+**结果**（seed 平均日度 ΔIC = L1 − L0；21d 平稳块自助 5000 次；HLN 自动 lag / lag 21；source: `artifacts/storya_v21_family1_cpre/cpre_comparison.csv`）
+
+| 基底 | ΔIC L1−L0 | 95% CI（10-seed 平均） | HLN p auto / lag21 | IC L0 [CI] | IC L1 [CI] | 自身 MDE（≈2.8×SE） | k/10 | LOSO |
+|---|---|---|---|---|---|---|---|---|
+| **C-pre**（48 列，pre-evaluation 选择） | **−0.0024** | **[−0.0256, +0.0178]** | 0.786 / 0.847 | 0.0057 [−0.0230, +0.0376] | 0.0033 [−0.0181, +0.0245] | 0.0313 | 5/10 | 1/10 |
+| C（51 列，test-informed） | +0.0148 | [−0.0004, +0.0304] | 0.011 / 0.063 | 0.0195 | 0.0343 | 0.0220 | 10/10 | 0/10 |
+| B（价量，无泄漏） | +0.0143 | [−0.0051, +0.0341] | 0.052 / 0.181 | 0.0228 | 0.0371 | 0.0275 | 10/10 | 0/10 |
+| C5（20 列，test-informed） | +0.0134 | [+0.0008, +0.0283] | 0.008 / 0.054 | 0.0203 | 0.0337 | 0.0197 | 10/10 | 0/10 |
+
+配对日度对比（比较基底 − C-pre，同 749 天，逐折日历两侧断言；只报绝对变化；source: `artifacts/storya_v21_family1_cpre/cpre_paired_contrast.csv`）：C − C-pre = +0.0172 [−0.0111, +0.0494]（p 0.10 / 0.27）；B − C-pre = +0.0167 [−0.0133, +0.0509]；C5 − C-pre = +0.0158 [−0.0095, +0.0481]；配对 MDE ≈ 0.041–0.045，都大于各比较基底自身的对比。
+
+Fold 结构（source: `experiments/storya_v21_main12_cpre/results.csv`, `artifacts/storya_v21_family1_cpre/cpre_ex_fold.csv`）：C-pre 的对比对 2025Q2（fold 9）敏感——该季 LightGBM IC 0.2042、MLP 0.0656，ΔIC −0.139（12 折中贡献最负；C、C5 在同一季是最大正贡献）。剔除该季后 C-pre ΔIC = +0.0099 [−0.0069, +0.0265]（p 0.198 / 0.348）；全期结果仍是主结果。C-pre 的 per-seed ΔIC 范围 −0.0314…+0.0173，5/10 与合并符号一致、1 次留一 seed 翻号（同一评估数据上的初始化敏感性）（source: `cpre_seed_robustness.csv`）。本条共发布 22 个 nominal p（无 BH；它们是相关的规格/对比，不是 22 次独立复制；最小的是 C5 的 0.008，不是 C-pre）（source: `cpre_tests_reported.json`）。
+
+**读法**（方案 §1 预设三分支中的 (c)；TP3 确认）：
+- On C-pre, the seed-averaged daily MLP−LightGBM contrast was −0.0024 (95% stationary-block-bootstrap CI [−0.0256, +0.0178]; nominal HLN p = 0.786 at the automatic HAC lag and 0.847 at lag 21). The interval contains zero; this does not establish absence of a contrast. The estimate's magnitude is below C-pre's own approximate nominal MDE of 0.0313. CI 与两档 HLN 判定一致。
+- The positive pooled point estimate observed in C, C5 and B was not reproduced on C-pre. However, all three paired difference intervals contain zero, so the analysis does not establish that the underlying contrasts differ across these bases. 配对 MDE 大于任一比较基底的对比 → 分辨率有限；"比较基底超过 C-pre / 与选择膨胀一致" 的句子**未触发**（没有配对区间排零）；不做 halved/doubled 推断；非拒绝不是等价。
+- Both evaluated models had low pooled IC point estimates on C-pre: LightGBM 0.0057 [−0.0230, +0.0376] and MLP 0.0033 [−0.0181, +0.0245]. Their point estimates were lower than on C and B; this descriptive pattern does not establish negligible predictive content or identify the cause of the differences（选择器只按边际 |IC| 取组，不是任一模型的最优表示；选择抽样变异、regime、表示差异、调参局限都可能，本实验不区分）。
+- All five finalists in each arm had positive three-seed average tuning ICs（与 C5 的决赛全负只是描述性差异）；these selected validation metrics establish neither independent validation nor search adequacy. 参数量相近（31,361 vs 31,745）不等于有效容量、正则或优化相同。
+- MDE 是近似的名义 80% 功效尺度，不是显著性阈值；比较表里 C 的 auto-lag 拒绝 vs 其块自助 CI 含 0、C5 的 CI 排零 vs lag-21 不拒绝，这些不一致照旧保留。
+- C-pre does not estimate how much leakage inflated C; it provides the clean-basis estimate of the same contrast, where 'clean basis' means feature re-selection whose scoring and grouping inputs are bounded by 2022-06-30, conditional on the study's fixed stock panel and on a protocol chosen retrospectively. B remains the leak-free anchor. This sensitivity addresses feature re-selection for the MLP−LightGBM comparison only. It does not re-evaluate graph or edge contrasts, remove the fixed-panel limitation, or convert the original C results into clean confirmatory evidence.
+
+**本条采用的表述**：以上引用的英文句子（Codex TP3 PERMITTED 清单原文）。
+
+**本条不采用、论文也不应采用的表述**（TP3 FORBIDDEN 清单）："The MLP−LightGBM advantage is not reproduced on a pre-evaluation basis"（不带点估计限定和配对不确定）；"the selected features contain little or no predictive signal, whereas B contains signal"；"removing leakage eliminated / reversed / halved / reduced the MLP advantage by a known amount"；"the models are equivalent on C-pre" / "LightGBM is superior on C-pre"；"positive tuning finalists rule out tuning failure" / "all tuning-seed ICs were positive"；"similar parameter counts rule out capacity or optimization explanations"；"excluding the anomalous quarter reveals the true MLP advantage"；"five groups survived removal of the T−1 leakage"；"C-pre resolves L1" / "provides leak-free confirmation" / "confirms that graphs hurt on a clean re-selected basis"；"selection leakage cannot affect null or negative within-universe contrasts"；加上 2026-09-11-a 的禁用清单与 "definitive check"。
+
+**对论文的含义**：L1 的 "pending leak-free re-selection" 现在有了针对 MLP−LightGBM 的正面回答：在只用评估前信息选出的基底上，该对比的点估计为 −0.002、区间 [−0.026, +0.018]，C/C5/B 上的正向点估计没有重现，但配对区间全含 0——它不提供对 C 正向对比的独立确认，也不识别泄漏膨胀的大小。论文侧（H博士）需要：main.tex:290 / :998 / :1012 改正 "five groups survive strict T−1 re-ranking"（那是两种排名方法的交集）；承认已完成的 L0/L1 重选敏感性并保留对 C 原结果的限定；明确图/边对比的重选未做。B（无泄漏基底上 +0.0143，欠功效）仍是唯一的无泄漏锚点。
+
+**评审链**：TP1 Codex A（PROCEED-WITH-FIXES）/ B（全 FIXED）；TP2 Codex A（PASS-WITH-CONCERNS，1 Cn 已修）；TP3 Codex A（PROCEED-WITH-FIXES：1 MAJOR 措辞 + 3 CONCERN，全部落实/接受；`artifacts/reviews/2026-09-12_codex_results_A.md`）。
+
+---
+
 ## 2026-09-11-a: C5 feature-subset sensitivity（post-hoc，TEST-INFORMED selection）— MLP−LightGBM 在 "5 surviving groups" 20 列子集上的 L1−L0
 
 → progress: 2026-09-10-a/-b/-c, 2026-09-11-a/-b/-c/-d | plan: 2026-09-10-a, 2026-09-11-a | analysis: 2026-09-11-a

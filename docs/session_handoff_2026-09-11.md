@@ -1,9 +1,10 @@
 ---
 handoff_date: 2026-09-11
-last_completed: "2026-09-11-g: C-pre plan frozen (docs/c_pre_plan_2026-09-11.md) + Codex TP1 Round A PROCEED-WITH-FIXES applied; 2026-09-11-f: plan_aaa_t1_stability figure redrawn; commits pushed to origin/main"
+last_completed: "2026-09-12-c: C-pre production run done (240 cells, integrity PASS) + Codex TP3 PROCEED-WITH-FIXES applied; docs/analysis.md 2026-09-12-a written (ΔIC −0.0024 [−0.0256, +0.0178]; paired vs C/B/C5 all include 0)"
 in_flight: []
 open_questions:
-  - "C-pre GO / NO-GO: docs/c_pre_plan_2026-09-11.md §8 D1-D6 (frozen defaults; Codex TP1-A agreed on all six); if GO → TP2 (+ Codex Round B) → commit selector → select → freeze UNIVERSE_CPRE_NAMES → tune → 240 cells (Mac, or T4 if a hostname is given) → stats → TP3; Mac ≈ 3 h compute"
+  - "Paper: apply TP3 A-04 — correct main.tex:290/:998/:1012 (five-group overlap is a ranking-method disagreement), acknowledge the completed L0/L1 pre-evaluation re-selection sensitivity with the PERMITTED sentences (docs/analysis.md 2026-09-12-a), keep the qualification on C, state that graph/edge re-selection is unresolved; drop the halved/doubled sentence from the C5 paragraph"
+  - "Push: C-pre commits (b969a62 .. closeout) are local only — H博士 to confirm"
   - "Paper L1 / appendix rewording (main.tex:290, :998, :1012) AND the figure caption (figure redrawn 2026-09-11-f; main.tex untouched here): 'only 5 of 15 groups survive strict T-1 re-ranking' is a misstatement (proxy top-15 identical with/without the shift; 5/15 = permutation top-15 ∩ proxy top-15) and the 'definitive check' promise cannot be discharged by C5 (its selection is test-informed) — H博士 to rewrite before inserting any C5 paragraph"
   - "C-pre (pre-test selector, brief §9.10): only needed if the paper wants a quantitative statement about leakage in C (TP3); requires freezing the coverage rule for hc_mom12m warm-up (Codex TP1-B B-01), the group-score definition, and grouping reuse vs re-clustering; then its own TP1"
   - "Push: DONE 2026-09-11 (C5 commits + report + figure/C-pre-plan commit are on origin/main)"
@@ -26,7 +27,10 @@ rule9_status:
   touchpoint_1_plan: PASSED        # Codex Round A BLOCK-EXECUTION → re-scoped → Round B PROCEED-WITH-FIXES (closures applied)
   touchpoint_2_code: PASSED        # Codex Round A PROCEED-WITH-FIXES (5/5 fixed) → finance-gnn-reviewer Round B fallback (Codex usage limit) PROCEED-WITH-FIXES (4/4 fixed)
   touchpoint_3_results: PASSED     # finance-gnn-reviewer Round A fallback (Codex usage limit) PROCEED-WITH-FIXES (4 M fixed, 3 Cn accepted)
-  cpre_touchpoint_1_plan: PASSED-ROUND-A   # Codex 2026-09-11 PROCEED-WITH-FIXES (0 C / 2 M / 2 Cn, all applied); Round B deferred to TP2 after H博士 approval
+  cpre_touchpoint_1_plan: PASSED           # Codex 2026-09-11 Round A PROCEED-WITH-FIXES (all applied) -> Round B 2026-09-12 all FIXED
+  cpre_touchpoint_2_code: PASSED           # Codex 2026-09-12 Round A PASS-WITH-CONCERNS (1 Cn fixed before the run)
+  cpre_touchpoint_3_results: PASSED        # Codex 2026-09-12 Round A PROCEED-WITH-FIXES (1 M wording + 3 Cn; applied / accepted)
+  cpre_closeout_audit: PENDING
   closeout_audit: PASSED           # 4 Explore agents; artifacts/reviews/2026-09-11_explore-*_closeout.md; progress.md 2026-09-11-e
 next_actions:
   - "H博士: C-pre go/no-go (recommended: GO) and confirm D1-D6; paper rewording + new figure caption before 9/25"

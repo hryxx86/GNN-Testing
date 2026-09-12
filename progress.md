@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-09-12-c: C-pre 正式流水线完成 + Codex Review — Results (Touchpoint 3, Round A) PROCEED-WITH-FIXES → analysis.md 2026-09-12-a
+
+- 流水线（Mac，02:19→04:01，git 46ca6e3）：tune L0 35 s / L1 837 s → `frozen_hparams_cpre.json`（md5 a8fdfb8f）→ 240 cell（1.5 h）→ family1 `--sensitivity` → analyzer `--ex-fold 9`。integrity PASS（240/240、收敛、cell_id [3600, 3839]、48 列 == `UNIVERSE_CPRE_NAMES`、逐 cell 冻结日历全长、frozen 门 OK）。产物 commit `41ac83f`（含 analyzer 的 fold-share 显示守卫：pooled 在 1 SE 内时打印 n/a）。
+- **结果**：C-pre L1−L0 = −0.0024 [−0.0256, +0.0178]，p 0.786 / 0.847，自身 MDE 0.0313，k 5/10、LOSO 1/10（per-seed −0.0314…+0.0173）；两臂 IC 水平 L0 0.0057 / L1 0.0033（区间含 0）；配对 C/B/C5 − C-pre = +0.0172 / +0.0167 / +0.0158，区间全含 0（配对 MDE ≈ 0.041–0.045）；fold 9（2025Q2）L0 0.204 vs L1 0.066 → ΔIC −0.139，剔除后 +0.0099 [−0.0069, +0.0265]（source: `artifacts/storya_v21_family1_cpre/cpre_*.csv`）。
+- Reviewer: codex（≈6.7 min，无额度中断）；Full review: `artifacts/reviews/2026-09-12_codex_results_A.md`；Summary: 0 C + 1 M + 3 Cn；Verdict **PROCEED-WITH-FIXES**（"credible enough to report; no defect requiring new model runs"）。Codex 独立复算 headline、两臂区间、三个配对、四个 ex-fold-9 全部一致；哈希链（运行模块 / 调参 / selection / frozen）一致；240 + 720 个 per-day 数组全长有限。
+- Resolutions：A-01 MAJOR（两臂水平与"未重现"措辞越界）→ FIXED（analysis.md 用 Codex PERMITTED 句原文：未重现只说点估计并紧跟配对区间含 0；两臂水平只作描述、不归因）；A-02 Cn（我在评审请求里写错的 per-seed 范围）→ FIXED（产物本就是 −0.0314…+0.0173；文档用正确值）；A-03 Cn（决赛正 val-IC 不能排除调参局限；L1 冠军单 seed +0.034/+0.012/−0.006）→ FIXED（措辞收窄）；A-04 Cn（论文 L1 三处要改口径 + 承认已完成的 L0/L1 重选 + 图/边未做）→ ACCEPTED-AS-CONCERN（论文侧，待 H博士）。
+- 写入 `docs/analysis.md` 2026-09-12-a（采用/禁用清单随条）。
+
+→ progress: 2026-09-12-c | plan: 2026-09-12-b | analysis: 2026-09-12-a
+
 ## 2026-09-12-b: Codex Review — Code (Touchpoint 2, Round A) + Plan (Touchpoint 1, Round B) — C-pre 实现；PASS-WITH-CONCERNS → 正式流水线启动
 
 - Target: `run_storya_cpre_select.py`、`run_storya_e1_anchor.py`、`run_storya_v21_main12.py`、`run_storya_v21_tune.py`、`analyze_c5_sensitivity.py`（HEAD `e80c6ac`，全部已提交）+ `docs/c_pre_plan_2026-09-11.md`（Round B）
